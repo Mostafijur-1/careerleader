@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { recommendByPersonality } from '@/lib/recommendation'
+import { useUser } from '../contexts/UserContext'
 
 type Q = { 
   id: string
@@ -10,12 +10,13 @@ type Q = {
   dimension: string
   sideA: string
   sideB: string
-  optionA: string
-  optionB: string
+  optionA?: string
+  optionB?: string
   interests: string[]
 }
 
 export default function AssessmentPage() {
+  const { user } = useUser()
   const [isMounted, setIsMounted] = useState(false)
   const [qs, setQs] = useState<Q[]>([])
   const [answers, setAnswers] = useState<Record<string, number>>({})
@@ -24,6 +25,13 @@ export default function AssessmentPage() {
   const [result, setResult] = useState<any>(null)
   const [gender, setGender] = useState<string>('Male')
   const [currentQuestion, setCurrentQuestion] = useState(0)
+  const likertOptions = [
+    { value: 1, label: 'Strongly Disagree' },
+    { value: 2, label: 'Disagree' },
+    { value: 3, label: 'Neutral' },
+    { value: 4, label: 'Agree' },
+    { value: 5, label: 'Strongly Agree' },
+  ]
 
   const progress = qs.length ? Math.round((Object.keys(answers).length / qs.length) * 100) : 0
 
@@ -51,49 +59,6 @@ export default function AssessmentPage() {
     }
   }, [isMounted])
 
-  // Calculate MBTI personality type from answers
-  function calculatePersonality(): { type: string; interests: string[] } {
-    const scores: { [key: string]: { [key: string]: number } } = {
-      'EI': { E: 0, I: 0 },
-      'SN': { S: 0, N: 0 },
-      'TF': { T: 0, F: 0 },
-      'JP': { J: 0, P: 0 }
-    }
-
-    // Score answers
-    qs.forEach(q => {
-      const answer = answers[q.id]
-      if (answer !== undefined) {
-        const dim = q.dimension
-        if (scores[dim]) {
-          // Answer 5 = strongly option A (sideA), 1 = strongly option B (sideB)
-          if (answer >= 4) {
-            scores[dim][q.sideA] += 1
-          } else if (answer <= 2) {
-            scores[dim][q.sideB] += 1
-          }
-        }
-      }
-    })
-
-    // Build personality type by selecting dominant side for each dimension
-    const personalityType = 
-      (scores['EI']['E'] >= scores['EI']['I'] ? 'E' : 'I') +
-      (scores['SN']['S'] >= scores['SN']['N'] ? 'S' : 'N') +
-      (scores['TF']['T'] >= scores['TF']['F'] ? 'T' : 'F') +
-      (scores['JP']['J'] >= scores['JP']['P'] ? 'J' : 'P')
-
-    // Extract interests from answered questions
-    const interests: string[] = []
-    qs.forEach(q => {
-      if (answers[q.id] !== undefined && q.interests?.length > 0) {
-        interests.push(...q.interests)
-      }
-    })
-
-    return { type: personalityType, interests: [...new Set(interests)] }
-  }
-
   function setAnswer(qid: string, val: number) {
     setAnswers(prev => ({ ...prev, [qid]: val }))
     if (currentQuestion < qs.length - 1) {
@@ -101,23 +66,30 @@ export default function AssessmentPage() {
     }
   }
 
-  function submit() {
+  async function submit() {
     setLoading(true)
     try {
-      const { type, interests } = calculatePersonality()
-      console.log('Calculated personality:', type, interests)
-      
-      if (!type || type.length !== 4) {
-        throw new Error(`Invalid personality type: ${type}`)
+      const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => ({
+        questionId,
+        answer,
+      }))
+      const res = await fetch('/api/assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          answers: formattedAnswers,
+          user: user ? { email: user.email, type: user.type } : null,
+          gender,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || 'Failed to submit assessment')
       }
-      
-      const recommendations = recommendByPersonality(type)
-      console.log('Got recommendations:', recommendations)
-      
       setResult({
-        personalityType: type,
-        interests,
-        recommendations,
+        personalityType: data.result?.personality,
+        interests: data.result?.interests || [],
+        recommendations: data.recommendations || [],
       })
     } catch (err) {
       console.error('Submission error:', err)
@@ -191,38 +163,35 @@ export default function AssessmentPage() {
               {qs.length > 0 && qs[currentQuestion] && (
                 <div className="mb-6 sm:mb-8">
                   <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-6 sm:mb-8">{qs[currentQuestion].text}</h3>
-                  
-                  {/* Answer Options - A or B */}
+                  <div className="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-900">
+                    <p className="font-semibold">Scale: Strongly Disagree to Strongly Agree</p>
+                    {(qs[currentQuestion].optionA || qs[currentQuestion].optionB) && (
+                      <p className="mt-1">
+                        <span className="font-medium">Agree side:</span> {qs[currentQuestion].optionA || 'Option A'} |{' '}
+                        <span className="font-medium">Disagree side:</span> {qs[currentQuestion].optionB || 'Option B'}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Answer Options - Likert 1 to 5 */}
                   <div className="space-y-3">
-                    <button
-                      type="button"
-                      onClick={() => setAnswer(qs[currentQuestion].id, 5)}
-                      className={`w-full p-4 rounded-xl font-semibold transition transform text-left flex items-center gap-4 ${
-                        answers[qs[currentQuestion].id] === 5
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105'
-                          : 'bg-gray-100 text-gray-900 border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50'
-                      }`}
-                    >
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0 ${answers[qs[currentQuestion].id] === 5 ? 'bg-white text-blue-600' : 'bg-gray-300'}`}>
-                        A
-                      </div>
-                      <span>{qs[currentQuestion].optionA}</span>
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => setAnswer(qs[currentQuestion].id, 1)}
-                      className={`w-full p-4 rounded-xl font-semibold transition transform text-left flex items-center gap-4 ${
-                        answers[qs[currentQuestion].id] === 1
-                          ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg scale-105'
-                          : 'bg-gray-100 text-gray-900 border-2 border-gray-200 hover:border-orange-400 hover:bg-orange-50'
-                      }`}
-                    >
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0 ${answers[qs[currentQuestion].id] === 1 ? 'bg-white text-orange-600' : 'bg-gray-300'}`}>
-                        B
-                      </div>
-                      <span>{qs[currentQuestion].optionB}</span>
-                    </button>
+                    {likertOptions.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setAnswer(qs[currentQuestion].id, opt.value)}
+                        className={`w-full p-4 rounded-xl font-semibold transition transform text-left flex items-center gap-4 ${
+                          answers[qs[currentQuestion].id] === opt.value
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105'
+                            : 'bg-gray-100 text-gray-900 border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 ${answers[qs[currentQuestion].id] === opt.value ? 'bg-white text-blue-600' : 'bg-gray-300'}`}>
+                          {opt.value}
+                        </div>
+                        <span>{opt.label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}

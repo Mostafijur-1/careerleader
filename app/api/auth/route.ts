@@ -30,7 +30,7 @@ export async function GET(req: Request) {
 // { action: 'register' | 'login', type: 'student' | 'mentor' | 'admin', ...fields }
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
-  const { action, type, email, password, name, expertise, role, adminEmail, adminPassword, mentorEmail } = body
+  const { action, type, email, password, name, expertise, role, adminEmail, adminPassword, mentorEmail, zoomLink, meetLink } = body
   
   // Skip generic field check for activate/deactivate mentor actions
   if (action !== 'activate-mentor' && action !== 'deactivate-mentor') {
@@ -58,6 +58,8 @@ export async function POST(req: Request) {
     if (type === 'mentor') {
       userDoc.expertise = expertise || [];
       userDoc.active = false; // mentor must be activated by admin
+      userDoc.zoomLink = typeof zoomLink === 'string' ? zoomLink.trim() : ''
+      userDoc.meetLink = typeof meetLink === 'string' ? meetLink.trim() : ''
     }
     if (type === 'admin') {
       userDoc.role = role || 'admin';

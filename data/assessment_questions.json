@@ -1,17 +1,82 @@
 [
-  { "id": "q1", "text": "At a party or social gathering, do you:", "dimension": "EI", "sideA": "E", "sideB": "I", "optionA": "Enjoy meeting new people and stay energized", "optionB": "Prefer talking with a few close friends", "interests": ["social", "people"] },
-  
-  { "id": "q2", "text": "When solving a problem, do you prefer to:", "dimension": "SN", "sideA": "S", "sideB": "N", "optionA": "Use proven methods and concrete facts", "optionB": "Explore new patterns and innovative ideas", "interests": ["practical", "innovation"] },
-  
-  { "id": "q3", "text": "When making important decisions, you rely more on:", "dimension": "TF", "sideA": "T", "sideB": "F", "optionA": "Objective analysis and logical reasoning", "optionB": "Personal values and people's feelings", "interests": ["analysis", "people"] },
-  
-  { "id": "q4", "text": "Do you prefer your life to be:", "dimension": "JP", "sideA": "J", "sideB": "P", "optionA": "Organized, structured, and planned", "optionB": "Flexible, spontaneous, and adaptable", "interests": ["planning", "adaptability"] },
-  
-  { "id": "q5", "text": "When you have free time, you typically:", "dimension": "EI", "sideA": "E", "sideB": "I", "optionA": "Go out and do activities with others", "optionB": "Spend time alone with hobbies or reading", "interests": ["social", "reflection"] },
-  
-  { "id": "q6", "text": "Do you trust more in:", "dimension": "SN", "sideA": "N", "sideB": "S", "optionA": "Your intuition and possibilities", "optionB": "Experience and proven facts", "interests": ["innovation", "practical"] },
-  
-  { "id": "q7", "text": "In conversations, you tend to:", "dimension": "TF", "sideA": "T", "sideB": "F", "optionA": "Point out logical inconsistencies", "optionB": "Focus on how others might feel", "interests": ["analysis", "people"] },
-  
-  { "id": "q8", "text": "When starting a project, do you:", "dimension": "JP", "sideA": "J", "sideB": "P", "optionA": "Create a detailed plan before starting", "optionB": "Figure it out as you go along", "interests": ["planning", "adaptability"] }
+  {
+    "id": "q1",
+    "text": "I feel energized after spending time in large social groups.",
+    "dimension": "EI",
+    "sideA": "E",
+    "sideB": "I",
+    "optionA": "Energized by active social interaction",
+    "optionB": "Energized by quiet reflection",
+    "interests": ["social", "people"]
+  },
+  {
+    "id": "q2",
+    "text": "When solving problems, I trust practical evidence more than abstract possibilities.",
+    "dimension": "SN",
+    "sideA": "S",
+    "sideB": "N",
+    "optionA": "Practical facts and tested methods",
+    "optionB": "Patterns, ideas, and future possibilities",
+    "interests": ["practical", "innovation"]
+  },
+  {
+    "id": "q3",
+    "text": "I make important decisions primarily with objective logic.",
+    "dimension": "TF",
+    "sideA": "T",
+    "sideB": "F",
+    "optionA": "Logic, consistency, and analysis",
+    "optionB": "Values, empathy, and harmony",
+    "interests": ["analysis", "people"]
+  },
+  {
+    "id": "q4",
+    "text": "I prefer a well-planned schedule over last-minute flexibility.",
+    "dimension": "JP",
+    "sideA": "J",
+    "sideB": "P",
+    "optionA": "Structure and clear plans",
+    "optionB": "Flexibility and spontaneity",
+    "interests": ["planning", "adaptability"]
+  },
+  {
+    "id": "q5",
+    "text": "In my free time, I usually choose group activities over solo activities.",
+    "dimension": "EI",
+    "sideA": "E",
+    "sideB": "I",
+    "optionA": "Social activities and group experiences",
+    "optionB": "Solo hobbies and personal time",
+    "interests": ["social", "reflection"]
+  },
+  {
+    "id": "q6",
+    "text": "I rely more on intuition and future potential than on past experience.",
+    "dimension": "SN",
+    "sideA": "N",
+    "sideB": "S",
+    "optionA": "Intuition and emerging opportunities",
+    "optionB": "Experience and proven reality",
+    "interests": ["innovation", "practical"]
+  },
+  {
+    "id": "q7",
+    "text": "In discussions, I focus first on what is logically correct.",
+    "dimension": "TF",
+    "sideA": "T",
+    "sideB": "F",
+    "optionA": "Logical accuracy and fairness",
+    "optionB": "Emotional impact and relationships",
+    "interests": ["analysis", "people"]
+  },
+  {
+    "id": "q8",
+    "text": "I feel more comfortable when projects have a detailed plan from the start.",
+    "dimension": "JP",
+    "sideA": "J",
+    "sideB": "P",
+    "optionA": "Clear roadmap before action",
+    "optionB": "Explore and adapt while doing",
+    "interests": ["planning", "adaptability"]
+  }
 ]

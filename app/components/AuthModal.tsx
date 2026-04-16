@@ -27,6 +27,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [expertise, setExpertise] = useState("");
+  const [zoomLink, setZoomLink] = useState("");
+  const [meetLink, setMeetLink] = useState("");
   const [role, setRole] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error" | "">();
@@ -46,6 +48,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       password,
       name: mode === "register" ? name : undefined,
       expertise: type === "mentor" && mode === "register" ? expertise.split(",").map(e => e.trim()) : undefined,
+      zoomLink: type === "mentor" && mode === "register" ? zoomLink : undefined,
+      meetLink: type === "mentor" && mode === "register" ? meetLink : undefined,
       role: type === "admin" && mode === "register" ? role : undefined,
     };
     const res = await fetch("/api/auth", {
@@ -76,6 +80,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             setName("");
             setExpertise("");
             setRole("");
+            setZoomLink("");
+            setMeetLink("");
             setMessage("");
             setMessageType("");
             setShowMentorNotice(false);
@@ -88,6 +94,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             setName("");
             setExpertise("");
             setRole("");
+            setZoomLink("");
+            setMeetLink("");
             setMessage("");
             setMessageType("");
           }, 1500);
@@ -216,6 +224,30 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       required
                     />
                   </div>
+                )}
+                {type === "mentor" && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Zoom Link (optional)</label>
+                      <input
+                        type="url"
+                        value={zoomLink}
+                        onChange={e => setZoomLink(e.target.value)}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                        placeholder="https://zoom.us/j/..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Google Meet Link (optional)</label>
+                      <input
+                        type="url"
+                        value={meetLink}
+                        onChange={e => setMeetLink(e.target.value)}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                        placeholder="https://meet.google.com/..."
+                      />
+                    </div>
+                  </>
                 )}
                 {type === "admin" && (
                   <div>

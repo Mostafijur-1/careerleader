@@ -3,7 +3,7 @@
     "id": "c1",
     "title": "Software Engineer",
     "category": "job",
-    "description": "Designs, develops, and maintains software applications.",
+    "description": "Builds reliable software products, collaborates with cross-functional teams, and solves complex technical problems from design to deployment.",
     "skills": ["programming", "algorithms", "system design"],
     "personalities": ["INTJ", "ENTJ", "ISTJ", "ESTJ"]
   },
@@ -11,7 +11,7 @@
     "id": "c2",
     "title": "Data Scientist",
     "category": "job",
-    "description": "Extracts insights from data using statistics and ML.",
+    "description": "Uses statistics, machine learning, and experimentation to extract insights from data and support evidence-based business decisions.",
     "skills": ["python", "statistics", "machine learning"],
     "personalities": ["INTP", "ENTP", "INFJ"]
   },
@@ -19,7 +19,7 @@
     "id": "c3",
     "title": "DevOps Engineer",
     "category": "job",
-    "description": "Builds and maintains infrastructure and CI/CD pipelines.",
+    "description": "Automates infrastructure, improves release pipelines, and ensures systems are scalable, secure, and stable across environments.",
     "skills": ["linux", "cloud", "automation"],
     "personalities": ["ISTJ", "ISFJ", "ESTJ"]
   },
@@ -27,7 +27,7 @@
     "id": "c4",
     "title": "UX Designer",
     "category": "higher_study",
-    "description": "Designs user experiences and interfaces.",
+    "description": "Researches user behavior and designs intuitive experiences and interfaces that improve usability, engagement, and customer satisfaction.",
     "skills": ["user research", "prototyping", "visual design"],
     "personalities": ["INFP", "ENFP", "INFJ"]
   },
@@ -35,7 +35,7 @@
     "id": "c5",
     "title": "Startup Founder (Tech)",
     "category": "entrepreneurship",
-    "description": "Starts and leads a technology-focused business.",
+    "description": "Identifies market opportunities, builds product vision, leads teams, and drives growth for a technology-focused startup venture.",
     "skills": ["product", "fundraising", "leadership"],
     "personalities": ["ENTP", "ENFP", "ESTP"]
   }
