@@ -23,6 +23,13 @@ type MentorMessage = {
   createdAt: string
 }
 
+type PendingRequest = {
+  id: string
+  studentEmail: string
+  studentName?: string
+  studentMbti?: string
+}
+
 export default function MentorPage() {
   const { user } = useUser()
   const router = useRouter()
@@ -33,6 +40,8 @@ export default function MentorPage() {
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [sending, setSending] = useState(false)
   const [draft, setDraft] = useState("")
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([])
+  const [requestActionLoading, setRequestActionLoading] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     if (!user) return
@@ -63,6 +72,25 @@ export default function MentorPage() {
     }
     fetchConversations()
   }, [user?.email, user?.type, selectedStudent])
+
+  useEffect(() => {
+    async function fetchPendingRequests() {
+      if (!user?.email || user.type !== "mentor") return
+      try {
+        const params = new URLSearchParams({
+          action: "mentor-requests",
+          mentorEmail: user.email,
+          status: "pending",
+        })
+        const res = await fetch(`/api/mentorship?${params.toString()}`)
+        const data = await res.json()
+        setPendingRequests(Array.isArray(data?.requests) ? data.requests : [])
+      } catch (error) {
+        console.error("Failed to load mentor requests", error)
+      }
+    }
+    fetchPendingRequests()
+  }, [user?.email, user?.type])
 
   useEffect(() => {
     async function fetchThread() {
@@ -115,6 +143,48 @@ export default function MentorPage() {
     }
   }
 
+  async function respondRequest(studentEmail: string, decision: "accepted" | "rejected") {
+    if (!user?.email) return
+    const key = `${studentEmail}:${decision}`
+    setRequestActionLoading(prev => ({ ...prev, [key]: true }))
+    try {
+      const res = await fetch("/api/mentorship", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "respond-request",
+          studentEmail,
+          mentorEmail: user.email,
+          decision,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data?.success) {
+        setPendingRequests(prev => prev.filter(r => r.studentEmail !== studentEmail))
+        if (decision === "accepted") {
+          const alreadyExists = conversations.some(c => c.studentEmail === studentEmail)
+          if (!alreadyExists) {
+            setConversations(prev => [
+              {
+                studentEmail,
+                studentName: "",
+                studentMbti: "",
+                lastMessage: "",
+                lastMessageAt: "",
+              },
+              ...prev,
+            ])
+          }
+          setSelectedStudent(studentEmail)
+        }
+      }
+    } catch (error) {
+      console.error("Failed to respond request", error)
+    } finally {
+      setRequestActionLoading(prev => ({ ...prev, [key]: false }))
+    }
+  }
+
   if (!user || user.type !== "mentor") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -144,6 +214,35 @@ export default function MentorPage() {
             <h2 className="font-bold text-lg">Students</h2>
             <p className="text-xs text-white/80 mt-1">Active mentorship conversations</p>
           </div>
+          {pendingRequests.length > 0 && (
+            <div className="p-3 border-b border-gray-100 bg-amber-50">
+              <p className="text-xs font-bold text-amber-900 mb-2">Pending Requests</p>
+              <div className="space-y-2">
+                {pendingRequests.map(req => (
+                  <div key={req.id} className="rounded-lg border border-amber-200 bg-white p-2">
+                    <p className="text-sm font-semibold text-gray-900">{req.studentName || req.studentEmail}</p>
+                    <p className="text-xs text-gray-600">MBTI: {req.studentMbti || "N/A"}</p>
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        onClick={() => respondRequest(req.studentEmail, "accepted")}
+                        disabled={requestActionLoading[`${req.studentEmail}:accepted`]}
+                        className="flex-1 py-1.5 text-xs font-bold rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => respondRequest(req.studentEmail, "rejected")}
+                        disabled={requestActionLoading[`${req.studentEmail}:rejected`]}
+                        className="flex-1 py-1.5 text-xs font-bold rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="max-h-[70vh] overflow-y-auto">
             {loadingConversations ? (
               <p className="p-4 text-sm text-gray-500">Loading conversations...</p>

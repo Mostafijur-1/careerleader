@@ -38,12 +38,14 @@ type MessageNotification = {
   createdAt: string
 }
 
+type ConnectionStatus = "none" | "pending" | "accepted" | "rejected"
+
 export default function Home() {
   const { user, setUser } = useUser()
   const router = useRouter()
   const [isMounted, setIsMounted] = useState(false)
   const [isAuthOpen, setIsAuthOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState("job")
+  const [activeTab, setActiveTab] = useState<"job" | "higher_study" | "entrepreneurship">("job")
   const [selectedMentor, setSelectedMentor] = useState<MentorVM | null>(null)
   const [mentors, setMentors] = useState<MentorVM[]>([])
 
@@ -56,6 +58,8 @@ export default function Home() {
   const [notifications, setNotifications] = useState<MessageNotification[]>([])
   const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [requestStatuses, setRequestStatuses] = useState<Record<string, ConnectionStatus>>({})
+  const [requestLoadingByMentor, setRequestLoadingByMentor] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     setIsMounted(true)
@@ -103,6 +107,11 @@ export default function Home() {
         setChatMessages([])
         return
       }
+      const status = requestStatuses[selectedMentor.email.toLowerCase()] || "none"
+      if (status !== "accepted") {
+        setChatMessages([])
+        return
+      }
       setChatLoading(true)
       try {
         const params = new URLSearchParams({
@@ -121,7 +130,7 @@ export default function Home() {
       }
     }
     fetchMessages()
-  }, [selectedMentor, user?.email])
+  }, [selectedMentor, user?.email, requestStatuses])
 
   useEffect(() => {
     async function fetchNotifications() {
@@ -153,6 +162,34 @@ export default function Home() {
     }
     fetchNotifications()
   }, [user?.email, user?.type, chatMessages.length])
+
+  useEffect(() => {
+    async function fetchRequestStatuses() {
+      if (!user?.email || user.type !== "student") {
+        setRequestStatuses({})
+        return
+      }
+      try {
+        const params = new URLSearchParams({
+          action: "request-statuses",
+          studentEmail: user.email,
+        })
+        const res = await fetch(`/api/mentorship?${params.toString()}`)
+        const data = await res.json()
+        const statuses: Record<string, ConnectionStatus> = {}
+        for (const item of data?.statuses || []) {
+          const key = String(item?.mentorEmail || "").toLowerCase()
+          if (!key) continue
+          const val = String(item?.status || "none").toLowerCase()
+          statuses[key] = val === "accepted" || val === "pending" || val === "rejected" ? (val as ConnectionStatus) : "none"
+        }
+        setRequestStatuses(statuses)
+      } catch (error) {
+        console.error("Failed to load mentorship request statuses", error)
+      }
+    }
+    fetchRequestStatuses()
+  }, [user?.email, user?.type, mentors.length])
 
   function toggleNotifications() {
     const nextOpen = !notificationsOpen
@@ -192,6 +229,31 @@ export default function Home() {
     }
   }
 
+  async function sendConnectionRequest(mentorEmail: string) {
+    if (!user?.email || user.type !== "student") return
+    const key = mentorEmail.toLowerCase()
+    setRequestLoadingByMentor(prev => ({ ...prev, [key]: true }))
+    try {
+      const res = await fetch("/api/mentorship", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send-request",
+          studentEmail: user.email,
+          mentorEmail: key,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data?.status) {
+        setRequestStatuses(prev => ({ ...prev, [key]: data.status as ConnectionStatus }))
+      }
+    } catch (error) {
+      console.error("Failed to send mentorship request", error)
+    } finally {
+      setRequestLoadingByMentor(prev => ({ ...prev, [key]: false }))
+    }
+  }
+
   const handleLogout = () => {
     setUser(null)
     setMobileMenuOpen(false)
@@ -199,10 +261,21 @@ export default function Home() {
 
   const displayName = isMounted ? (user ? user.name : "Guest") : "Guest"
 
-  const careers = [
-    { id: 1, title: "Software Engineer", match: 96, category: "job", icon: "💻", salary: "$120K-$180K" },
-    { id: 2, title: "Network Engineer", match: 86, category: "job", icon: "🌐", salary: "$100K-$160K" },
-  ]
+  const careerPreviews: Record<"job" | "higher_study" | "entrepreneurship", Array<{ id: number; title: string; subtitle: string; icon: string; fit: number }>> = {
+    job: [
+      { id: 1, title: "Software Engineer", subtitle: "Product, web, and platform development", icon: "💻", fit: 96 },
+      { id: 2, title: "Network Engineer", subtitle: "Infrastructure, cloud, and security", icon: "🌐", fit: 86 },
+    ],
+    higher_study: [
+      { id: 3, title: "Govt. Universities", subtitle: "Admission, requirements, and preparation", icon: "🏛️", fit: 88 },
+      { id: 4, title: "Scholarship (Abroad)", subtitle: "Eligibility, documents, and process", icon: "🎓", fit: 84 },
+    ],
+    entrepreneurship: [
+      { id: 5, title: "Startup Foundation", subtitle: "How to begin and validate ideas", icon: "🚀", fit: 90 },
+      { id: 6, title: "Roles & Growth", subtitle: "Skills, challenges, and success strategy", icon: "📈", fit: 82 },
+    ],
+  }
+  const activeCareerItems = careerPreviews[activeTab]
 
   const resources = [
     { id: 1, title: "Python Programming", icon: "🐍", type: ["Courses", "Articles", "Videos"], learners: "10K+" },
@@ -397,8 +470,8 @@ export default function Home() {
       {/* Career Recommendations */}
       <section id="careers" className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
         <div className="mb-8">
-          <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4">Career Recommendations</h2>
-          <p className="text-gray-600">Explore careers that match your profile</p>
+          <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4">Career Path Preview</h2>
+          <p className="text-gray-600">Pick a track to preview it, then open full guidance for step-by-step details.</p>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3 mb-8">
           {["job", "higher_study", "entrepreneurship"].map(tab => (
@@ -416,7 +489,7 @@ export default function Home() {
           ))}
         </div>
         <div className="grid sm:grid-cols-2 gap-4 sm:gap-8">
-          {careers.map(career => (
+          {activeCareerItems.map(career => (
             <div key={career.id} className="group relative bg-white rounded-2xl p-8 shadow-md hover:shadow-2xl border border-gray-100 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 to-indigo-600/5 opacity-0 group-hover:opacity-100 transition"></div>
               <div className="relative">
@@ -424,18 +497,23 @@ export default function Home() {
                   <div>
                     <div className="text-4xl sm:text-6xl mb-3">{career.icon}</div>
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{career.title}</h3>
-                    <p className="text-sm text-gray-500 mt-2">{career.salary}</p>
+                    <p className="text-sm text-gray-500 mt-2">{career.subtitle}</p>
                   </div>
-                  <div className="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 font-bold px-4 py-2 rounded-xl text-lg">{career.match}%</div>
+                  <div className="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 font-bold px-4 py-2 rounded-xl text-lg">{career.fit}%</div>
                 </div>
                 <div className="mb-4 flex items-center gap-2">
                   <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all" style={{ width: `${career.match}%` } as React.CSSProperties}></div>
+                    <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all" style={{ width: `${career.fit}%` } as React.CSSProperties}></div>
                   </div>
                 </div>
                 <div className="flex gap-3">
                   <button className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-2 rounded-lg font-bold shadow-md hover:shadow-lg transition">✓ Interested</button>
-                  <button className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 rounded-lg font-bold transition">View Details →</button>
+                  <Link
+                    href="/career-options"
+                    className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 rounded-lg font-bold transition text-center"
+                  >
+                    Full Guidance →
+                  </Link>
                 </div>
               </div>
             </div>
@@ -496,10 +574,64 @@ export default function Home() {
                   )}
                   <button
                     onClick={() => setSelectedMentor(mentor)}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition"
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition mb-2"
                   >
                     👁 View Profile
                   </button>
+                  {(() => {
+                    const status = requestStatuses[mentor.email.toLowerCase()] || "none"
+                    const isLoadingReq = !!requestLoadingByMentor[mentor.email.toLowerCase()]
+                    if (!user || user.type !== "student") {
+                      return (
+                        <button
+                          onClick={() => setIsAuthOpen(true)}
+                          className="w-full bg-gray-100 text-gray-700 font-bold py-2 rounded-lg border border-gray-300 hover:bg-gray-200 transition"
+                        >
+                          Login to Connect
+                        </button>
+                      )
+                    }
+                    if (status === "accepted") {
+                      return (
+                        <button
+                          onClick={() => setSelectedMentor(mentor)}
+                          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 rounded-lg shadow-md hover:shadow-lg transition"
+                        >
+                          Chat Now
+                        </button>
+                      )
+                    }
+                    if (status === "pending") {
+                      return (
+                        <button
+                          disabled
+                          className="w-full bg-yellow-100 text-yellow-800 font-bold py-2 rounded-lg border border-yellow-300 cursor-not-allowed"
+                        >
+                          Request Pending
+                        </button>
+                      )
+                    }
+                    if (status === "rejected") {
+                      return (
+                        <button
+                          onClick={() => sendConnectionRequest(mentor.email)}
+                          disabled={isLoadingReq}
+                          className="w-full bg-orange-100 text-orange-800 font-bold py-2 rounded-lg border border-orange-300 hover:bg-orange-200 transition disabled:opacity-60"
+                        >
+                          {isLoadingReq ? "Sending..." : "Request Again"}
+                        </button>
+                      )
+                    }
+                    return (
+                      <button
+                        onClick={() => sendConnectionRequest(mentor.email)}
+                        disabled={isLoadingReq}
+                        className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 rounded-lg shadow-md hover:shadow-lg transition disabled:opacity-60"
+                      >
+                        {isLoadingReq ? "Sending..." : "Request to Connect"}
+                      </button>
+                    )
+                  })()}
                 </div>
               </div>
             ))}
@@ -597,6 +729,10 @@ export default function Home() {
             <div className="h-44 sm:h-48 overflow-y-auto bg-gray-50 rounded-md p-3 space-y-2 mb-3">
                 {!user ? (
                   <p className="text-sm text-gray-600">Login as a student to chat with this mentor.</p>
+                ) : (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted" ? (
+                  <p className="text-sm text-gray-600">
+                    Chat unlocks after mentor accepts your connection request.
+                  </p>
                 ) : chatLoading ? (
                   <p className="text-sm text-gray-500">Loading messages...</p>
                 ) : chatMessages.length === 0 ? (
@@ -606,10 +742,12 @@ export default function Home() {
                     <div
                       key={msg.id}
                       className={`text-sm p-2 rounded-md ${
-                        msg.senderEmail === user?.email ? "bg-blue-100 text-blue-900 ml-8" : "bg-white border border-gray-200 mr-8"
+                        msg.senderType === "student"
+                          ? "bg-blue-100 text-blue-900 ml-8"
+                          : "bg-white border border-gray-200 mr-8"
                       }`}
                     >
-                      <p className="font-semibold">{msg.senderEmail === user?.email ? "You" : selectedMentor.name}</p>
+                      <p className="font-semibold">{msg.senderType === "student" ? "You" : selectedMentor.name}</p>
                       <p>{msg.text}</p>
                     </div>
                   ))
@@ -622,11 +760,11 @@ export default function Home() {
                   onChange={e => setChatInput(e.target.value)}
                   placeholder={user ? "Type your message..." : "Login to chat"}
                   className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={!user || chatSending}
+                  disabled={!user || chatSending || (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"}
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!user || chatSending || !chatInput.trim()}
+                  disabled={!user || chatSending || !chatInput.trim() || (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"}
                   className="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   {chatSending ? "Sending..." : "Send"}
