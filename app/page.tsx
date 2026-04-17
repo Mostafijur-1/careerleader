@@ -474,7 +474,7 @@ export default function Home() {
           <p className="text-gray-600">Pick a track to preview it, then open full guidance for step-by-step details.</p>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3 mb-8">
-          {["job", "higher_study", "entrepreneurship"].map(tab => (
+          {(["job", "higher_study", "entrepreneurship"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
