@@ -100,6 +100,30 @@ export async function GET(req: Request) {
     })
   }
 
+  if (action === 'student-notifications') {
+    const studentEmail = (url.searchParams.get('studentEmail') || '').trim().toLowerCase()
+    if (!studentEmail) {
+      return NextResponse.json({ error: 'Missing studentEmail' }, { status: 400 })
+    }
+
+    const messages = await getCollection('mentor_messages')
+    const docs = await messages
+      .find({ studentEmail, senderType: 'mentor' })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .toArray()
+
+    return NextResponse.json({
+      notifications: docs.map(d => ({
+        id: String(d._id),
+        mentorEmail: d.mentorEmail,
+        senderEmail: d.senderEmail,
+        text: d.text,
+        createdAt: d.createdAt,
+      })),
+    })
+  }
+
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
 }
 

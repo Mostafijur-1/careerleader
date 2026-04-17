@@ -127,21 +127,22 @@ export default function MentorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mentor Inbox</h1>
-            <p className="text-sm text-gray-600">View and reply to students under your mentorship.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Mentor Inbox</h1>
+            <p className="text-sm text-white/80 mt-1">View and reply to students under your mentorship.</p>
           </div>
-          <Link href="/" className="text-blue-600 font-semibold">Back Home</Link>
+          <Link href="/" className="text-white font-semibold hover:text-blue-200 transition">Back Home</Link>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid md:grid-cols-3 gap-4">
-        <section className="md:col-span-1 bg-white rounded-xl border border-gray-200">
-          <div className="p-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-900">Students</h2>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid md:grid-cols-3 gap-4 sm:gap-6">
+        <section className="md:col-span-1 bg-white rounded-2xl shadow-2xl border border-white/50 overflow-hidden">
+          <div className="p-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white">
+            <h2 className="font-bold text-lg">Students</h2>
+            <p className="text-xs text-white/80 mt-1">Active mentorship conversations</p>
           </div>
           <div className="max-h-[70vh] overflow-y-auto">
             {loadingConversations ? (
@@ -153,7 +154,7 @@ export default function MentorPage() {
                 <button
                   key={c.studentEmail}
                   onClick={() => setSelectedStudent(c.studentEmail)}
-                  className={`w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 ${selectedStudent === c.studentEmail ? "bg-blue-50" : ""}`}
+                  className={`w-full text-left p-4 border-b border-gray-100 transition ${selectedStudent === c.studentEmail ? "bg-blue-50" : "hover:bg-gray-50"}`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-semibold text-sm text-gray-900">{c.studentName || c.studentEmail}</p>
@@ -169,19 +170,19 @@ export default function MentorPage() {
           </div>
         </section>
 
-        <section className="md:col-span-2 bg-white rounded-xl border border-gray-200 flex flex-col">
-          <div className="p-4 border-b border-gray-100">
+        <section className="md:col-span-2 bg-white rounded-2xl shadow-2xl border border-white/50 flex flex-col overflow-hidden">
+          <div className="p-4 sm:p-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
             <h2 className="font-semibold text-gray-900">
               {selectedConversation ? `Chat with ${selectedConversation.studentName || selectedConversation.studentEmail}` : "Select a student"}
             </h2>
             {selectedConversation && (
-              <p className="text-sm text-purple-700 font-semibold mt-1">
+              <p className="text-sm text-white/90 font-semibold mt-1">
                 Student MBTI: {selectedConversation.studentMbti || "Not available yet"}
               </p>
             )}
           </div>
 
-          <div className="flex-1 p-4 space-y-2 overflow-y-auto max-h-[55vh] bg-gray-50">
+          <div className="flex-1 p-4 sm:p-5 space-y-3 overflow-y-auto max-h-[55vh] bg-gradient-to-b from-gray-50 to-white">
             {!selectedStudent ? (
               <p className="text-sm text-gray-500">Choose a student conversation from the left.</p>
             ) : loadingMessages ? (
@@ -192,7 +193,11 @@ export default function MentorPage() {
               messages.map(msg => (
                 <div
                   key={msg.id}
-                  className={`max-w-[80%] p-3 rounded-lg text-sm ${msg.senderType === "mentor" ? "ml-auto bg-blue-600 text-white" : "bg-white border border-gray-200 text-gray-900"}`}
+                  className={`max-w-[80%] p-3 rounded-2xl text-sm shadow-sm ${
+                    msg.senderType === "mentor"
+                      ? "ml-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                      : "bg-white border border-gray-200 text-gray-900"
+                  }`}
                 >
                   {msg.text}
                 </div>
@@ -200,18 +205,18 @@ export default function MentorPage() {
             )}
           </div>
 
-          <div className="p-4 border-t border-gray-100 flex gap-2">
+          <div className="p-4 sm:p-5 border-t border-gray-100 bg-white flex gap-2">
             <input
               value={draft}
               onChange={e => setDraft(e.target.value)}
               placeholder={selectedStudent ? "Reply to student..." : "Select a student first"}
               disabled={!selectedStudent || sending}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={sendReply}
               disabled={!selectedStudent || sending || !draft.trim()}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               {sending ? "Sending..." : "Send"}
             </button>
