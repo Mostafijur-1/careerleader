@@ -23,7 +23,6 @@ export default function AssessmentPage() {
   const [loading, setLoading] = useState(false)
   const [loadingQuestions, setLoadingQuestions] = useState(true)
   const [result, setResult] = useState<any>(null)
-  const [gender, setGender] = useState<string>('Male')
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const likertOptions = [
     { value: 1, label: 'Strongly Disagree' },
@@ -61,9 +60,6 @@ export default function AssessmentPage() {
 
   function setAnswer(qid: string, val: number) {
     setAnswers(prev => ({ ...prev, [qid]: val }))
-    if (currentQuestion < qs.length - 1) {
-      setCurrentQuestion(currentQuestion + 1)
-    }
   }
 
   async function submit() {
@@ -79,7 +75,6 @@ export default function AssessmentPage() {
         body: JSON.stringify({
           answers: formattedAnswers,
           user: user ? { email: user.email, type: user.type } : null,
-          gender,
         }),
       })
       const data = await res.json()
@@ -144,22 +139,6 @@ export default function AssessmentPage() {
 
             {/* Questions */}
             <div className="p-4 sm:p-6 lg:p-8">
-              {/* Gender Selector */}
-              {currentQuestion === 0 && (
-                <div className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-200">
-                  <label className="block text-sm font-bold text-gray-700 mb-3">Gender (optional)</label>
-                  <select 
-                    value={gender} 
-                    onChange={e => setGender(e.target.value)} 
-                    className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:border-blue-600 transition font-medium"
-                  >
-                    <option>Other</option>
-                    <option>Male</option>
-                    <option>Female</option>
-                  </select>
-                </div>
-              )}
-
               {qs.length > 0 && qs[currentQuestion] && (
                 <div className="mb-6 sm:mb-8">
                   <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-6 sm:mb-8">{qs[currentQuestion].text}</h3>
@@ -210,7 +189,8 @@ export default function AssessmentPage() {
               {Object.keys(answers).length < qs.length ? (
                 <button
                   onClick={() => setCurrentQuestion(Math.min(qs.length - 1, currentQuestion + 1))}
-                  className="w-full sm:w-auto px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold text-white transition"
+                  disabled={!qs[currentQuestion] || answers[qs[currentQuestion].id] === undefined}
+                  className="w-full sm:w-auto px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next →
                 </button>
