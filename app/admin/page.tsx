@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useUser } from '@/app/contexts/UserContext'
 import Link from 'next/link'
+import LanguageToggle from '@/app/components/LanguageToggle'
 
 interface Mentor {
   id: string
@@ -144,9 +145,12 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2 text-sm sm:text-base">Manage mentor activations</p>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-wrap justify-between items-start gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600 mt-2 text-sm sm:text-base">Manage mentor activations</p>
+          </div>
+          <LanguageToggle variant="light" />
         </div>
       </div>
 

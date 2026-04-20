@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useUser } from "../contexts/UserContext";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface AuthButtonProps {
   onOpenAuth: () => void;
@@ -9,6 +10,7 @@ interface AuthButtonProps {
 
 export default function AuthButton({ onOpenAuth, onLogout }: AuthButtonProps) {
   const { user } = useUser();
+  const { t } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export default function AuthButton({ onOpenAuth, onLogout }: AuthButtonProps) {
         onClick={onLogout}
         className="text-red-600 font-semibold hover:text-red-700 transition"
       >
-        Logout
+        {t.auth.logout}
       </button>
     </div>
   ) : (
@@ -33,7 +35,7 @@ export default function AuthButton({ onOpenAuth, onLogout }: AuthButtonProps) {
       onClick={onOpenAuth}
       className="text-blue-600 font-semibold hover:text-blue-700 transition"
     >
-      Login / Register
+      {t.auth.loginRegister}
     </button>
   );
 }

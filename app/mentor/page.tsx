@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "../contexts/UserContext"
+import { useLanguage } from "../contexts/LanguageContext"
+import LanguageToggle from "../components/LanguageToggle"
 
 type Conversation = {
   studentEmail: string
@@ -32,6 +34,8 @@ type PendingRequest = {
 
 export default function MentorPage() {
   const { user } = useUser()
+  const { t } = useLanguage()
+  const m = t.mentorPage
   const router = useRouter()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedStudent, setSelectedStudent] = useState<string>("")
@@ -189,8 +193,8 @@ export default function MentorPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-gray-700 mb-4">Mentor login required.</p>
-          <Link href="/" className="text-blue-600 font-semibold">Go to Home</Link>
+          <p className="text-gray-700 mb-4">{m.loginRequired}</p>
+          <Link href="/" className="text-blue-600 font-semibold">{m.goHome}</Link>
         </div>
       </div>
     )
@@ -199,24 +203,27 @@ export default function MentorPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5 flex flex-wrap justify-between items-center gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Mentor Inbox</h1>
-            <p className="text-sm text-white/80 mt-1">View and reply to students under your mentorship.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">{m.title}</h1>
+            <p className="text-sm text-white/80 mt-1">{m.subtitle}</p>
           </div>
-          <Link href="/" className="text-white font-semibold hover:text-blue-200 transition">Back Home</Link>
+          <div className="flex items-center gap-3">
+            <LanguageToggle />
+            <Link href="/" className="text-white font-semibold hover:text-blue-200 transition">{m.backHome}</Link>
+          </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid md:grid-cols-3 gap-4 sm:gap-6">
         <section className="md:col-span-1 bg-white rounded-2xl shadow-2xl border border-white/50 overflow-hidden">
           <div className="p-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white">
-            <h2 className="font-bold text-lg">Students</h2>
-            <p className="text-xs text-white/80 mt-1">Active mentorship conversations</p>
+            <h2 className="font-bold text-lg">{m.students}</h2>
+            <p className="text-xs text-white/80 mt-1">{m.studentsSub}</p>
           </div>
           {pendingRequests.length > 0 && (
             <div className="p-3 border-b border-gray-100 bg-amber-50">
-              <p className="text-xs font-bold text-amber-900 mb-2">Pending Requests</p>
+              <p className="text-xs font-bold text-amber-900 mb-2">{m.pending}</p>
               <div className="space-y-2">
                 {pendingRequests.map(req => (
                   <div key={req.id} className="rounded-lg border border-amber-200 bg-white p-2">
@@ -228,14 +235,14 @@ export default function MentorPage() {
                         disabled={requestActionLoading[`${req.studentEmail}:accepted`]}
                         className="flex-1 py-1.5 text-xs font-bold rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
                       >
-                        Accept
+                        {m.accept}
                       </button>
                       <button
                         onClick={() => respondRequest(req.studentEmail, "rejected")}
                         disabled={requestActionLoading[`${req.studentEmail}:rejected`]}
                         className="flex-1 py-1.5 text-xs font-bold rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
                       >
-                        Reject
+                        {m.reject}
                       </button>
                     </div>
                   </div>
@@ -245,9 +252,9 @@ export default function MentorPage() {
           )}
           <div className="max-h-[70vh] overflow-y-auto">
             {loadingConversations ? (
-              <p className="p-4 text-sm text-gray-500">Loading conversations...</p>
+              <p className="p-4 text-sm text-gray-500">{m.loadingConversations}</p>
             ) : conversations.length === 0 ? (
-              <p className="p-4 text-sm text-gray-500">No student conversations yet.</p>
+              <p className="p-4 text-sm text-gray-500">{m.noConversations}</p>
             ) : (
               conversations.map(c => (
                 <button
@@ -262,7 +269,7 @@ export default function MentorPage() {
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-500 mt-1">{c.studentEmail}</p>
-                  <p className="text-xs text-gray-600 mt-1 truncate">{c.lastMessage || "No messages"}</p>
+                  <p className="text-xs text-gray-600 mt-1 truncate">{c.lastMessage || m.noMessages}</p>
                 </button>
               ))
             )}
@@ -271,23 +278,25 @@ export default function MentorPage() {
 
         <section className="md:col-span-2 bg-white rounded-2xl shadow-2xl border border-white/50 flex flex-col overflow-hidden">
           <div className="p-4 sm:p-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-            <h2 className="font-semibold text-gray-900">
-              {selectedConversation ? `Chat with ${selectedConversation.studentName || selectedConversation.studentEmail}` : "Select a student"}
+            <h2 className="font-semibold text-white">
+              {selectedConversation
+                ? m.chatWith(selectedConversation.studentName || selectedConversation.studentEmail)
+                : m.selectStudent}
             </h2>
             {selectedConversation && (
               <p className="text-sm text-white/90 font-semibold mt-1">
-                Student MBTI: {selectedConversation.studentMbti || "Not available yet"}
+                {m.studentMbti(selectedConversation.studentMbti || "—")}
               </p>
             )}
           </div>
 
           <div className="flex-1 p-4 sm:p-5 space-y-3 overflow-y-auto max-h-[55vh] bg-gradient-to-b from-gray-50 to-white">
             {!selectedStudent ? (
-              <p className="text-sm text-gray-500">Choose a student conversation from the left.</p>
+              <p className="text-sm text-gray-500">{m.selectFromLeft}</p>
             ) : loadingMessages ? (
-              <p className="text-sm text-gray-500">Loading messages...</p>
+              <p className="text-sm text-gray-500">{m.loadingMessages}</p>
             ) : messages.length === 0 ? (
-              <p className="text-sm text-gray-500">No messages in this conversation.</p>
+              <p className="text-sm text-gray-500">{m.noMessagesThread}</p>
             ) : (
               messages.map(msg => (
                 <div
@@ -308,7 +317,7 @@ export default function MentorPage() {
             <input
               value={draft}
               onChange={e => setDraft(e.target.value)}
-              placeholder={selectedStudent ? "Reply to student..." : "Select a student first"}
+              placeholder={selectedStudent ? m.replyPlaceholder : m.selectFirst}
               disabled={!selectedStudent || sending}
               className="flex-1 border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -317,7 +326,7 @@ export default function MentorPage() {
               disabled={!selectedStudent || sending || !draft.trim()}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              {sending ? "Sending..." : "Send"}
+              {sending ? m.sending : m.send}
             </button>
           </div>
         </section>

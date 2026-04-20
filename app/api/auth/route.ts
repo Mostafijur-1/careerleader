@@ -60,6 +60,26 @@ export async function POST(req: Request) {
       userDoc.active = false; // mentor must be activated by admin
       userDoc.zoomLink = typeof zoomLink === 'string' ? zoomLink.trim() : ''
       userDoc.meetLink = typeof meetLink === 'string' ? meetLink.trim() : ''
+      const {
+        careerIds,
+        headline,
+        bio,
+        education,
+        currentJob,
+        experience,
+        rating,
+        reviewCount,
+      } = body
+      if (Array.isArray(careerIds)) {
+        userDoc.careerIds = careerIds.filter((x: unknown) => typeof x === 'string')
+      }
+      if (typeof headline === 'string' && headline.trim()) userDoc.headline = headline.trim()
+      if (typeof bio === 'string') userDoc.bio = bio.trim()
+      if (Array.isArray(education)) userDoc.education = education
+      if (currentJob && typeof currentJob === 'object') userDoc.currentJob = currentJob
+      if (Array.isArray(experience)) userDoc.experience = experience
+      if (typeof rating === 'number') userDoc.rating = rating
+      if (typeof reviewCount === 'number') userDoc.reviewCount = reviewCount
     }
     if (type === 'admin') {
       userDoc.role = role || 'admin';

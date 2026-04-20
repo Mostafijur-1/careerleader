@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getCollection } from '../../../lib/db'
+import mentorShowcase from '../../../data/mentor_showcase.json'
+import type { CareerCategory } from '../../../lib/mentorProfile'
+import { mentorMatchesCategory } from '../../../lib/mentorProfile'
 
 type ChatMessage = {
   studentEmail: string
@@ -23,19 +26,79 @@ export async function GET(req: Request) {
   const action = url.searchParams.get('action')
 
   if (action === 'mentors') {
+    const rawCategory = (url.searchParams.get('category') || '').trim().toLowerCase()
+    const category: CareerCategory | null = ['job', 'higher_study', 'entrepreneurship'].includes(rawCategory)
+      ? (rawCategory as CareerCategory)
+      : null
+
     const users = await getCollection('users')
     const mentors = await users.find({ type: 'mentor', active: true }).toArray()
-    return NextResponse.json({
-      mentors: mentors.map(m => ({
+
+    const mapDb = (m: Record<string, unknown>) => {
+      const expertise: string[] = Array.isArray(m.expertise) ? (m.expertise as string[]) : []
+      const careerIds: string[] = Array.isArray(m.careerIds)
+        ? (m.careerIds as string[]).filter((x): x is string => typeof x === 'string')
+        : []
+      const headline =
+        typeof m.headline === 'string' && m.headline.trim()
+          ? String(m.headline).trim()
+          : expertise[0]
+            ? `${expertise[0]} mentor`
+            : 'Career mentor'
+      const education = Array.isArray(m.education) ? m.education : []
+      const experience = Array.isArray(m.experience) ? m.experience : []
+      const currentJob =
+        m.currentJob && typeof m.currentJob === 'object' && m.currentJob !== null ? m.currentJob : null
+      return {
         id: String(m._id),
-        email: m.email,
-        name: m.name,
-        expertise: m.expertise || [],
-        active: m.active || false,
-        zoomLink: m.zoomLink || '',
-        meetLink: m.meetLink || '',
-      })),
-    })
+        demo: false,
+        email: String(m.email || '').toLowerCase(),
+        name: String(m.name || 'Mentor'),
+        careerIds,
+        headline,
+        role: headline,
+        education,
+        currentJob,
+        experience,
+        bio: typeof m.bio === 'string' ? m.bio : '',
+        expertise,
+        rating: typeof m.rating === 'number' ? m.rating : 4.6,
+        reviews: typeof m.reviewCount === 'number' ? m.reviewCount : 100,
+        recommended: m.recommended !== false,
+        zoomLink: typeof m.zoomLink === 'string' ? m.zoomLink : '',
+        meetLink: typeof m.meetLink === 'string' ? m.meetLink : '',
+      }
+    }
+
+    const dbList = mentors.map(m => mapDb(m as Record<string, unknown>))
+    const showcaseList = (mentorShowcase as Record<string, unknown>[]).map(row => ({
+      id: String(row.id || row.name || 'demo'),
+      demo: true,
+      email: typeof row.email === 'string' ? row.email.toLowerCase() : '',
+      name: String(row.name || 'Mentor'),
+      careerIds: Array.isArray(row.careerIds) ? (row.careerIds as string[]).filter(Boolean) : [],
+      headline: String(row.headline || row.role || 'Career mentor'),
+      role: String(row.headline || 'Career mentor'),
+      education: Array.isArray(row.education) ? row.education : [],
+      currentJob: row.currentJob && typeof row.currentJob === 'object' ? row.currentJob : null,
+      experience: Array.isArray(row.experience) ? row.experience : [],
+      bio: typeof row.bio === 'string' ? row.bio : '',
+      expertise: Array.isArray(row.expertise) ? (row.expertise as string[]) : [],
+      rating: typeof row.rating === 'number' ? row.rating : 4.6,
+      reviews: typeof row.reviews === 'number' ? row.reviews : 100,
+      recommended: row.recommended !== false,
+      zoomLink: typeof row.zoomLink === 'string' ? row.zoomLink : '',
+      meetLink: typeof row.meetLink === 'string' ? row.meetLink : '',
+    }))
+
+    const dbEmails = new Set(dbList.map(m => m.email).filter(Boolean))
+    const merged = [...dbList, ...showcaseList.filter(s => !s.email || !dbEmails.has(s.email))]
+
+    const filtered = category
+      ? merged.filter(m => mentorMatchesCategory(m.careerIds, category))
+      : merged
+
+    return NextResponse.json({ mentors: filtered })
   }
 
   if (action === 'messages') {

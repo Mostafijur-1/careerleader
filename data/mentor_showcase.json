@@ -1,0 +1,227 @@
+[
+  {
+    "id": "demo-c1-sw",
+    "demo": true,
+    "email": "",
+    "name": "Nazim Uddin",
+    "careerIds": ["c1"],
+    "headline": "Senior Software Engineer",
+    "education": [
+      {
+        "degree": "B.Sc. in Computer Science & Engineering",
+        "institution": "Bangladesh University of Engineering and Technology",
+        "year": "2012"
+      },
+      {
+        "degree": "Professional Scrum Master I",
+        "institution": "Scrum.org",
+        "year": "2019"
+      }
+    ],
+    "currentJob": {
+      "title": "Senior Software Engineer",
+      "company": "Global Tech Solutions"
+    },
+    "experience": [
+      {
+        "title": "Senior Software Engineer",
+        "organization": "Global Tech Solutions",
+        "period": "2020 – present",
+        "summary": "Leads backend services, mentoring junior engineers, and drives release quality."
+      },
+      {
+        "title": "Software Engineer",
+        "organization": "StartupX",
+        "period": "2014 – 2020",
+        "summary": "Built APIs, data pipelines, and deployment automation."
+      }
+    ],
+    "bio": "10+ years shipping reliable web platforms. Focus on system design, clean architecture, and helping students break into software engineering.",
+    "expertise": ["system design", "python", "web", "databases"],
+    "rating": 4.9,
+    "reviews": 214,
+    "recommended": true,
+    "zoomLink": "",
+    "meetLink": ""
+  },
+  {
+    "id": "demo-c2-ds",
+    "demo": true,
+    "email": "",
+    "name": "Farhana Chowdhury",
+    "careerIds": ["c2"],
+    "headline": "Lead Data Scientist",
+    "education": [
+      {
+        "degree": "M.S. Statistics",
+        "institution": "University of Dhaka",
+        "year": "2016"
+      },
+      {
+        "degree": "B.Sc. Mathematics",
+        "institution": "Jahangirnagar University",
+        "year": "2014"
+      }
+    ],
+    "currentJob": {
+      "title": "Lead Data Scientist",
+      "company": "Analytics Partners BD"
+    },
+    "experience": [
+      {
+        "title": "Lead Data Scientist",
+        "organization": "Analytics Partners BD",
+        "period": "2021 – present",
+        "summary": "Owns forecasting models, A/B testing, and stakeholder reporting."
+      },
+      {
+        "title": "Data Scientist",
+        "organization": "FinServe Co.",
+        "period": "2016 – 2021",
+        "summary": "Credit risk models and customer analytics."
+      }
+    ],
+    "bio": "Statistician turned ML practitioner. Mentors on portfolios, interviews, and transitioning into data science roles.",
+    "expertise": ["python", "statistics", "machine learning"],
+    "rating": 4.8,
+    "reviews": 156,
+    "recommended": true,
+    "zoomLink": "",
+    "meetLink": ""
+  },
+  {
+    "id": "demo-c3-devops",
+    "demo": true,
+    "email": "",
+    "name": "Khalil Ahmed",
+    "careerIds": ["c3"],
+    "headline": "Principal DevOps Engineer",
+    "education": [
+      {
+        "degree": "B.Sc. in EEE",
+        "institution": "KUET",
+        "year": "2011"
+      },
+      {
+        "degree": "AWS Solutions Architect – Professional",
+        "institution": "Amazon Web Services",
+        "year": "2018"
+      }
+    ],
+    "currentJob": {
+      "title": "Principal DevOps Engineer",
+      "company": "CloudScale Ltd"
+    },
+    "experience": [
+      {
+        "title": "Principal DevOps Engineer",
+        "organization": "CloudScale Ltd",
+        "period": "2019 – present",
+        "summary": "Kubernetes, GitOps, and multi-region reliability."
+      },
+      {
+        "title": "Systems Engineer",
+        "organization": "TelcoNet",
+        "period": "2012 – 2019",
+        "summary": "Network automation and on-call operations."
+      }
+    ],
+    "bio": "Infrastructure and automation specialist. Helps learners map certifications to real job skills and DevOps career paths.",
+    "expertise": ["linux", "cloud", "automation", "kubernetes"],
+    "rating": 4.7,
+    "reviews": 98,
+    "recommended": true,
+    "zoomLink": "",
+    "meetLink": ""
+  },
+  {
+    "id": "demo-c4-ux",
+    "demo": true,
+    "email": "",
+    "name": "Nusrat Jahan",
+    "careerIds": ["c4"],
+    "headline": "Senior UX Designer",
+    "education": [
+      {
+        "degree": "BFA in Graphic Design",
+        "institution": "Faculty of Fine Arts, DU",
+        "year": "2015"
+      },
+      {
+        "degree": "HCI Certificate",
+        "institution": "Online specialization",
+        "year": "2018"
+      }
+    ],
+    "currentJob": {
+      "title": "Senior UX Designer",
+      "company": "ProductLab Studio"
+    },
+    "experience": [
+      {
+        "title": "Senior UX Designer",
+        "organization": "ProductLab Studio",
+        "period": "2020 – present",
+        "summary": "End-to-end product design, design systems, and user research."
+      },
+      {
+        "title": "UX Designer",
+        "organization": "Agency Nine",
+        "period": "2016 – 2020",
+        "summary": "Web and mobile apps for clients in fintech and education."
+      }
+    ],
+    "bio": "Guides students on portfolios, higher-study paths in design, and breaking into UX research and product design.",
+    "expertise": ["user research", "prototyping", "visual design"],
+    "rating": 4.85,
+    "reviews": 132,
+    "recommended": true,
+    "zoomLink": "",
+    "meetLink": ""
+  },
+  {
+    "id": "demo-c5-founder",
+    "demo": true,
+    "email": "",
+    "name": "Rafiq Hassan",
+    "careerIds": ["c5"],
+    "headline": "Founder & CEO",
+    "education": [
+      {
+        "degree": "MBA",
+        "institution": "IBA, University of Dhaka",
+        "year": "2014"
+      },
+      {
+        "degree": "B.Sc. Computer Science",
+        "institution": "NSU",
+        "year": "2010"
+      }
+    ],
+    "currentJob": {
+      "title": "Founder & CEO",
+      "company": "BrightApps (SaaS)"
+    },
+    "experience": [
+      {
+        "title": "Founder & CEO",
+        "organization": "BrightApps",
+        "period": "2018 – present",
+        "summary": "Product vision, fundraising, and team building for a B2B SaaS startup."
+      },
+      {
+        "title": "Product Manager",
+        "organization": "Enterprise Software Inc.",
+        "period": "2012 – 2018",
+        "summary": "Shipped enterprise features and worked with sales and engineering."
+      }
+    ],
+    "bio": "Serial entrepreneur in tech. Mentors on validation, pitching, early hiring, and balancing product with growth.",
+    "expertise": ["product", "fundraising", "leadership"],
+    "rating": 4.75,
+    "reviews": 89,
+    "recommended": true,
+    "zoomLink": "",
+    "meetLink": ""
+  }
+]

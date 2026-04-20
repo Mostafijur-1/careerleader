@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import LanguageToggle from "../components/LanguageToggle";
 
 const typeIcons = {
   student: "👨‍🎓",
@@ -72,7 +73,10 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4 py-8 sm:py-12">
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4 py-8 sm:py-12">
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageToggle />
+      </div>
       <div className="w-full max-w-md min-w-0">
         {user ? (
           <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8">

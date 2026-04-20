@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useUser } from "../contexts/UserContext";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const typeIcons = {
   student: "👨‍🎓",
@@ -21,6 +22,8 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const { setUser } = useUser();
+  const { t } = useLanguage();
+  const a = t.auth;
   const [mode, setMode] = useState<"login" | "register">("login");
   const [type, setType] = useState<"student" | "mentor" | "admin">("student");
   const [email, setEmail] = useState("");
@@ -131,9 +134,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         {/* Header - Fixed */}
         <div className={`bg-gradient-to-r ${typeColors[type]} px-4 sm:px-6 py-4 sm:py-5 text-white text-center flex-shrink-0`}>
           <div className="text-4xl sm:text-5xl mb-1 sm:mb-2">{typeIcons[type]}</div>
-          <h2 className="text-xl sm:text-2xl font-bold capitalize">{mode === "login" ? "Welcome Back" : "Join Us"}</h2>
+          <h2 className="text-xl sm:text-2xl font-bold capitalize">{mode === "login" ? a.welcomeBack : a.joinUs}</h2>
           <p className="text-white/80 text-sm mt-1">
-            {mode === "login" ? "Sign in to your account" : "Create a new account"}
+            {mode === "login" ? a.signIn : a.createAccount}
           </p>
         </div>
 
@@ -150,7 +153,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              Login
+              {a.login}
             </button>
             {type !== "admin" && (
               <button
@@ -162,7 +165,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                Register
+                {a.register}
               </button>
             )}
           </div>
@@ -170,14 +173,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           {/* Admin-only message */}
           {type === "admin" && (
             <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded mb-4 text-sm text-blue-800">
-              <span className="font-semibold">ℹ️ Admin accounts</span> are managed by system administrators only.
+              <span className="font-semibold">{a.adminNote}</span> {a.adminNoteBody}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3">
             {/* User Type */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">User Type</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">{a.userType}</label>
               <select
                 value={type}
                 onChange={e => {
@@ -190,9 +193,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
                 title="User Type"
               >
-                <option value="student">👨‍🎓 Student</option>
-                <option value="mentor">👨‍🏫 Mentor</option>
-                <option value="admin">👨‍💼 Admin</option>
+                <option value="student">{a.student}</option>
+                <option value="mentor">{a.mentor}</option>
+                <option value="admin">{a.admin}</option>
               </select>
             </div>
 
@@ -200,7 +203,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {mode === "register" && (
               <>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">{a.fullName}</label>
                   <input
                     type="text"
                     value={name}
@@ -213,7 +216,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 {type === "mentor" && (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Expertise <span className="text-red-500">*</span>
+                      {a.expertise} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -228,7 +231,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 {type === "mentor" && (
                   <>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Zoom Link (optional)</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">{a.zoomOptional}</label>
                       <input
                         type="url"
                         value={zoomLink}
@@ -238,7 +241,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Google Meet Link (optional)</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">{a.meetOptional}</label>
                       <input
                         type="url"
                         value={meetLink}
@@ -251,7 +254,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 )}
                 {type === "admin" && (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Admin Role</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">{a.adminRole}</label>
                     <input
                       type="text"
                       value={role}
@@ -266,7 +269,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             {/* Email & Password */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">{a.email}</label>
               <input
                 type="email"
                 value={email}
@@ -278,7 +281,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">{a.password}</label>
               <input
                 type="password"
                 value={password}
@@ -299,7 +302,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   : `bg-gradient-to-r ${typeColors[type]} hover:shadow-lg`
               }`}
             >
-              {loading ? "Processing..." : mode === "login" ? "Sign In" : "Create Account"}
+              {loading ? a.processing : mode === "login" ? a.signInBtn : a.createAccountBtn}
             </button>
           </form>
 
@@ -319,8 +322,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           {/* Mentor Registration Notice - ONLY AFTER SUCCESSFUL MENTOR REGISTRATION */}
           {showMentorNotice && (
             <div className="mt-4 p-3 rounded-lg text-sm font-semibold text-yellow-800 border-l-4 border-yellow-500 bg-yellow-50">
-              <div className="text-center">✅ Account created successfully!</div>
-              <div className="text-center mt-2">⚠️ Your mentor account will be inactive until approved by an admin.</div>
+              <div className="text-center">{a.mentorSuccess}</div>
+              <div className="text-center mt-2">{a.mentorPending}</div>
             </div>
           )}
         </div>

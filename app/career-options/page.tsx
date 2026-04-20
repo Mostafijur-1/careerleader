@@ -2,50 +2,14 @@
 
 import Link from "next/link"
 import { useState } from "react"
+import { useLanguage } from "../contexts/LanguageContext"
+import LanguageToggle from "../components/LanguageToggle"
 
 type MenuItem = {
+  id: string
   title: string
   points: string[]
 }
-
-const jobItems: MenuItem[] = [
-  {
-    title: "Government Jobs",
-    points: ["Job sectors", "Requirements", "Application process", "Preparation guidelines"],
-  },
-  {
-    title: "Private Jobs",
-    points: ["Company types", "Required skills", "Job opportunities", "Career growth"],
-  },
-]
-
-const bdItems: MenuItem[] = [
-  {
-    title: "Govt. Universities",
-    points: ["Admission process", "Requirements", "Preparation tips"],
-  },
-  {
-    title: "Private Universities",
-    points: ["Admission system", "Costs", "Facilities"],
-  },
-]
-
-const abroadItems: MenuItem[] = [
-  {
-    title: "Scholarship",
-    points: ["Types of scholarships", "Eligibility", "Application process"],
-  },
-  {
-    title: "Self-Finance",
-    points: ["Cost estimation", "Visa process", "University selection"],
-  },
-]
-
-const entrepreneurshipItems: MenuItem[] = [
-  { title: "How to Be an Entrepreneur", points: ["How to become an entrepreneur"] },
-  { title: "Roles & Skills", points: ["Required skills", "Roles and responsibilities"] },
-  { title: "Challenges & Success", points: ["Challenges and risks", "Success strategies"] },
-]
 
 function ExpandableRow({
   item,
@@ -81,7 +45,20 @@ function ExpandableRow({
   )
 }
 
+function jobIcon(id: string) {
+  return id === "gov" ? "🏛️" : "💼"
+}
+
+function studyIcon(id: string) {
+  if (id === "gov-uni") return "🏛️"
+  if (id === "pvt-uni") return "🏫"
+  if (id === "scholarship") return "🎓"
+  return "✈️"
+}
+
 export default function CareerOptionsPage() {
+  const { t } = useLanguage()
+  const co = t.careerOptions
   const [studyTab, setStudyTab] = useState<"Bangladesh" | "Abroad">("Bangladesh")
   const [openKey, setOpenKey] = useState<string>("")
 
@@ -89,48 +66,50 @@ export default function CareerOptionsPage() {
     setOpenKey(prev => (prev === key ? "" : key))
   }
 
+  const studyItems = studyTab === "Bangladesh" ? co.bd : co.abroadItems
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
           <Link href="/" className="text-blue-600 font-semibold hover:text-blue-700 transition">
-            ← Back Home
+            {co.back}
           </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Career Options</h1>
-          <div className="w-20" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{co.title}</h1>
+          <LanguageToggle variant="light" />
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-10 space-y-8">
         <section className="rounded-2xl bg-white p-5 sm:p-6 shadow-md border border-gray-100">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b border-gray-100 pb-2">Job Opportunities</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b border-gray-100 pb-2">{co.jobOpportunities}</h2>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4">
-            {jobItems.map(item => (
+            {co.jobs.map(item => (
               <button
-                key={item.title}
+                key={item.id}
                 type="button"
-                onClick={() => toggle(`job-${item.title}`)}
+                onClick={() => toggle(`job-${item.id}`)}
                 className="rounded-xl border border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50 px-3 py-4 text-center shadow-sm hover:shadow-md transition"
               >
-                <p className="text-3xl sm:text-4xl">{item.title.includes("Government") ? "🏛️" : "💼"}</p>
+                <p className="text-3xl sm:text-4xl">{jobIcon(item.id)}</p>
                 <p className="mt-2 text-sm sm:text-base font-bold text-gray-800">{item.title}</p>
               </button>
             ))}
           </div>
           <div className="mt-3 space-y-2">
-            {jobItems.map(item => (
+            {co.jobs.map(item => (
               <ExpandableRow
-                key={`row-job-${item.title}`}
+                key={`row-job-${item.id}`}
                 item={item}
-                isOpen={openKey === `job-${item.title}`}
-                onToggle={() => toggle(`job-${item.title}`)}
+                isOpen={openKey === `job-${item.id}`}
+                onToggle={() => toggle(`job-${item.id}`)}
               />
             ))}
           </div>
         </section>
 
         <section className="rounded-2xl bg-white p-5 sm:p-6 shadow-md border border-gray-100">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b border-gray-100 pb-2">Higher Studies</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b border-gray-100 pb-2">{co.higherStudies}</h2>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <button
               onClick={() => setStudyTab("Bangladesh")}
@@ -140,7 +119,7 @@ export default function CareerOptionsPage() {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              Bangladesh
+              {co.bangladesh}
             </button>
             <button
               onClick={() => setStudyTab("Abroad")}
@@ -150,53 +129,45 @@ export default function CareerOptionsPage() {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              Abroad
+              {co.abroad}
             </button>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4">
-            {(studyTab === "Bangladesh" ? bdItems : abroadItems).map(item => (
+            {studyItems.map(item => (
               <button
-                key={item.title}
+                key={item.id}
                 type="button"
-                onClick={() => toggle(`study-${studyTab}-${item.title}`)}
+                onClick={() => toggle(`study-${studyTab}-${item.id}`)}
                 className="rounded-xl border border-gray-200 bg-gradient-to-br from-slate-50 to-blue-50 px-3 py-4 text-center shadow-sm hover:shadow-md transition"
               >
-                <p className="text-3xl sm:text-4xl">
-                  {item.title.includes("Govt.")
-                    ? "🏛️"
-                    : item.title.includes("Private")
-                    ? "🏫"
-                    : item.title.includes("Scholarship")
-                    ? "🎓"
-                    : "✈️"}
-                </p>
+                <p className="text-3xl sm:text-4xl">{studyIcon(item.id)}</p>
                 <p className="mt-2 text-sm sm:text-base font-bold text-gray-800">{item.title}</p>
               </button>
             ))}
           </div>
 
           <div className="mt-3 space-y-2">
-            {(studyTab === "Bangladesh" ? bdItems : abroadItems).map(item => (
+            {studyItems.map(item => (
               <ExpandableRow
-                key={`row-study-${studyTab}-${item.title}`}
+                key={`row-study-${studyTab}-${item.id}`}
                 item={item}
-                isOpen={openKey === `study-${studyTab}-${item.title}`}
-                onToggle={() => toggle(`study-${studyTab}-${item.title}`)}
+                isOpen={openKey === `study-${studyTab}-${item.id}`}
+                onToggle={() => toggle(`study-${studyTab}-${item.id}`)}
               />
             ))}
           </div>
         </section>
 
         <section className="rounded-2xl bg-white p-5 sm:p-6 shadow-md border border-gray-100">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b border-gray-100 pb-2">Entrepreneurship</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b border-gray-100 pb-2">{co.entrepreneurship}</h2>
           <div className="mt-4 grid gap-2 lg:grid-cols-3">
-            {entrepreneurshipItems.map(item => (
+            {co.ent.map(item => (
               <ExpandableRow
-                key={`ent-${item.title}`}
+                key={`ent-${item.id}`}
                 item={item}
-                isOpen={openKey === `ent-${item.title}`}
-                onToggle={() => toggle(`ent-${item.title}`)}
+                isOpen={openKey === `ent-${item.id}`}
+                onToggle={() => toggle(`ent-${item.id}`)}
               />
             ))}
           </div>
@@ -205,4 +176,3 @@ export default function CareerOptionsPage() {
     </div>
   )
 }
-

@@ -6,13 +6,23 @@ import AuthButton from "./components/AuthButton"
 import AuthModal from "./components/AuthModal"
 import ClientOnly from "./components/HydrationBoundary"
 import { useUser } from "./contexts/UserContext"
+import { useLanguage } from "./contexts/LanguageContext"
 import { useRouter } from "next/navigation"
+import careers from "@/data/careers.json"
+import LanguageToggle from "./components/LanguageToggle"
 
 type MentorVM = {
   id: string
+  demo?: boolean
   email: string
   name: string
   role: string
+  headline: string
+  careerIds: string[]
+  education: Array<{ degree: string; institution: string; year?: string }>
+  currentJob: { title: string; company: string } | null
+  experience: Array<{ title: string; organization: string; period: string; summary?: string }>
+  bio: string
   rating: number
   reviews: number
   recommended: boolean
@@ -20,6 +30,12 @@ type MentorVM = {
   expertise: string[]
   zoomLink?: string
   meetLink?: string
+}
+
+function careerLabels(ids: string[]) {
+  return ids
+    .map(id => careers.find(c => c.id === id)?.title)
+    .filter(Boolean) as string[]
 }
 
 type MentorMessage = {
@@ -42,6 +58,7 @@ type ConnectionStatus = "none" | "pending" | "accepted" | "rejected"
 
 export default function Home() {
   const { user, setUser } = useUser()
+  const { t } = useLanguage()
   const router = useRouter()
   const [isMounted, setIsMounted] = useState(false)
   const [isAuthOpen, setIsAuthOpen] = useState(false)
@@ -72,24 +89,44 @@ export default function Home() {
   useEffect(() => {
     async function fetchMentors() {
       try {
-        const res = await fetch("/api/mentorship?action=mentors")
+        const params = new URLSearchParams({
+          action: "mentors",
+          category: activeTab,
+        })
+        const res = await fetch(`/api/mentorship?${params.toString()}`)
         const data = await res.json()
         const list = Array.isArray(data?.mentors) ? data.mentors : []
-        const mapped: MentorVM[] = list.map((m: any) => {
+        const mapped: MentorVM[] = list.map((m: Record<string, unknown>) => {
           const name = String(m?.name || "Mentor")
-          const expertise: string[] = Array.isArray(m?.expertise) ? m.expertise : []
+          const expertise: string[] = Array.isArray(m?.expertise) ? (m.expertise as string[]) : []
+          const headline =
+            typeof m?.headline === "string" && m.headline.trim()
+              ? String(m.headline)
+              : expertise[0]
+                ? `${expertise[0]} mentor`
+                : "Career mentor"
           return {
-            id: String(m?.id || m?._id || name),
+            id: String(m?.id || name),
+            demo: Boolean(m?.demo),
             email: String(m?.email || "").toLowerCase(),
             name,
-            role: expertise[0] ? String(expertise[0]) : "Career Mentor",
-            rating: 4.6,
-            reviews: 100,
-            recommended: true,
+            role: headline,
+            headline,
+            careerIds: Array.isArray(m?.careerIds) ? (m.careerIds as string[]) : [],
+            education: Array.isArray(m?.education) ? (m.education as MentorVM["education"]) : [],
+            currentJob:
+              m?.currentJob && typeof m.currentJob === "object" && m.currentJob !== null
+                ? (m.currentJob as MentorVM["currentJob"])
+                : null,
+            experience: Array.isArray(m?.experience) ? (m.experience as MentorVM["experience"]) : [],
+            bio: typeof m?.bio === "string" ? m.bio : "",
+            rating: typeof m?.rating === "number" ? m.rating : 4.6,
+            reviews: typeof m?.reviews === "number" ? m.reviews : 100,
+            recommended: m?.recommended !== false,
             image: name.charAt(0).toUpperCase(),
             expertise,
-            zoomLink: m?.zoomLink || "",
-            meetLink: m?.meetLink || "",
+            zoomLink: typeof m?.zoomLink === "string" ? m.zoomLink : "",
+            meetLink: typeof m?.meetLink === "string" ? m.meetLink : "",
           }
         })
         setMentors(mapped)
@@ -99,7 +136,7 @@ export default function Home() {
       }
     }
     fetchMentors()
-  }, [])
+  }, [activeTab])
 
   useEffect(() => {
     async function fetchMessages() {
@@ -231,6 +268,7 @@ export default function Home() {
 
   async function sendConnectionRequest(mentorEmail: string) {
     if (!user?.email || user.type !== "student") return
+    if (!mentorEmail.trim()) return
     const key = mentorEmail.toLowerCase()
     setRequestLoadingByMentor(prev => ({ ...prev, [key]: true }))
     try {
@@ -259,29 +297,26 @@ export default function Home() {
     setMobileMenuOpen(false)
   }
 
-  const displayName = isMounted ? (user ? user.name : "Guest") : "Guest"
+  const displayName = isMounted ? (user ? user.name : t.common.guest) : t.common.guest
 
-  const careerPreviews: Record<"job" | "higher_study" | "entrepreneurship", Array<{ id: number; title: string; subtitle: string; icon: string; fit: number }>> = {
-    job: [
-      { id: 1, title: "Software Engineer", subtitle: "Product, web, and platform development", icon: "💻", fit: 96 },
-      { id: 2, title: "Network Engineer", subtitle: "Infrastructure, cloud, and security", icon: "🌐", fit: 86 },
-    ],
-    higher_study: [
-      { id: 3, title: "Govt. Universities", subtitle: "Admission, requirements, and preparation", icon: "🏛️", fit: 88 },
-      { id: 4, title: "Scholarship (Abroad)", subtitle: "Eligibility, documents, and process", icon: "🎓", fit: 84 },
-    ],
-    entrepreneurship: [
-      { id: 5, title: "Startup Foundation", subtitle: "How to begin and validate ideas", icon: "🚀", fit: 90 },
-      { id: 6, title: "Roles & Growth", subtitle: "Skills, challenges, and success strategy", icon: "📈", fit: 82 },
-    ],
+  const careerPreviews: Record<
+    "job" | "higher_study" | "entrepreneurship",
+    Array<{ id: number; title: string; subtitle: string; icon: string; fit: number }>
+  > = {
+    job: t.home.careerPreview.job.map((c, i) => ({ ...c, id: i + 1 })),
+    higher_study: t.home.careerPreview.higher.map((c, i) => ({ ...c, id: i + 3 })),
+    entrepreneurship: t.home.careerPreview.ent.map((c, i) => ({ ...c, id: i + 5 })),
   }
   const activeCareerItems = careerPreviews[activeTab]
 
-  const resources = [
-    { id: 1, title: "Python Programming", icon: "🐍", type: ["Courses", "Articles", "Videos"], learners: "10K+" },
-    { id: 2, title: "Web Development", icon: "🌐", type: ["Courses", "Articles", "Videos"], learners: "25K+" },
-    { id: 3, title: "Mobile App Developer", icon: "📱", type: ["Courses", "Articles", "Videos"], learners: "15K+" },
-  ]
+  const mentorTrackLabel =
+    activeTab === "job"
+      ? t.home.mentorTrackJob
+      : activeTab === "higher_study"
+        ? t.home.mentorTrackHigher
+        : t.home.mentorTrackEnt
+
+  const resources = t.home.resources
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
@@ -294,15 +329,16 @@ export default function Home() {
             </div>
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">CareerLeader</span>
           </div>
-          <nav className="hidden md:flex gap-6 lg:gap-8 items-center">
-            <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">Home</Link>
-            <Link href="#careers" className="text-gray-700 hover:text-blue-600 font-medium transition">Explore Careers</Link>
-            <Link href="#mentors" className="text-gray-700 hover:text-blue-600 font-medium transition">Mentors</Link>
+          <nav className="hidden md:flex gap-4 lg:gap-6 items-center flex-wrap">
+            <LanguageToggle variant="light" compact />
+            <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.home}</Link>
+            <Link href="#careers" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.exploreCareers}</Link>
+            <Link href="#mentors" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.mentors}</Link>
             {isMounted && user?.type === "admin" && (
-              <Link href="/admin" className="text-blue-600 hover:text-blue-700 font-medium transition">⚙️ Admin</Link>
+              <Link href="/admin" className="text-blue-600 hover:text-blue-700 font-medium transition">{t.nav.admin}</Link>
             )}
             {isMounted && user?.type === "mentor" && (
-              <Link href="/mentor" className="text-blue-600 hover:text-blue-700 font-medium transition">💬 Mentor Inbox</Link>
+              <Link href="/mentor" className="text-blue-600 hover:text-blue-700 font-medium transition">{t.nav.mentorInbox}</Link>
             )}
             <div className="relative">
               <button onClick={toggleNotifications} className="relative text-gray-700 hover:text-blue-600 transition">
@@ -315,11 +351,11 @@ export default function Home() {
               </button>
               {notificationsOpen && (
                 <div className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto bg-white rounded-xl border border-gray-200 shadow-2xl p-3 z-50">
-                  <h4 className="font-bold text-gray-900 mb-2">Message Notifications</h4>
+                  <h4 className="font-bold text-gray-900 mb-2">{t.nav.msgNotifications}</h4>
                   {notificationsLoading ? (
-                    <p className="text-sm text-gray-500 py-2">Loading...</p>
+                    <p className="text-sm text-gray-500 py-2">{t.common.loading}</p>
                   ) : notifications.length === 0 ? (
-                    <p className="text-sm text-gray-500 py-2">No new message notifications.</p>
+                    <p className="text-sm text-gray-500 py-2">{t.nav.noNewNotifications}</p>
                   ) : (
                     notifications.map(n => (
                       <div key={n.id} className="py-2 border-b border-gray-100 last:border-b-0">
@@ -346,11 +382,11 @@ export default function Home() {
               </button>
               {notificationsOpen && (
                 <div className="absolute right-0 top-full mt-2 w-72 max-h-80 overflow-y-auto bg-white rounded-xl border border-gray-200 shadow-2xl p-3 z-50">
-                  <h4 className="font-bold text-gray-900 mb-2">Message Notifications</h4>
+                  <h4 className="font-bold text-gray-900 mb-2">{t.nav.msgNotifications}</h4>
                   {notificationsLoading ? (
-                    <p className="text-sm text-gray-500 py-2">Loading...</p>
+                    <p className="text-sm text-gray-500 py-2">{t.common.loading}</p>
                   ) : notifications.length === 0 ? (
-                    <p className="text-sm text-gray-500 py-2">No new message notifications.</p>
+                    <p className="text-sm text-gray-500 py-2">{t.nav.noNewNotifications}</p>
                   ) : (
                     notifications.map(n => (
                       <div key={n.id} className="py-2 border-b border-gray-100 last:border-b-0">
@@ -365,7 +401,7 @@ export default function Home() {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-gray-700 hover:text-blue-600 transition"
-              aria-label="Toggle menu"
+              aria-label={t.nav.toggleMenu}
             >
               {mobileMenuOpen ? "✕" : "☰"}
             </button>
@@ -374,14 +410,17 @@ export default function Home() {
 
         {mobileMenuOpen && (
           <nav className="md:hidden border-t border-gray-200 bg-white px-4 py-4 flex flex-col gap-3">
-            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">Home</Link>
-            <Link href="#careers" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">Explore Careers</Link>
-            <Link href="#mentors" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">Mentors</Link>
+            <div className="pb-2">
+              <LanguageToggle variant="light" />
+            </div>
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.home}</Link>
+            <Link href="#careers" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.exploreCareers}</Link>
+            <Link href="#mentors" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.mentors}</Link>
             {isMounted && user?.type === "admin" && (
-              <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="text-blue-600 font-medium py-2">⚙️ Admin</Link>
+              <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="text-blue-600 font-medium py-2">{t.nav.admin}</Link>
             )}
             {isMounted && user?.type === "mentor" && (
-              <Link href="/mentor" onClick={() => setMobileMenuOpen(false)} className="text-blue-600 font-medium py-2">💬 Mentor Inbox</Link>
+              <Link href="/mentor" onClick={() => setMobileMenuOpen(false)} className="text-blue-600 font-medium py-2">{t.nav.mentorInbox}</Link>
             )}
             <div className="pt-2 border-t border-gray-100">
               <AuthButton onOpenAuth={() => { setIsAuthOpen(true); setMobileMenuOpen(false) }} onLogout={handleLogout} />
@@ -396,16 +435,18 @@ export default function Home() {
         <div className="absolute -bottom-8 right-0 w-96 h-96 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center relative z-10">
           <div>
-            <div className="inline-block mb-4 px-4 py-2 bg-blue-100 text-blue-600 rounded-full text-sm font-semibold">Welcome to Career Leader!</div>
+            <div className="inline-block mb-4 px-4 py-2 bg-blue-100 text-blue-600 rounded-full text-sm font-semibold">{t.home.welcomeBadge}</div>
             <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Find Your <span className="bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">Ideal Career</span> Path
+              {t.home.heroTitleBefore}{" "}
+              <span className="bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">{t.home.heroTitleHighlight}</span>{" "}
+              {t.home.heroTitleAfter}
             </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-8 leading-relaxed">Discover personalized career recommendations based on your personality, interests, and goals in just 5 minutes.</p>
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-8 leading-relaxed">{t.home.heroSub}</p>
             <Link
               href="/assessment"
               className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-10 rounded-full shadow-lg hover:shadow-xl transition transform hover:scale-105"
             >
-              🚀 Take Assessment Now
+              {t.home.ctaAssessment}
             </Link>
           </div>
           <div className="text-center relative">
@@ -420,18 +461,18 @@ export default function Home() {
       {/* Greeting & Feature Cards */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
         <div className="mb-12">
-          <h2 className="text-2xl sm:text-4xl font-bold text-gray-900">Hello, {displayName}! 👋</h2>
-          <p className="text-base sm:text-lg text-gray-600 mt-2">Ready to discover your future?</p>
+          <h2 className="text-2xl sm:text-4xl font-bold text-gray-900">{t.home.hello(displayName)}</h2>
+          <p className="text-base sm:text-lg text-gray-600 mt-2">{t.home.readyFuture}</p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           <div className="group relative bg-white rounded-2xl p-8 shadow-md hover:shadow-2xl border border-gray-100 transition-all duration-300 hover:-translate-y-1">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 to-red-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition"></div>
             <div className="relative">
               <div className="text-5xl mb-4">📋</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Complete Assessment</h3>
-              <p className="text-gray-600 mb-6">Take a 5-minute personality & interest test to find careers that fit you.</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t.home.cardAssessmentTitle}</h3>
+              <p className="text-gray-600 mb-6">{t.home.cardAssessmentBody}</p>
               <Link href="/assessment" className="inline-block bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
-                Start Now
+                {t.home.cardAssessmentCta}
               </Link>
             </div>
           </div>
@@ -439,10 +480,10 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-indigo-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition"></div>
             <div className="relative">
               <div className="text-5xl mb-4">🎯</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Recommended Careers</h3>
-              <p className="text-gray-600 mb-6">Get personalized career suggestions based on your assessment.</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t.home.cardRecommendedTitle}</h3>
+              <p className="text-gray-600 mb-6">{t.home.cardRecommendedBody}</p>
               <Link href="#careers" className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
-                View Careers
+                {t.home.cardRecommendedCta}
               </Link>
             </div>
           </div>
@@ -450,11 +491,11 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-emerald-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition"></div>
             <div className="relative">
               <div className="text-5xl mb-4">📊</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Track Your Progress</h3>
-              <p className="text-gray-600 mb-6">Monitor your skill development and career progress.</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t.home.cardProgressTitle}</h3>
+              <p className="text-gray-600 mb-6">{t.home.cardProgressBody}</p>
               <div className="flex items-center gap-4">
                 <button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
-                  View
+                  {t.home.cardProgressView}
                 </button>
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
@@ -470,8 +511,8 @@ export default function Home() {
       {/* Career Recommendations */}
       <section id="careers" className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
         <div className="mb-8">
-          <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4">Career Path Preview</h2>
-          <p className="text-gray-600">Pick a track to preview it, then open full guidance for step-by-step details.</p>
+          <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4">{t.home.careerPathTitle}</h2>
+          <p className="text-gray-600">{t.home.careerPathSub}</p>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3 mb-8">
           {(["job", "higher_study", "entrepreneurship"] as const).map(tab => (
@@ -484,7 +525,7 @@ export default function Home() {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              {tab === "job" ? "💼 Job" : tab === "higher_study" ? "🎓 Higher Study" : "🚀 Entrepreneurship"}
+              {tab === "job" ? t.home.tabJob : tab === "higher_study" ? t.home.tabHigher : t.home.tabEnt}
             </button>
           ))}
         </div>
@@ -507,12 +548,12 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-2 rounded-lg font-bold shadow-md hover:shadow-lg transition">✓ Interested</button>
+                  <button className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-2 rounded-lg font-bold shadow-md hover:shadow-lg transition">{t.home.previewInterested}</button>
                   <Link
                     href="/career-options"
                     className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 rounded-lg font-bold transition text-center"
                   >
-                    Full Guidance →
+                    {t.home.previewGuidance}
                   </Link>
                 </div>
               </div>
@@ -526,8 +567,8 @@ export default function Home() {
         {/* Learning Resources */}
         <div className="lg:col-span-1">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Learning Resources</h2>
-            <Link href="#" className="text-blue-600 hover:text-blue-700 font-bold text-sm">See All →</Link>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.home.learningResources}</h2>
+            <Link href="#" className="text-blue-600 hover:text-blue-700 font-bold text-sm">{t.home.seeAll}</Link>
           </div>
           <div className="space-y-4">
             {resources.map(resource => (
@@ -535,19 +576,24 @@ export default function Home() {
                 <div className="text-4xl mb-3 group-hover:scale-110 transition">{resource.icon}</div>
                 <h3 className="font-bold text-gray-900 text-lg">{resource.title}</h3>
                 <div className="flex gap-2 mt-3 text-xs font-medium text-gray-600">
-                  {resource.type.map(t => (
-                    <span key={`${resource.id}-${t}`} className="bg-gray-100 px-2 py-1 rounded">• {t}</span>
+                  {resource.type.map(tag => (
+                    <span key={`${resource.id}-${tag}`} className="bg-gray-100 px-2 py-1 rounded">• {tag}</span>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">👥 {resource.learners} learners</p>
+                <p className="text-xs text-gray-500 mt-2">{t.home.learnersLabel(resource.learners)}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Mentors */}
+        {/* Mentors — scoped to the same career track as Career Path Preview (job / higher study / entrepreneurship) */}
         <div className="lg:col-span-2">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Top Mentors for You</h2>
+          <div className="mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.home.mentorsTrackTitle}</h2>
+            <p className="text-gray-600 mt-2 text-sm sm:text-base">
+              {t.home.mentorsTrackSub(mentorTrackLabel)}
+            </p>
+          </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {mentors.map(mentor => (
               <div
@@ -556,11 +602,28 @@ export default function Home() {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-indigo-600/10 opacity-0 group-hover:opacity-100 transition"></div>
                 <div className="relative">
+                  {mentor.demo && (
+                    <span className="absolute top-0 right-0 text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 px-2 py-0.5 rounded-bl-lg rounded-tr-xl">
+                      {t.home.sample}
+                    </span>
+                  )}
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600 mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:scale-110 transition">
                     {mentor.image}
                   </div>
                   <h3 className="font-bold text-gray-900 text-lg">{mentor.name}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{mentor.role}</p>
+                  <p className="text-sm text-gray-600 mb-2">{mentor.headline}</p>
+                  {careerLabels(mentor.careerIds).length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-1.5 mb-3">
+                      {careerLabels(mentor.careerIds).map(label => (
+                        <span
+                          key={`${mentor.id}-${label}`}
+                          className="text-[11px] font-semibold bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded-full border border-indigo-100"
+                        >
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex justify-center items-center gap-1 mb-3">
                     {[...Array(5)].map((_, i) => (
                       <span key={i} className="text-yellow-400 text-lg">★</span>
@@ -569,25 +632,32 @@ export default function Home() {
                   </div>
                   {mentor.recommended && (
                     <div className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-full inline-block mb-4">
-                      ⭐ Highly Recommended
+                      {t.home.highlyRecommended}
                     </div>
                   )}
                   <button
                     onClick={() => setSelectedMentor(mentor)}
                     className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition mb-2"
                   >
-                    👁 View Profile
+                    {t.home.viewProfile}
                   </button>
                   {(() => {
                     const status = requestStatuses[mentor.email.toLowerCase()] || "none"
                     const isLoadingReq = !!requestLoadingByMentor[mentor.email.toLowerCase()]
+                    if (mentor.demo || !mentor.email) {
+                      return (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {t.home.sampleProfileHint}
+                        </p>
+                      )
+                    }
                     if (!user || user.type !== "student") {
                       return (
                         <button
                           onClick={() => setIsAuthOpen(true)}
                           className="w-full bg-gray-100 text-gray-700 font-bold py-2 rounded-lg border border-gray-300 hover:bg-gray-200 transition"
                         >
-                          Login to Connect
+                          {t.home.loginToConnect}
                         </button>
                       )
                     }
@@ -597,7 +667,7 @@ export default function Home() {
                           onClick={() => setSelectedMentor(mentor)}
                           className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 rounded-lg shadow-md hover:shadow-lg transition"
                         >
-                          Chat Now
+                          {t.home.chatNow}
                         </button>
                       )
                     }
@@ -607,7 +677,7 @@ export default function Home() {
                           disabled
                           className="w-full bg-yellow-100 text-yellow-800 font-bold py-2 rounded-lg border border-yellow-300 cursor-not-allowed"
                         >
-                          Request Pending
+                          {t.home.requestPending}
                         </button>
                       )
                     }
@@ -618,7 +688,7 @@ export default function Home() {
                           disabled={isLoadingReq}
                           className="w-full bg-orange-100 text-orange-800 font-bold py-2 rounded-lg border border-orange-300 hover:bg-orange-200 transition disabled:opacity-60"
                         >
-                          {isLoadingReq ? "Sending..." : "Request Again"}
+                          {isLoadingReq ? t.home.sending : t.home.requestAgain}
                         </button>
                       )
                     }
@@ -628,7 +698,7 @@ export default function Home() {
                         disabled={isLoadingReq}
                         className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 rounded-lg shadow-md hover:shadow-lg transition disabled:opacity-60"
                       >
-                        {isLoadingReq ? "Sending..." : "Request to Connect"}
+                        {isLoadingReq ? t.home.sending : t.home.requestToConnect}
                       </button>
                     )
                   })()}
@@ -637,7 +707,7 @@ export default function Home() {
             ))}
             {mentors.length === 0 && (
               <div className="sm:col-span-2 lg:col-span-3 p-8 text-center text-gray-500 bg-white rounded-2xl border border-gray-100 shadow-md">
-                No active mentors available right now.
+                {t.home.noMentors}
               </div>
             )}
           </div>
@@ -651,8 +721,8 @@ export default function Home() {
             <span className="text-2xl">🚀</span>
             <span className="font-bold text-gray-900">Career Leader</span>
           </div>
-          <p className="text-sm mb-4">Discover your ideal career path based on your personality and interests.</p>
-          <p className="text-xs text-gray-500">Career Leader © 2026. All rights reserved.</p>
+          <p className="text-sm mb-4">{t.home.footerTagline}</p>
+          <p className="text-xs text-gray-500">{t.home.footerRights}</p>
         </div>
       </footer>
 
@@ -662,7 +732,7 @@ export default function Home() {
       {/* Mentor Profile Modal */}
       {selectedMentor && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 sm:p-8 my-auto relative">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-8 my-auto relative max-h-[90vh] overflow-y-auto">
             {/* Close Button */}
             <button
               onClick={() => setSelectedMentor(null)}
@@ -678,65 +748,144 @@ export default function Home() {
 
             {/* Mentor Info */}
             <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">{selectedMentor.name}</h2>
-            <p className="text-gray-600 text-center mb-1">{selectedMentor.role}</p>
+            <p className="text-gray-600 text-center mb-2">{selectedMentor.headline}</p>
+            {careerLabels(selectedMentor.careerIds).length > 0 && (
+              <div className="flex flex-wrap justify-center gap-1.5 mb-3">
+                {careerLabels(selectedMentor.careerIds).map(label => (
+                  <span
+                    key={label}
+                    className="text-[11px] font-semibold bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded-full border border-indigo-100"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Rating */}
-            <div className="flex justify-center items-center gap-1 mb-6">
+            <div className="flex justify-center items-center gap-1 mb-4">
               {[...Array(5)].map((_, i) => (
                 <span key={i} className="text-yellow-400 text-lg">★</span>
               ))}
-              <span className="text-sm text-gray-600 ml-2">{selectedMentor.rating} ({selectedMentor.reviews} reviews)</span>
+              <span className="text-sm text-gray-600 ml-2">{selectedMentor.rating} {t.home.mentorModal.reviews(selectedMentor.reviews)}</span>
             </div>
 
             {/* Badge */}
             {selectedMentor.recommended && (
-              <div className="text-center mb-6">
+              <div className="text-center mb-4">
                 <span className="inline-block bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-600 text-xs font-bold px-4 py-2 rounded-full">
-                  ⭐ Highly Recommended
+                  {t.home.highlyRecommended}
                 </span>
               </div>
             )}
 
-            {/* About Section */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-700">
-                Experienced mentor with years of expertise in {selectedMentor.role.toLowerCase()}. Available for mentoring, career guidance, and technical discussions.
+            {selectedMentor.demo && (
+              <p className="text-center text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg py-2 px-3 mb-4">
+                {t.home.mentorModal.sampleBanner}
               </p>
+            )}
+
+            <div className="space-y-4 mb-6 text-left">
+              {selectedMentor.education.length > 0 && (
+                <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.education}</h3>
+                  <ul className="space-y-2">
+                    {selectedMentor.education.map((ed, i) => (
+                      <li key={`${ed.degree}-${i}`} className="text-sm text-gray-700">
+                        <span className="font-semibold text-gray-900">{ed.degree}</span>
+                        <span className="text-gray-600"> — {ed.institution}</span>
+                        {ed.year ? <span className="text-gray-500"> ({ed.year})</span> : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {selectedMentor.currentJob && (
+                <div className="border border-gray-100 rounded-xl p-4 bg-white">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.currentRole}</h3>
+                  <p className="text-sm text-gray-900 font-semibold">{selectedMentor.currentJob.title}</p>
+                  <p className="text-sm text-gray-600">{selectedMentor.currentJob.company}</p>
+                </div>
+              )}
+
+              {selectedMentor.experience.length > 0 && (
+                <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.experience}</h3>
+                  <ul className="space-y-3">
+                    {selectedMentor.experience.map((ex, i) => (
+                      <li key={`${ex.title}-${i}`} className="text-sm border-l-2 border-indigo-200 pl-3">
+                        <p className="font-semibold text-gray-900">{ex.title}</p>
+                        <p className="text-gray-600">{ex.organization} · {ex.period}</p>
+                        {ex.summary ? <p className="text-gray-600 mt-1">{ex.summary}</p> : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {selectedMentor.bio ? (
+                <div className="border border-gray-100 rounded-xl p-4 bg-white">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.about}</h3>
+                  <p className="text-sm text-gray-700 leading-relaxed">{selectedMentor.bio}</p>
+                </div>
+              ) : null}
+
+              {selectedMentor.expertise.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.expertise}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedMentor.expertise.map(skill => (
+                      <span key={skill} className="text-xs font-medium bg-blue-50 text-blue-800 px-2.5 py-1 rounded-lg">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Contact Buttons */}
-            <div className="flex gap-3 mb-6">
-              <a
-                href={selectedMentor.zoomLink || "https://zoom.us"}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition text-center"
-              >
-                Zoom
-              </a>
-              <a
-                href={selectedMentor.meetLink || "https://meet.google.com"}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md hover:shadow-lg transition text-center"
-              >
-                Meet
-              </a>
-            </div>
+            {(selectedMentor.zoomLink || selectedMentor.meetLink) ? (
+              <div className="flex gap-3 mb-6">
+                {selectedMentor.zoomLink ? (
+                  <a
+                    href={selectedMentor.zoomLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition text-center"
+                  >
+                    Zoom
+                  </a>
+                ) : null}
+                {selectedMentor.meetLink ? (
+                  <a
+                    href={selectedMentor.meetLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md hover:shadow-lg transition text-center"
+                  >
+                    Meet
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
 
             {/* Chat */}
             <div className="rounded-lg border border-gray-200 p-3">
             <div className="h-44 sm:h-48 overflow-y-auto bg-gray-50 rounded-md p-3 space-y-2 mb-3">
-                {!user ? (
-                  <p className="text-sm text-gray-600">Login as a student to chat with this mentor.</p>
+                {selectedMentor.demo || !selectedMentor.email ? (
+                  <p className="text-sm text-gray-600">{t.home.mentorModal.chatRegistered}</p>
+                ) : !user ? (
+                  <p className="text-sm text-gray-600">{t.home.mentorModal.loginStudentChat}</p>
                 ) : (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted" ? (
                   <p className="text-sm text-gray-600">
-                    Chat unlocks after mentor accepts your connection request.
+                    {t.home.mentorModal.chatAfterAccept}
                   </p>
                 ) : chatLoading ? (
-                  <p className="text-sm text-gray-500">Loading messages...</p>
+                  <p className="text-sm text-gray-500">{t.home.mentorModal.loadingMessages}</p>
                 ) : chatMessages.length === 0 ? (
-                  <p className="text-sm text-gray-500">No messages yet. Start a conversation.</p>
+                  <p className="text-sm text-gray-500">{t.home.mentorModal.noMessages}</p>
                 ) : (
                   chatMessages.map(msg => (
                     <div
@@ -747,7 +896,7 @@ export default function Home() {
                           : "bg-white border border-gray-200 mr-8"
                       }`}
                     >
-                      <p className="font-semibold">{msg.senderType === "student" ? "You" : selectedMentor.name}</p>
+                      <p className="font-semibold">{msg.senderType === "student" ? t.home.mentorModal.you : selectedMentor.name}</p>
                       <p>{msg.text}</p>
                     </div>
                   ))
@@ -758,16 +907,29 @@ export default function Home() {
                 <input
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
-                  placeholder={user ? "Type your message..." : "Login to chat"}
+                  placeholder={user ? t.home.mentorModal.placeholderChat : t.home.mentorModal.placeholderLogin}
                   className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={!user || chatSending || (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"}
+                  disabled={
+                    !user ||
+                    chatSending ||
+                    selectedMentor.demo ||
+                    !selectedMentor.email ||
+                    (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"
+                  }
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!user || chatSending || !chatInput.trim() || (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"}
+                  disabled={
+                    !user ||
+                    chatSending ||
+                    !chatInput.trim() ||
+                    selectedMentor.demo ||
+                    !selectedMentor.email ||
+                    (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"
+                  }
                   className="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  {chatSending ? "Sending..." : "Send"}
+                  {chatSending ? t.home.mentorModal.sending : t.home.mentorModal.send}
                 </button>
               </div>
             </div>
