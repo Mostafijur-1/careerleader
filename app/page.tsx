@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import AuthButton from "./components/AuthButton"
 import AuthModal from "./components/AuthModal"
 import ClientOnly from "./components/HydrationBoundary"
@@ -56,6 +56,64 @@ type MessageNotification = {
 
 type ConnectionStatus = "none" | "pending" | "accepted" | "rejected"
 
+function mapApiMentorRowToVM(m: Record<string, unknown>): MentorVM {
+  const name = String(m?.name || "Mentor")
+  const expertise: string[] = Array.isArray(m?.expertise) ? (m.expertise as string[]) : []
+  const headline =
+    typeof m?.headline === "string" && m.headline.trim()
+      ? String(m.headline)
+      : expertise[0]
+        ? `${expertise[0]} mentor`
+        : "Career mentor"
+  return {
+    id: String(m?.id || name),
+    demo: Boolean(m?.demo),
+    email: String(m?.email || "").toLowerCase(),
+    name,
+    role: headline,
+    headline,
+    careerIds: Array.isArray(m?.careerIds) ? (m.careerIds as string[]) : [],
+    education: Array.isArray(m?.education) ? (m.education as MentorVM["education"]) : [],
+    currentJob:
+      m?.currentJob && typeof m.currentJob === "object" && m.currentJob !== null
+        ? (m.currentJob as MentorVM["currentJob"])
+        : null,
+    experience: Array.isArray(m?.experience) ? (m.experience as MentorVM["experience"]) : [],
+    bio: typeof m?.bio === "string" ? m.bio : "",
+    rating: typeof m?.rating === "number" ? m.rating : 4.6,
+    reviews: typeof m?.reviews === "number" ? m.reviews : 100,
+    recommended: m?.recommended !== false,
+    image: name.charAt(0).toUpperCase(),
+    expertise,
+    zoomLink: typeof m?.zoomLink === "string" ? m.zoomLink : "",
+    meetLink: typeof m?.meetLink === "string" ? m.meetLink : "",
+  }
+}
+
+function minimalMentorFromEmail(email: string): MentorVM {
+  const key = email.toLowerCase().trim()
+  const local = key.split("@")[0] || "mentor"
+  const cap = local.length ? local.charAt(0).toUpperCase() + local.slice(1) : "Mentor"
+  return {
+    id: key,
+    email: key,
+    name: cap,
+    role: "Mentor",
+    headline: "Mentor",
+    careerIds: [],
+    education: [],
+    currentJob: null,
+    experience: [],
+    bio: "",
+    rating: 4.6,
+    reviews: 100,
+    recommended: false,
+    image: cap.charAt(0).toUpperCase(),
+    expertise: [],
+    demo: false,
+  }
+}
+
 export default function Home() {
   const { user, setUser } = useUser()
   const { t } = useLanguage()
@@ -77,10 +135,56 @@ export default function Home() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [requestStatuses, setRequestStatuses] = useState<Record<string, ConnectionStatus>>({})
   const [requestLoadingByMentor, setRequestLoadingByMentor] = useState<Record<string, boolean>>({})
+  const notificationsDesktopRef = useRef<HTMLDivElement>(null)
+  const notificationsMobileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (!notificationsOpen) return
+    function handlePointerDown(e: MouseEvent | TouchEvent) {
+      const target = e.target as Node
+      if (
+        notificationsDesktopRef.current?.contains(target) ||
+        notificationsMobileRef.current?.contains(target)
+      ) {
+        return
+      }
+      setNotificationsOpen(false)
+    }
+    document.addEventListener("mousedown", handlePointerDown)
+    document.addEventListener("touchstart", handlePointerDown)
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown)
+      document.removeEventListener("touchstart", handlePointerDown)
+    }
+  }, [notificationsOpen])
+
+  const openChatFromNotification = useCallback(
+    async (mentorEmail: string) => {
+      const key = mentorEmail.trim().toLowerCase()
+      if (!key) return
+      let mentor = mentors.find(m => m.email.toLowerCase() === key)
+      if (!mentor) {
+        try {
+          const res = await fetch(`/api/mentorship?action=mentors`)
+          const data = await res.json()
+          const list = Array.isArray(data?.mentors) ? data.mentors : []
+          const mapped = (list as Record<string, unknown>[]).map(mapApiMentorRowToVM)
+          mentor = mapped.find(m => m.email.toLowerCase() === key)
+        } catch {
+          /* ignore */
+        }
+      }
+      if (!mentor) mentor = minimalMentorFromEmail(key)
+      setSelectedMentor(mentor)
+      setNotificationsOpen(false)
+      setMobileMenuOpen(false)
+    },
+    [mentors]
+  )
 
   useEffect(() => {
     if (user?.type === "mentor") router.push("/mentor")
@@ -96,39 +200,7 @@ export default function Home() {
         const res = await fetch(`/api/mentorship?${params.toString()}`)
         const data = await res.json()
         const list = Array.isArray(data?.mentors) ? data.mentors : []
-        const mapped: MentorVM[] = list.map((m: Record<string, unknown>) => {
-          const name = String(m?.name || "Mentor")
-          const expertise: string[] = Array.isArray(m?.expertise) ? (m.expertise as string[]) : []
-          const headline =
-            typeof m?.headline === "string" && m.headline.trim()
-              ? String(m.headline)
-              : expertise[0]
-                ? `${expertise[0]} mentor`
-                : "Career mentor"
-          return {
-            id: String(m?.id || name),
-            demo: Boolean(m?.demo),
-            email: String(m?.email || "").toLowerCase(),
-            name,
-            role: headline,
-            headline,
-            careerIds: Array.isArray(m?.careerIds) ? (m.careerIds as string[]) : [],
-            education: Array.isArray(m?.education) ? (m.education as MentorVM["education"]) : [],
-            currentJob:
-              m?.currentJob && typeof m.currentJob === "object" && m.currentJob !== null
-                ? (m.currentJob as MentorVM["currentJob"])
-                : null,
-            experience: Array.isArray(m?.experience) ? (m.experience as MentorVM["experience"]) : [],
-            bio: typeof m?.bio === "string" ? m.bio : "",
-            rating: typeof m?.rating === "number" ? m.rating : 4.6,
-            reviews: typeof m?.reviews === "number" ? m.reviews : 100,
-            recommended: m?.recommended !== false,
-            image: name.charAt(0).toUpperCase(),
-            expertise,
-            zoomLink: typeof m?.zoomLink === "string" ? m.zoomLink : "",
-            meetLink: typeof m?.meetLink === "string" ? m.meetLink : "",
-          }
-        })
+        const mapped: MentorVM[] = (list as Record<string, unknown>[]).map(mapApiMentorRowToVM)
         setMentors(mapped)
       } catch (e) {
         console.error("Failed to load mentors", e)
@@ -340,8 +412,8 @@ export default function Home() {
             {isMounted && user?.type === "mentor" && (
               <Link href="/mentor" className="text-blue-600 hover:text-blue-700 font-medium transition">{t.nav.mentorInbox}</Link>
             )}
-            <div className="relative">
-              <button onClick={toggleNotifications} className="relative text-gray-700 hover:text-blue-600 transition">
+            <div className="relative" ref={notificationsDesktopRef}>
+              <button type="button" onClick={toggleNotifications} className="relative text-gray-700 hover:text-blue-600 transition">
                 🔔
                 {unreadCount > 0 && (
                   <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
@@ -358,10 +430,15 @@ export default function Home() {
                     <p className="text-sm text-gray-500 py-2">{t.nav.noNewNotifications}</p>
                   ) : (
                     notifications.map(n => (
-                      <div key={n.id} className="py-2 border-b border-gray-100 last:border-b-0">
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => openChatFromNotification(n.mentorEmail)}
+                        className="w-full text-left py-2 border-b border-gray-100 last:border-b-0 rounded-md px-1 -mx-1 hover:bg-blue-50 transition cursor-pointer"
+                      >
                         <p className="text-xs text-gray-500">{n.senderEmail}</p>
                         <p className="text-sm text-gray-900 truncate">{n.text}</p>
-                      </div>
+                      </button>
                     ))
                   )}
                 </div>
@@ -371,8 +448,8 @@ export default function Home() {
           </nav>
 
           <div className="md:hidden flex items-center gap-3">
-            <div className="relative">
-              <button onClick={toggleNotifications} className="relative text-gray-700 hover:text-blue-600 transition text-lg">
+            <div className="relative" ref={notificationsMobileRef}>
+              <button type="button" onClick={toggleNotifications} className="relative text-gray-700 hover:text-blue-600 transition text-lg">
                 🔔
                 {unreadCount > 0 && (
                   <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
@@ -389,10 +466,15 @@ export default function Home() {
                     <p className="text-sm text-gray-500 py-2">{t.nav.noNewNotifications}</p>
                   ) : (
                     notifications.map(n => (
-                      <div key={n.id} className="py-2 border-b border-gray-100 last:border-b-0">
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => openChatFromNotification(n.mentorEmail)}
+                        className="w-full text-left py-2 border-b border-gray-100 last:border-b-0 rounded-md px-1 -mx-1 hover:bg-blue-50 transition cursor-pointer"
+                      >
                         <p className="text-xs text-gray-500">{n.senderEmail}</p>
                         <p className="text-sm text-gray-900 truncate">{n.text}</p>
-                      </div>
+                      </button>
                     ))
                   )}
                 </div>
