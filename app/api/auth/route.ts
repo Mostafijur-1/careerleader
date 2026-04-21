@@ -10,12 +10,14 @@ function mapUserForClient(user: {
   email?: string
   type?: string
   name?: string
+  mbti?: string
 }) {
   return {
     id: user._id ? String(user._id) : '',
     email: user.email || '',
     type: (user.type || 'student') as 'student' | 'mentor' | 'admin',
     name: user.name || '',
+    mbti: typeof user.mbti === 'string' ? user.mbti : '',
   }
 }
 
@@ -73,8 +75,16 @@ export async function GET(req: Request) {
     }
 
     try {
-      const user = verifyAuthToken(token)
-      return NextResponse.json({ user })
+      const tokenUser = verifyAuthToken(token)
+      const users = await getCollection('users')
+      const dbUser = await users.findOne(
+        { email: tokenUser.email, type: tokenUser.type },
+        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1 } }
+      )
+      if (!dbUser) {
+        return NextResponse.json({ user: null }, { status: 401 })
+      }
+      return NextResponse.json({ user: mapUserForClient(dbUser) })
     } catch {
       return NextResponse.json({ user: null }, { status: 401 })
     }

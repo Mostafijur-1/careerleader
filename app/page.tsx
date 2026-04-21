@@ -55,6 +55,7 @@ type MessageNotification = {
 }
 
 type ConnectionStatus = "none" | "pending" | "accepted" | "rejected"
+type HomeRecommendation = { id: string; title: string; description?: string }
 
 function mapApiMentorRowToVM(m: Record<string, unknown>): MentorVM {
   const name = String(m?.name || "Mentor")
@@ -135,6 +136,9 @@ export default function Home() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [requestStatuses, setRequestStatuses] = useState<Record<string, ConnectionStatus>>({})
   const [requestLoadingByMentor, setRequestLoadingByMentor] = useState<Record<string, boolean>>({})
+  const [homeRecommendations, setHomeRecommendations] = useState<HomeRecommendation[]>([])
+  const [showHomeRecommendations, setShowHomeRecommendations] = useState(false)
+  const [homeRecommendationsLoading, setHomeRecommendationsLoading] = useState(false)
   const notificationsDesktopRef = useRef<HTMLDivElement>(null)
   const notificationsMobileRef = useRef<HTMLDivElement>(null)
 
@@ -364,6 +368,28 @@ export default function Home() {
     }
   }
 
+  async function toggleHomeRecommendations() {
+    if (!user?.mbti) return
+    if (!showHomeRecommendations && homeRecommendations.length === 0) {
+      setHomeRecommendationsLoading(true)
+      try {
+        const res = await fetch("/api/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ personality: user.mbti }),
+        })
+        const data = await res.json()
+        setHomeRecommendations(Array.isArray(data?.recommendations) ? data.recommendations : [])
+      } catch (error) {
+        console.error("Failed to load home recommendations", error)
+        setHomeRecommendations([])
+      } finally {
+        setHomeRecommendationsLoading(false)
+      }
+    }
+    setShowHomeRecommendations(prev => !prev)
+  }
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth", {
@@ -556,6 +582,62 @@ export default function Home() {
           <h2 className="text-2xl sm:text-4xl font-bold text-gray-900">{t.home.hello(displayName)}</h2>
           <p className="text-base sm:text-lg text-gray-600 mt-2">{t.home.readyFuture}</p>
         </div>
+
+        {isMounted && user?.type === "student" && (
+          <div className="mb-8 sm:mb-10 bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-5 text-white">
+              <h3 className="text-xl sm:text-2xl font-bold">{t.home.mbtiSectionTitle}</h3>
+              <p className="text-white/85 text-sm sm:text-base mt-1">{t.home.mbtiSectionSub}</p>
+            </div>
+            <div className="p-5 sm:p-6">
+              {user.mbti ? (
+                <>
+                  <div className="inline-flex items-center gap-3 rounded-xl bg-purple-50 border border-purple-200 px-4 py-3">
+                    <span className="text-sm font-semibold text-purple-800">{t.assessment.mbtiLabel}</span>
+                    <span className="text-2xl font-bold text-purple-900">{user.mbti}</span>
+                  </div>
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={toggleHomeRecommendations}
+                      className="rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 px-5 py-2.5 text-white font-bold transition"
+                    >
+                      {showHomeRecommendations ? t.home.hideHomeRecommendations : t.home.viewHomeRecommendations}
+                    </button>
+                  </div>
+                  {showHomeRecommendations && (
+                    <div className="mt-4 space-y-3">
+                      {homeRecommendationsLoading ? (
+                        <p className="text-sm text-gray-600">{t.home.loadingRecommendations}</p>
+                      ) : homeRecommendations.length === 0 ? (
+                        <p className="text-sm text-gray-600">{t.home.noRecommendations}</p>
+                      ) : (
+                        homeRecommendations.map((item, idx) => (
+                          <div key={item.id} className="rounded-lg border border-green-100 bg-green-50 p-4">
+                            <p className="text-xs font-bold text-green-700">#{idx + 1}</p>
+                            <h4 className="text-lg font-bold text-gray-900">{item.title}</h4>
+                            {item.description ? <p className="text-sm text-gray-700 mt-1">{item.description}</p> : null}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <p className="text-sm sm:text-base text-gray-700">{t.home.mbtiMissing}</p>
+                  <Link
+                    href="/assessment"
+                    className="inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white font-semibold transition"
+                  >
+                    {t.home.takeAssessment}
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           <div className="group relative bg-white rounded-2xl p-8 shadow-md hover:shadow-2xl border border-gray-100 transition-all duration-300 hover:-translate-y-1">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 to-red-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition"></div>

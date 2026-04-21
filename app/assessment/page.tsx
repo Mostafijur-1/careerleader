@@ -17,6 +17,20 @@ type Q = {
   interests: string[]
 }
 
+type Recommendation = {
+  id: string
+  title: string
+  description?: string
+  skills?: string[]
+}
+
+type AssessmentResult = {
+  personalityType?: string
+  interests: string[]
+  recommendations: Recommendation[]
+  error?: string
+}
+
 export default function AssessmentPage() {
   const { user } = useUser()
   const { lang, t } = useLanguage()
@@ -26,7 +40,8 @@ export default function AssessmentPage() {
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(false)
   const [loadingQuestions, setLoadingQuestions] = useState(true)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<AssessmentResult | null>(null)
+  const [showRecommendations, setShowRecommendations] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const qsRef = useRef<Q[]>([])
   qsRef.current = qs
@@ -93,6 +108,7 @@ export default function AssessmentPage() {
         interests: data.result?.interests || [],
         recommendations: data.recommendations || [],
       })
+      setShowRecommendations(false)
     } catch (err) {
       console.error('Submission error:', err)
       setResult({ error: String(err) })
@@ -250,18 +266,30 @@ export default function AssessmentPage() {
                         </div>
                       </div>
                     )}
+
+                    {result?.recommendations && result.recommendations.length > 0 && (
+                      <div className="px-4 pb-5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+                        <button
+                          type="button"
+                          onClick={() => setShowRecommendations(prev => !prev)}
+                          className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 px-5 py-3 font-bold text-white transition"
+                        >
+                          {showRecommendations ? ta.hideRecommendations : ta.viewRecommendations}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Recommended Careers */}
-                {result?.recommendations && result.recommendations.length > 0 && (
+                {showRecommendations && result?.recommendations && result.recommendations.length > 0 && (
                   <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
                     <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-4 sm:p-6 lg:p-8 text-white">
                       <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold">{ta.careersTitle}</h3>
                       <p className="text-white/80 mt-2">{ta.careersSub(result.personalityType)}</p>
                     </div>
                     <div className="p-4 sm:p-6 lg:p-8 space-y-4">
-                      {result.recommendations.map((r: any, idx: number) => (
+                      {result.recommendations.map((r, idx: number) => (
                         <div key={r.id} className="p-6 border-l-4 border-green-500 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg hover:shadow-lg transition">
                           <div className="flex items-start gap-4">
                             <div className="text-3xl font-bold text-green-600 font-mono">#{idx + 1}</div>

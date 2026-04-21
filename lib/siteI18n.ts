@@ -39,6 +39,14 @@ export type SiteMessages = {
     cardProgressTitle: string
     cardProgressBody: string
     cardProgressView: string
+    mbtiSectionTitle: string
+    mbtiSectionSub: string
+    mbtiMissing: string
+    takeAssessment: string
+    viewHomeRecommendations: string
+    hideHomeRecommendations: string
+    loadingRecommendations: string
+    noRecommendations: string
     careerPathTitle: string
     careerPathSub: string
     tabJob: string
@@ -178,6 +186,8 @@ export type SiteMessages = {
     interestsTitle: string
     careersTitle: string
     careersSub: (type: string) => string
+    viewRecommendations: string
+    hideRecommendations: string
     retake: string
     backHome: string
     likert: [string, string, string, string, string]
@@ -221,6 +231,14 @@ const en: SiteMessages = {
     cardProgressTitle: "Track Your Progress",
     cardProgressBody: "Monitor your skill development and career progress.",
     cardProgressView: "View",
+    mbtiSectionTitle: "Your MBTI & Recommendations",
+    mbtiSectionSub: "Your latest assessment result appears here.",
+    mbtiMissing: "You have not completed the assessment yet.",
+    takeAssessment: "Take Assessment",
+    viewHomeRecommendations: "View Recommendations",
+    hideHomeRecommendations: "Hide Recommendations",
+    loadingRecommendations: "Loading recommendations...",
+    noRecommendations: "No recommendations found for this MBTI yet.",
     careerPathTitle: "Career Path Preview",
     careerPathSub: "Pick a track to preview it, then open full guidance for step-by-step details.",
     tabJob: "💼 Job",
@@ -413,6 +431,8 @@ const en: SiteMessages = {
     interestsTitle: "Your Key Interests",
     careersTitle: "🎯 Recommended Careers",
     careersSub: type => `Perfect career paths for personality type ${type}`,
+    viewRecommendations: "Show Recommendations",
+    hideRecommendations: "Hide Recommendations",
     retake: "🔄 Retake Assessment",
     backHome: "← Back Home",
     likert: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
@@ -457,6 +477,14 @@ const bn: SiteMessages = {
     cardProgressTitle: "অগ্রগতি ট্র্যাক করুন",
     cardProgressBody: "দক্ষতা বৃদ্ধি ও ক্যারিয়ার অগ্রগতি পর্যবেক্ষণ করুন।",
     cardProgressView: "দেখুন",
+    mbtiSectionTitle: "আপনার MBTI ও সুপারিশ",
+    mbtiSectionSub: "আপনার সর্বশেষ মূল্যায়নের ফল এখানে দেখানো হবে।",
+    mbtiMissing: "আপনি এখনও মূল্যায়ন সম্পন্ন করেননি।",
+    takeAssessment: "মূল্যায়ন দিন",
+    viewHomeRecommendations: "সুপারিশ দেখুন",
+    hideHomeRecommendations: "সুপারিশ লুকান",
+    loadingRecommendations: "সুপারিশ লোড হচ্ছে...",
+    noRecommendations: "এই MBTI এর জন্য এখনো সুপারিশ পাওয়া যায়নি।",
     careerPathTitle: "ক্যারিয়ার পথের প্রিভিউ",
     careerPathSub:
       "একটি ট্র্যাক বেছে নিন, তারপর বিস্তারিত ধাপের জন্য পূর্ণ নির্দেশনা খুলুন।",
@@ -651,6 +679,8 @@ const bn: SiteMessages = {
     interestsTitle: "আপনার প্রধান আগ্রহ",
     careersTitle: "🎯 সুপারিশকৃত ক্যারিয়ার",
     careersSub: type => `${type} ধরনের জন্য উপযুক্ত ক্যারিয়ার`,
+    viewRecommendations: "সুপারিশ দেখুন",
+    hideRecommendations: "সুপারিশ লুকান",
     retake: "🔄 আবার মূল্যায়ন",
     backHome: "← মূল পাতায় ফিরুন",
     likert: ["একেবারে অসম্মত", "অসম্মত", "নিরপেক্ষ", "সম্মত", "পূর্ণ সম্মত"],
