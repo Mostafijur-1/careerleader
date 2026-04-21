@@ -14,6 +14,16 @@ const typeColors = {
   admin: "from-orange-500 to-orange-600",
 };
 
+async function readJsonSafely(res: Response) {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [type, setType] = useState<"student" | "mentor" | "admin">("student");
@@ -45,12 +55,12 @@ export default function AuthPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
+    const data = await readJsonSafely(res);
     setLoading(false);
     if (res.ok) {
-      setMessage(data.message);
+      setMessage(data?.message || "Success");
       setMessageType("success");
-      if (mode === "login") setUser(data.user);
+      if (mode === "login") setUser(data?.user || null);
       if (mode === "register") {
         setTimeout(() => setMode("login"), 1500);
         setEmail("");
@@ -60,16 +70,24 @@ export default function AuthPage() {
         setRole("");
       }
     } else {
-      setMessage(data.error || "Error");
+      setMessage(data?.error || "Error");
       setMessageType("error");
     }
   }
 
   function handleLogout() {
-    setUser(null);
-    setMessage("Logged out successfully!");
-    setMessageType("success");
-    setTimeout(() => setMessage(""), 3000);
+    fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout" }),
+    })
+      .catch(() => undefined)
+      .finally(() => {
+        setUser(null);
+        setMessage("Logged out successfully!");
+        setMessageType("success");
+        setTimeout(() => setMessage(""), 3000);
+      });
   }
 
   return (

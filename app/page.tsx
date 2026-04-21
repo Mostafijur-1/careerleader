@@ -364,9 +364,19 @@ export default function Home() {
     }
   }
 
-  const handleLogout = () => {
-    setUser(null)
-    setMobileMenuOpen(false)
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "logout" }),
+      })
+    } catch {
+      // Clear local user state even if network call fails.
+    } finally {
+      setUser(null)
+      setMobileMenuOpen(false)
+    }
   }
 
   const displayName = isMounted ? (user ? user.name : t.common.guest) : t.common.guest

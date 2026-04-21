@@ -20,6 +20,16 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
+async function readJsonSafely(res: Response) {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const { setUser } = useUser();
   const { t } = useLanguage();
@@ -60,14 +70,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
+    const data = await readJsonSafely(res);
     setLoading(false);
     if (res.ok) {
-      setMessage(data.message);
+      setMessage(data?.message || "Success");
       setMessageType("success");
       
       if (mode === "login") {
-        setUser(data.user);
+        setUser(data?.user || null);
         setTimeout(() => {
           onClose();
           setMessage("");
@@ -105,7 +115,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
       }
     } else {
-      setMessage(data.error || "Error");
+      setMessage(data?.error || "Error");
       setMessageType("error");
       setTimeout(() => setMessage(""), 4000);
     }

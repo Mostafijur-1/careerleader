@@ -2,6 +2,42 @@
 import { NextResponse } from 'next/server'
 import { getCollection } from '../../../lib/db'
 import bcrypt from 'bcryptjs'
+import { ObjectId } from 'mongodb'
+import { getAuthCookieName, signAuthToken, verifyAuthToken } from '../../../lib/auth'
+
+function mapUserForClient(user: {
+  _id?: ObjectId
+  email?: string
+  type?: string
+  name?: string
+}) {
+  return {
+    id: user._id ? String(user._id) : '',
+    email: user.email || '',
+    type: (user.type || 'student') as 'student' | 'mentor' | 'admin',
+    name: user.name || '',
+  }
+}
+
+function setAuthCookie(res: NextResponse, token: string) {
+  res.cookies.set(getAuthCookieName(), token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+  })
+}
+
+function clearAuthCookie(res: NextResponse) {
+  res.cookies.set(getAuthCookieName(), '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  })
+}
 
 // GET /api/auth/mentors - fetch all mentors for admin
 export async function GET(req: Request) {
@@ -23,6 +59,27 @@ export async function GET(req: Request) {
     })
   }
 
+  if (url.searchParams.has('me')) {
+    const token = req.headers.get('cookie')
+      ?.split(';')
+      .map(part => part.trim())
+      .find(part => part.startsWith(`${getAuthCookieName()}=`))
+      ?.split('=')
+      .slice(1)
+      .join('=')
+
+    if (!token) {
+      return NextResponse.json({ user: null }, { status: 401 })
+    }
+
+    try {
+      const user = verifyAuthToken(token)
+      return NextResponse.json({ user })
+    } catch {
+      return NextResponse.json({ user: null }, { status: 401 })
+    }
+  }
+
   return NextResponse.json({ error: 'Invalid query' }, { status: 400 })
 }
 
@@ -33,7 +90,7 @@ export async function POST(req: Request) {
   const { action, type, email, password, name, expertise, role, adminEmail, adminPassword, mentorEmail, zoomLink, meetLink } = body
   
   // Skip generic field check for activate/deactivate mentor actions
-  if (action !== 'activate-mentor' && action !== 'deactivate-mentor') {
+  if (action !== 'activate-mentor' && action !== 'deactivate-mentor' && action !== 'logout') {
     if (!action || !type || !email || !password) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
@@ -45,6 +102,12 @@ export async function POST(req: Request) {
   }
 
   const users = await getCollection('users')
+
+  if (action === 'logout') {
+    const res = NextResponse.json({ message: 'Logout successful' })
+    clearAuthCookie(res)
+    return res
+  }
 
   if (action === 'register') {
     // Check if user exists
@@ -85,7 +148,7 @@ export async function POST(req: Request) {
       userDoc.role = role || 'admin';
     }
     const result = await users.insertOne(userDoc)
-    return NextResponse.json({ message: 'Registered', user: { id: result.insertedId, email, type, name } })
+    return NextResponse.json({ message: 'Registered', user: { id: String(result.insertedId), email, type, name } })
   }
 
   if (action === 'login') {
@@ -100,9 +163,11 @@ export async function POST(req: Request) {
     if (!valid) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
-    // Return user info (omit password)
-    const { password: _, ...userInfo } = user
-    return NextResponse.json({ message: 'Login successful', user: userInfo })
+    const userInfo = mapUserForClient(user)
+    const token = signAuthToken(userInfo)
+    const res = NextResponse.json({ message: 'Login successful', user: userInfo })
+    setAuthCookie(res, token)
+    return res
   }
 
   if (action === 'activate-mentor') {

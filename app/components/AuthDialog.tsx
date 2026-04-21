@@ -14,6 +14,16 @@ const typeColors = {
   admin: "from-orange-500 to-orange-600",
 };
 
+async function readJsonSafely(res: Response) {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export default function AuthDialog() {
   const { user, setUser } = useUser();
   const [isOpen, setIsOpen] = useState(false);
@@ -49,14 +59,14 @@ export default function AuthDialog() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
+    const data = await readJsonSafely(res);
     setLoading(false);
     if (res.ok) {
-      setMessage(data.message);
+      setMessage(data?.message || "Success");
       setMessageType("success");
 
       if (mode === "login") {
-        setUser(data.user);
+        setUser(data?.user || null);
         setTimeout(() => setIsOpen(false), 1500);
       }
       if (mode === "register") {
@@ -85,16 +95,26 @@ export default function AuthDialog() {
         }
       }
     } else {
-      setMessage(data.error || "Error");
+      setMessage(data?.error || "Error");
       setMessageType("error");
     }
   }
 
-  function handleLogout() {
-    setUser(null);
-    setMessage("Logged out successfully!");
-    setMessageType("success");
-    setTimeout(() => setMessage(""), 3000);
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "logout" }),
+      });
+    } catch {
+      // Clear local user state even when API call fails.
+    } finally {
+      setUser(null);
+      setMessage("Logged out successfully!");
+      setMessageType("success");
+      setTimeout(() => setMessage(""), 3000);
+    }
   }
 
   return (
