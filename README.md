@@ -1,3 +1,5 @@
+Live: https://careerleader.vercel.app/
+
 # Career Leader
 
 Career Leader is a full-stack web application that helps students explore career paths using a personality assessment, receive personalized recommendations, and connect with mentors for guidance.
