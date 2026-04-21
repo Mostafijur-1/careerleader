@@ -286,7 +286,7 @@ export default function AssessmentPage() {
                   <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
                     <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-4 sm:p-6 lg:p-8 text-white">
                       <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold">{ta.careersTitle}</h3>
-                      <p className="text-white/80 mt-2">{ta.careersSub(result.personalityType)}</p>
+                      <p className="text-white/80 mt-2">{ta.careersSub(result.personalityType || "")}</p>
                     </div>
                     <div className="p-4 sm:p-6 lg:p-8 space-y-4">
                       {result.recommendations.map((r, idx: number) => (
