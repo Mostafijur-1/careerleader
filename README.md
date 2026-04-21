@@ -163,6 +163,11 @@ JWT_SECRET=replace_with_a_long_random_secret
 
 ## 8) Run Locally
 
+### clone 
+```bash
+git clone "https://github.com/Mostafijur-1/careerleader.git"
+```
+
 ### Install
 ```bash
 npm install
