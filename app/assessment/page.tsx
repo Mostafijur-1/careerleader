@@ -111,7 +111,7 @@ export default function AssessmentPage() {
       setShowRecommendations(false)
     } catch (err) {
       console.error('Submission error:', err)
-      setResult({ error: String(err) })
+      setResult({ error: String(err), interests: [], recommendations: [] })
     } finally {
       setLoading(false)
     }
