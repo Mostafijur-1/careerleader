@@ -23,7 +23,7 @@ interface ActionModal {
 }
 
 export default function AdminPage() {
-  const { user } = useUser()
+  const { user, setUser } = useUser()
   const [mentors, setMentors] = useState<Mentor[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -128,6 +128,21 @@ export default function AdminPage() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' }),
+      })
+    } catch {
+      // Always clear client session, even if logout API fails.
+    } finally {
+      setUser(null)
+      window.location.href = '/'
+    }
+  }
+
   if (!user || user.type !== 'admin') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -150,7 +165,15 @@ export default function AdminPage() {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-2 text-sm sm:text-base">Manage mentor activations</p>
           </div>
-          <LanguageToggle variant="light" />
+          <div className="flex items-center gap-3">
+            <LanguageToggle variant="light" />
+            <button
+              onClick={handleLogout}
+              className="text-red-600 hover:text-red-700 font-bold transition"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 

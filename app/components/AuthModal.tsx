@@ -5,14 +5,10 @@ import { useLanguage } from "../contexts/LanguageContext";
 
 const typeIcons = {
   student: "👨‍🎓",
-  mentor: "👨‍🏫",
-  admin: "👨‍💼",
 };
 
 const typeColors = {
   student: "from-blue-500 to-blue-600",
-  mentor: "from-purple-500 to-purple-600",
-  admin: "from-orange-500 to-orange-600",
 };
 
 interface AuthModalProps {
@@ -35,24 +31,18 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const { t } = useLanguage();
   const a = t.auth;
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [type, setType] = useState<"student" | "mentor" | "admin">("student");
+  const [type] = useState<"student">("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [expertise, setExpertise] = useState("");
-  const [zoomLink, setZoomLink] = useState("");
-  const [meetLink, setMeetLink] = useState("");
-  const [role, setRole] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error" | "">();
   const [loading, setLoading] = useState(false);
-  const [showMentorNotice, setShowMentorNotice] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMessage("");
     setLoading(true);
-    setShowMentorNotice(false);
 
     const payload = {
       action: mode,
@@ -60,10 +50,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       email,
       password,
       name: mode === "register" ? name : undefined,
-      expertise: type === "mentor" && mode === "register" ? expertise.split(",").map(e => e.trim()) : undefined,
-      zoomLink: type === "mentor" && mode === "register" ? zoomLink : undefined,
-      meetLink: type === "mentor" && mode === "register" ? meetLink : undefined,
-      role: type === "admin" && mode === "register" ? role : undefined,
     };
     const res = await fetch("/api/auth", {
       method: "POST",
@@ -84,35 +70,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }, 1500);
       }
       if (mode === "register") {
-        if (type === "mentor") {
-          setShowMentorNotice(true);
-          setTimeout(() => {
-            setMode("login");
-            setEmail("");
-            setPassword("");
-            setName("");
-            setExpertise("");
-            setRole("");
-            setZoomLink("");
-            setMeetLink("");
-            setMessage("");
-            setMessageType("");
-            setShowMentorNotice(false);
-          }, 4000);
-        } else {
-          setTimeout(() => {
-            setMode("login");
-            setEmail("");
-            setPassword("");
-            setName("");
-            setExpertise("");
-            setRole("");
-            setZoomLink("");
-            setMeetLink("");
-            setMessage("");
-            setMessageType("");
-          }, 1500);
-        }
+        setTimeout(() => {
+          setMode("login");
+          setEmail("");
+          setPassword("");
+          setName("");
+          setMessage("");
+          setMessageType("");
+        }, 1500);
       }
     } else {
       setMessage(data?.error || "Error");
@@ -153,7 +118,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         {/* Form Container - Scrollable */}
         <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6 py-3 sm:py-4">
           {/* Mode Toggle */}
-          <div className={`flex gap-2 mb-5 ${type === "admin" ? "opacity-50 pointer-events-none" : ""}`}>
+          <div className="flex gap-2 mb-5">
             <button
               type="button"
               onClick={() => setMode("login")}
@@ -165,50 +130,20 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             >
               {a.login}
             </button>
-            {type !== "admin" && (
-              <button
-                type="button"
-                onClick={() => setMode("register")}
-                className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition ${
-                  mode === "register"
-                    ? `bg-gradient-to-r ${typeColors[type]} text-white`
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {a.register}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setMode("register")}
+              className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition ${
+                mode === "register"
+                  ? `bg-gradient-to-r ${typeColors[type]} text-white`
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {a.register}
+            </button>
           </div>
 
-          {/* Admin-only message */}
-          {type === "admin" && (
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded mb-4 text-sm text-blue-800">
-              <span className="font-semibold">{a.adminNote}</span> {a.adminNoteBody}
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-3">
-            {/* User Type */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">{a.userType}</label>
-              <select
-                value={type}
-                onChange={e => {
-                  const newType = e.target.value as "student" | "mentor" | "admin";
-                  setType(newType);
-                  if (newType === "admin") {
-                    setMode("login");
-                  }
-                }}
-                className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                title="User Type"
-              >
-                <option value="student">{a.student}</option>
-                <option value="mentor">{a.mentor}</option>
-                <option value="admin">{a.admin}</option>
-              </select>
-            </div>
-
             {/* Registration Fields */}
             {mode === "register" && (
               <>
@@ -223,57 +158,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     required
                   />
                 </div>
-                {type === "mentor" && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      {a.expertise} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={expertise}
-                      onChange={e => setExpertise(e.target.value)}
-                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                      placeholder="Python, Web Development"
-                      required
-                    />
-                  </div>
-                )}
-                {type === "mentor" && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">{a.zoomOptional}</label>
-                      <input
-                        type="url"
-                        value={zoomLink}
-                        onChange={e => setZoomLink(e.target.value)}
-                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                        placeholder="https://zoom.us/j/..."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">{a.meetOptional}</label>
-                      <input
-                        type="url"
-                        value={meetLink}
-                        onChange={e => setMeetLink(e.target.value)}
-                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                        placeholder="https://meet.google.com/..."
-                      />
-                    </div>
-                  </>
-                )}
-                {type === "admin" && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">{a.adminRole}</label>
-                    <input
-                      type="text"
-                      value={role}
-                      onChange={e => setRole(e.target.value)}
-                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                      placeholder="System Admin"
-                    />
-                  </div>
-                )}
               </>
             )}
 
@@ -316,8 +200,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </button>
           </form>
 
-          {/* Success Message (NOT mentor notice) */}
-          {message && !showMentorNotice && (
+          {/* Success/Error Message */}
+          {message && (
             <div
               className={`mt-3 p-2.5 rounded-lg text-sm font-semibold text-center transition ${
                 messageType === "success"
@@ -326,14 +210,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               }`}
             >
               {messageType === "success" && "✅ "}{messageType === "error" && "❌ "}{message}
-            </div>
-          )}
-
-          {/* Mentor Registration Notice - ONLY AFTER SUCCESSFUL MENTOR REGISTRATION */}
-          {showMentorNotice && (
-            <div className="mt-4 p-3 rounded-lg text-sm font-semibold text-yellow-800 border-l-4 border-yellow-500 bg-yellow-50">
-              <div className="text-center">{a.mentorSuccess}</div>
-              <div className="text-center mt-2">{a.mentorPending}</div>
             </div>
           )}
         </div>

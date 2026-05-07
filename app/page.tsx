@@ -7,7 +7,6 @@ import AuthModal from "./components/AuthModal"
 import ClientOnly from "./components/HydrationBoundary"
 import { useUser } from "./contexts/UserContext"
 import { useLanguage } from "./contexts/LanguageContext"
-import { useRouter } from "next/navigation"
 import careers from "@/data/careers.json"
 import LanguageToggle from "./components/LanguageToggle"
 
@@ -118,7 +117,6 @@ function minimalMentorFromEmail(email: string): MentorVM {
 export default function Home() {
   const { user, setUser } = useUser()
   const { t } = useLanguage()
-  const router = useRouter()
   const [isMounted, setIsMounted] = useState(false)
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"job" | "higher_study" | "entrepreneurship">("job")
@@ -189,10 +187,6 @@ export default function Home() {
     },
     [mentors]
   )
-
-  useEffect(() => {
-    if (user?.type === "mentor") router.push("/mentor")
-  }, [user?.type, router])
 
   useEffect(() => {
     async function fetchMentors() {
@@ -442,12 +436,6 @@ export default function Home() {
             <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.home}</Link>
             <Link href="#careers" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.exploreCareers}</Link>
             <Link href="#mentors" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.mentors}</Link>
-            {isMounted && user?.type === "admin" && (
-              <Link href="/admin" className="text-blue-600 hover:text-blue-700 font-medium transition">{t.nav.admin}</Link>
-            )}
-            {isMounted && user?.type === "mentor" && (
-              <Link href="/mentor" className="text-blue-600 hover:text-blue-700 font-medium transition">{t.nav.mentorInbox}</Link>
-            )}
             <div className="relative" ref={notificationsDesktopRef}>
               <button type="button" onClick={toggleNotifications} className="relative text-gray-700 hover:text-blue-600 transition">
                 🔔
@@ -534,12 +522,6 @@ export default function Home() {
             <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.home}</Link>
             <Link href="#careers" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.exploreCareers}</Link>
             <Link href="#mentors" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.mentors}</Link>
-            {isMounted && user?.type === "admin" && (
-              <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="text-blue-600 font-medium py-2">{t.nav.admin}</Link>
-            )}
-            {isMounted && user?.type === "mentor" && (
-              <Link href="/mentor" onClick={() => setMobileMenuOpen(false)} className="text-blue-600 font-medium py-2">{t.nav.mentorInbox}</Link>
-            )}
             <div className="pt-2 border-t border-gray-100">
               <AuthButton onOpenAuth={() => { setIsAuthOpen(true); setMobileMenuOpen(false) }} onLogout={handleLogout} />
             </div>

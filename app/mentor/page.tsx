@@ -33,7 +33,7 @@ type PendingRequest = {
 }
 
 export default function MentorPage() {
-  const { user } = useUser()
+  const { user, setUser } = useUser()
   const { t } = useLanguage()
   const m = t.mentorPage
   const router = useRouter()
@@ -189,6 +189,21 @@ export default function MentorPage() {
     }
   }
 
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "logout" }),
+      })
+    } catch {
+      // Always clear client session, even if the API call fails.
+    } finally {
+      setUser(null)
+      router.push("/")
+    }
+  }
+
   if (!user || user.type !== "mentor") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -210,6 +225,12 @@ export default function MentorPage() {
           </div>
           <div className="flex items-center gap-3">
             <LanguageToggle />
+            <button
+              onClick={handleLogout}
+              className="text-red-200 hover:text-red-100 font-semibold transition"
+            >
+              {t.auth.logout}
+            </button>
             <Link href="/" className="text-white font-semibold hover:text-blue-200 transition">{m.backHome}</Link>
           </div>
         </div>

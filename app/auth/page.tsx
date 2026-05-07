@@ -4,14 +4,10 @@ import LanguageToggle from "../components/LanguageToggle";
 
 const typeIcons = {
   student: "👨‍🎓",
-  mentor: "👨‍🏫",
-  admin: "👨‍💼",
 };
 
 const typeColors = {
   student: "from-blue-500 to-blue-600",
-  mentor: "from-purple-500 to-purple-600",
-  admin: "from-orange-500 to-orange-600",
 };
 
 async function readJsonSafely(res: Response) {
@@ -26,12 +22,10 @@ async function readJsonSafely(res: Response) {
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [type, setType] = useState<"student" | "mentor" | "admin">("student");
+  const [type] = useState<"student">("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [expertise, setExpertise] = useState("");
-  const [role, setRole] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error" | "">();
   const [loading, setLoading] = useState(false);
@@ -47,8 +41,6 @@ export default function AuthPage() {
       email,
       password,
       name: mode === "register" ? name : undefined,
-      expertise: type === "mentor" && mode === "register" ? expertise.split(",").map(e => e.trim()) : undefined,
-      role: type === "admin" && mode === "register" ? role : undefined,
     };
     const res = await fetch("/api/auth", {
       method: "POST",
@@ -66,8 +58,6 @@ export default function AuthPage() {
         setEmail("");
         setPassword("");
         setName("");
-        setExpertise("");
-        setRole("");
       }
     } else {
       setMessage(data?.error || "Error");
@@ -163,21 +153,6 @@ export default function AuthPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* User Type */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">User Type</label>
-                  <select
-                    value={type}
-                    onChange={e => setType(e.target.value as "student" | "mentor" | "admin")}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                    title="User Type"
-                  >
-                    <option value="student">👨‍🎓 Student</option>
-                    <option value="mentor">👨‍🏫 Mentor</option>
-                    <option value="admin">👨‍💼 Admin</option>
-                  </select>
-                </div>
-
                 {/* Registration Fields */}
                 {mode === "register" && (
                   <>
@@ -192,34 +167,6 @@ export default function AuthPage() {
                         required
                       />
                     </div>
-                    {type === "mentor" && (
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Expertise <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={expertise}
-                          onChange={e => setExpertise(e.target.value)}
-                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                          placeholder="Python, Web Development, Database Design"
-                          required
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Separate with commas</p>
-                      </div>
-                    )}
-                    {type === "admin" && (
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Admin Role</label>
-                        <input
-                          type="text"
-                          value={role}
-                          onChange={e => setRole(e.target.value)}
-                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                          placeholder="e.g, System Admin, Content Manager"
-                        />
-                      </div>
-                    )}
                   </>
                 )}
 
@@ -247,15 +194,6 @@ export default function AuthPage() {
                     required
                   />
                 </div>
-
-                {/* Mentor Active Status Info */}
-                {mode === "register" && type === "mentor" && (
-                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
-                    <p className="text-sm text-yellow-800">
-                      <span className="font-semibold">⚠️ Note:</span> Your mentor account will be inactive until approved by an admin.
-                    </p>
-                  </div>
-                )}
 
                 {/* Submit Button */}
                 <button

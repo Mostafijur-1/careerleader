@@ -99,13 +99,13 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
   const { action, type, email, password, name, expertise, role, adminEmail, adminPassword, mentorEmail, zoomLink, meetLink } = body
   
-  // Skip generic field check for activate/deactivate mentor actions
+  // Skip generic field check for actions that don't use email/password/type payload.
   if (action !== 'activate-mentor' && action !== 'deactivate-mentor' && action !== 'logout') {
     if (!action || !type || !email || !password) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
-  } else {
-    // For mentor activation/deactivation, check different fields
+  } else if (action === 'activate-mentor' || action === 'deactivate-mentor') {
+    // Mentor activation/deactivation uses admin credentials + target mentor email.
     if (!action || !adminEmail || !adminPassword || !mentorEmail) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }

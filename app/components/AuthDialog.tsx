@@ -4,14 +4,10 @@ import { useUser } from "../contexts/UserContext";
 
 const typeIcons = {
   student: "👨‍🎓",
-  mentor: "👨‍🏫",
-  admin: "👨‍💼",
 };
 
 const typeColors = {
   student: "from-blue-500 to-blue-600",
-  mentor: "from-purple-500 to-purple-600",
-  admin: "from-orange-500 to-orange-600",
 };
 
 async function readJsonSafely(res: Response) {
@@ -28,22 +24,18 @@ export default function AuthDialog() {
   const { user, setUser } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [type, setType] = useState<"student" | "mentor" | "admin">("student");
+  const [type] = useState<"student">("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [expertise, setExpertise] = useState("");
-  const [role, setRole] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error" | "">();
   const [loading, setLoading] = useState(false);
-  const [showMentorNotice, setShowMentorNotice] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMessage("");
     setLoading(true);
-    setShowMentorNotice(false);
 
     const payload = {
       action: mode,
@@ -51,8 +43,6 @@ export default function AuthDialog() {
       email,
       password,
       name: mode === "register" ? name : undefined,
-      expertise: type === "mentor" && mode === "register" ? expertise.split(",").map(e => e.trim()) : undefined,
-      role: type === "admin" && mode === "register" ? role : undefined,
     };
     const res = await fetch("/api/auth", {
       method: "POST",
@@ -70,29 +60,12 @@ export default function AuthDialog() {
         setTimeout(() => setIsOpen(false), 1500);
       }
       if (mode === "register") {
-        if (type === "mentor") {
-          setShowMentorNotice(true);
-          setTimeout(() => {
-            setMode("login");
-            setEmail("");
-            setPassword("");
-            setName("");
-            setExpertise("");
-            setRole("");
-            setMessage("");
-            setMessageType("");
-            setShowMentorNotice(false);
-          }, 4000);
-        } else {
-          setTimeout(() => {
-            setMode("login");
-            setEmail("");
-            setPassword("");
-            setName("");
-            setExpertise("");
-            setRole("");
-          }, 1500);
-        }
+        setTimeout(() => {
+          setMode("login");
+          setEmail("");
+          setPassword("");
+          setName("");
+        }, 1500);
       }
     } else {
       setMessage(data?.error || "Error");
@@ -194,21 +167,6 @@ export default function AuthDialog() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-2">
-                {/* User Type */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-0.5">User Type</label>
-                  <select
-                    value={type}
-                    onChange={e => setType(e.target.value as "student" | "mentor" | "admin")}
-                    className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                    title="User Type"
-                  >
-                    <option value="student">👨‍🎓 Student</option>
-                    <option value="mentor">👨‍🏫 Mentor</option>
-                    <option value="admin">👨‍💼 Admin</option>
-                  </select>
-                </div>
-
                 {/* Registration Fields */}
                 {mode === "register" && (
                   <>
@@ -223,33 +181,6 @@ export default function AuthDialog() {
                         required
                       />
                     </div>
-                    {type === "mentor" && (
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-0.5">
-                          Expertise <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={expertise}
-                          onChange={e => setExpertise(e.target.value)}
-                          className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                          placeholder="Python, Web Dev"
-                          required
-                        />
-                      </div>
-                    )}
-                    {type === "admin" && (
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-0.5">Admin Role</label>
-                        <input
-                          type="text"
-                          value={role}
-                          onChange={e => setRole(e.target.value)}
-                          className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                          placeholder="System Admin"
-                        />
-                      </div>
-                    )}
                   </>
                 )}
 
@@ -292,8 +223,8 @@ export default function AuthDialog() {
                 </button>
               </form>
 
-              {/* Success Message (NOT mentor notice) */}
-              {message && !showMentorNotice && (
+              {/* Success/Error Message */}
+              {message && (
                 <div
                   className={`mt-2 p-1.5 rounded-lg text-xs font-semibold text-center transition ${
                     messageType === "success"
@@ -302,14 +233,6 @@ export default function AuthDialog() {
                   }`}
                 >
                   {messageType === "success" && "✅ "}{messageType === "error" && "❌ "}{message}
-                </div>
-              )}
-
-              {/* Mentor Registration Notice - ONLY AFTER SUCCESSFUL MENTOR REGISTRATION */}
-              {showMentorNotice && (
-                <div className="mt-3 p-2 rounded-lg text-xs font-semibold text-yellow-800 border-l-4 border-yellow-500 bg-yellow-50">
-                  <div className="text-center">✅ Account created successfully!</div>
-                  <div className="text-center mt-1">⚠️ Your mentor account will be inactive until approved by an admin.</div>
                 </div>
               )}
             </div>
