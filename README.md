@@ -1,3 +1,5 @@
+Live: https://careerleader.vercel.app/
+
 # Career Leader
 
 Career Leader is a full-stack web application that helps students explore career paths using a personality assessment, receive personalized recommendations, and connect with mentors for guidance.
@@ -162,6 +164,11 @@ JWT_SECRET=replace_with_a_long_random_secret
 ---
 
 ## 8) Run Locally
+
+### clone 
+```bash
+git clone "https://github.com/Mostafijur-1/careerleader.git"
+```
 
 ### Install
 ```bash
