@@ -31,17 +31,15 @@ body {
 input,
 select,
 textarea {
-  color: #111827;
-  -webkit-text-fill-color: #111827;
   opacity: 1;
 }
 
 input::placeholder,
 textarea::placeholder {
   color: #6b7280;
-  -webkit-text-fill-color: #6b7280;
 }
 
+/* Fix browser autofill text color to match the input's text color on dark/light backgrounds */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -51,6 +49,7 @@ textarea:-webkit-autofill:focus,
 select:-webkit-autofill,
 select:-webkit-autofill:hover,
 select:-webkit-autofill:focus {
-  -webkit-text-fill-color: #111827;
+  -webkit-text-fill-color: currentColor !important;
   transition: background-color 9999s ease-in-out 0s;
 }
+

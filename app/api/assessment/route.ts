@@ -3,7 +3,6 @@ import fs from 'fs'
 import path from 'path'
 import { scoreAssessment } from '../../../lib/assessment'
 import { recommend } from '../../../lib/recommendation'
-import { getAiRecommendations } from '../../../lib/aiRecommendation'
 import { getCollection } from '../../../lib/db'
 
 /** Response shape for assessment recommendations (local careers or Gemini). */
@@ -58,16 +57,7 @@ export async function POST(req: Request) {
 
   try {
     const result = scoreAssessment(answers)
-    const fallbackRecs = recommend(result.personality, result.interests || [], 5)
-    let recs: AssessmentRecommendation[] = fallbackRecs
-    try {
-      const aiRecs = await getAiRecommendations(result.personality, result.interests || [], 5)
-      if (aiRecs.length > 0) {
-        recs = aiRecs
-      }
-    } catch (error) {
-      console.error('Gemini recommendation failed, using local fallback:', error)
-    }
+    const recs = recommend(result.personality, result.interests || [], 5)
 
     // Persist MBTI only when an authenticated user submits assessment
     if (user?.email && user?.type) {
