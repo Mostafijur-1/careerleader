@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getCollection } from '../../../lib/db'
-import mentorShowcase from '../../../data/mentor_showcase.json'
 import type { CareerCategory } from '../../../lib/mentorProfile'
 import { mentorMatchesCategory } from '../../../lib/mentorProfile'
 
@@ -71,32 +70,10 @@ export async function GET(req: Request) {
     }
 
     const dbList = mentors.map(m => mapDb(m as Record<string, unknown>))
-    const showcaseList = (mentorShowcase as Record<string, unknown>[]).map(row => ({
-      id: String(row.id || row.name || 'demo'),
-      demo: true,
-      email: typeof row.email === 'string' ? row.email.toLowerCase() : '',
-      name: String(row.name || 'Mentor'),
-      careerIds: Array.isArray(row.careerIds) ? (row.careerIds as string[]).filter(Boolean) : [],
-      headline: String(row.headline || row.role || 'Career mentor'),
-      role: String(row.headline || 'Career mentor'),
-      education: Array.isArray(row.education) ? row.education : [],
-      currentJob: row.currentJob && typeof row.currentJob === 'object' ? row.currentJob : null,
-      experience: Array.isArray(row.experience) ? row.experience : [],
-      bio: typeof row.bio === 'string' ? row.bio : '',
-      expertise: Array.isArray(row.expertise) ? (row.expertise as string[]) : [],
-      rating: typeof row.rating === 'number' ? row.rating : 4.6,
-      reviews: typeof row.reviews === 'number' ? row.reviews : 100,
-      recommended: row.recommended !== false,
-      zoomLink: typeof row.zoomLink === 'string' ? row.zoomLink : '',
-      meetLink: typeof row.meetLink === 'string' ? row.meetLink : '',
-    }))
-
-    const dbEmails = new Set(dbList.map(m => m.email).filter(Boolean))
-    const merged = [...dbList, ...showcaseList.filter(s => !s.email || !dbEmails.has(s.email))]
 
     const filtered = category
-      ? merged.filter(m => mentorMatchesCategory(m.careerIds, category))
-      : merged
+      ? dbList.filter(m => mentorMatchesCategory(m.careerIds, category))
+      : dbList
 
     return NextResponse.json({ mentors: filtered })
   }

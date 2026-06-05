@@ -20,6 +20,14 @@ export type SiteMessages = {
     toggleMenu: string
     msgNotifications: string
     noNewNotifications: string
+    dashboard: string
+    assessment: string
+    goals: string
+    roadmap: string
+    resources: string
+    messages: string
+    profile: string
+    settings: string
   }
   home: {
     welcomeBadge: string
@@ -211,6 +219,14 @@ const en: SiteMessages = {
     toggleMenu: "Toggle menu",
     msgNotifications: "Message Notifications",
     noNewNotifications: "No new message notifications.",
+    dashboard: "Dashboard",
+    assessment: "Assessment",
+    goals: "Goals",
+    roadmap: "Roadmap",
+    resources: "Resources",
+    messages: "Messages",
+    profile: "Profile",
+    settings: "Settings",
   },
   home: {
     welcomeBadge: "Welcome to Career Leader!",
@@ -456,6 +472,14 @@ const bn: SiteMessages = {
     toggleMenu: "মেনু খুলুন",
     msgNotifications: "বার্তার বিজ্ঞপ্তি",
     noNewNotifications: "কোনো নতুন বার্তার বিজ্ঞপ্তি নেই।",
+    dashboard: "ড্যাশবোর্ড",
+    assessment: "মূল্যায়ন",
+    goals: "লক্ষ্যসমূহ",
+    roadmap: "রোডম্যাপ",
+    resources: "শেখার সম্পদ",
+    messages: "বার্তা",
+    profile: "প্রোফাইল",
+    settings: "সেটিংস",
   },
   home: {
     welcomeBadge: "ক্যারিয়ার লিডারে স্বাগতম!",

@@ -1,12 +1,11 @@
 "use client"
- 
+
 import { useEffect, useState, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "../contexts/UserContext"
 import { useLanguage } from "../contexts/LanguageContext"
-import LanguageToggle from "../components/LanguageToggle"
-import AuthModal from "../components/AuthModal"
+import DashboardLayout from "../components/DashboardLayout"
 import { careerDetails, type CareerDetail } from "./careerDetailsData"
 
 interface Recommendation {
@@ -16,105 +15,11 @@ interface Recommendation {
   skills?: string[]
 }
 
-// Custom inline SVG icons for sidebar, header
-function DashboardIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
-    </svg>
-  )
-}
-
-function AssessmentIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-    </svg>
-  )
-}
-
-function ExploreIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  )
-}
-
-function MentorsIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-    </svg>
-  )
-}
-
-function GoalsIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  )
-}
-
-function RoadmapIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-    </svg>
-  )
-}
-
-function ResourcesIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-    </svg>
-  )
-}
-
-function MessagesIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-    </svg>
-  )
-}
-
-function ProfileIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-  )
-}
-
-function SettingsIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  )
-}
-
-function BellIcon() {
-  return (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-    </svg>
-  )
-}
-
 export default function ExploreCareersPage() {
   const { user } = useUser()
   const { lang, t } = useLanguage()
   const router = useRouter()
   const [isMounted, setIsMounted] = useState(false)
-  const [isAuthOpen, setIsAuthOpen] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
  
   // Recommendations specific states
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
@@ -219,801 +124,599 @@ export default function ExploreCareersPage() {
   const secondaryRecommendations = filteredRecommendations.slice(4)
 
   return (
-    <div className="min-h-screen bg-slate-50 flex text-slate-800 antialiased font-sans">
-      
-      {/* 1. LEFT SIDEBAR */}
-      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 sticky top-0 h-screen z-20 shrink-0">
-        
-        {/* Brand Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
-          <div className="text-2xl">🚀</div>
-          <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">CareerLeader</span>
-        </div>
-
-        {/* Sidebar Nav Items */}
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-          <Link href="/dashboard" className="flex items-center gap-3.5 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl font-medium transition duration-200">
-            <DashboardIcon />
-            <span>{lang === 'bn' ? "ড্যাশবোর্ড" : "Dashboard"}</span>
-          </Link>
+    <DashboardLayout activeTab="explore-careers" breadcrumbExtra={selectedCareer?.title}>
+      {selectedCareer && currentCareerDetails ? (
+        /* Detailed Career Information Panel */
+        <div className="space-y-8 animate-fade-in text-left">
           
-          <Link href="/assessment" className="flex items-center gap-3.5 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl font-medium transition duration-200">
-            <AssessmentIcon />
-            <span>{lang === 'bn' ? "মূল্যায়ন" : "Assessment"}</span>
-          </Link>
-
-          <Link href="/explore-careers" className="flex items-center gap-3.5 px-4 py-3 bg-blue-50 text-blue-600 border-l-4 border-blue-600 pl-3 rounded-xl font-semibold transition duration-200">
-            <ExploreIcon />
-            <span>{lang === 'bn' ? "ক্যারিয়ার সমূহ" : "Explore Careers"}</span>
-          </Link>
-
-          <Link href="/mentors" className="flex items-center gap-3.5 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl font-medium transition duration-200">
-            <MentorsIcon />
-            <span>{lang === 'bn' ? "মেন্টরবৃন্দ" : "Mentors"}</span>
-          </Link>
-
-          <Link href="/goals" className="flex items-center gap-3.5 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl font-medium transition duration-200">
-            <GoalsIcon />
-            <span>{lang === 'bn' ? "লক্ষ্যসমূহ" : "Goals"}</span>
-          </Link>
-
-          <Link href="/roadmap" className="flex items-center gap-3.5 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl font-medium transition duration-200">
-            <RoadmapIcon />
-            <span>{lang === 'bn' ? "রোডম্যাপ" : "Roadmap"}</span>
-          </Link>
-
-          <Link href="/#mentors" className="flex items-center gap-3.5 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl font-medium transition duration-200">
-            <ResourcesIcon />
-            <span>{lang === 'bn' ? "শেখার সম্পদ" : "Resources"}</span>
-          </Link>
-
-          <button onClick={() => setIsPremiumModalOpen(true)} className="w-full flex items-center justify-between px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl font-medium transition duration-200">
-            <div className="flex items-center gap-3.5">
-              <MessagesIcon />
-              <span>{lang === 'bn' ? "বার্তা" : "Messages"}</span>
-            </div>
-            <span className="w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center shadow-md">3</span>
-          </button>
-
-          <button onClick={() => setIsPremiumModalOpen(true)} className="w-full flex items-center gap-3.5 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl font-medium text-left transition duration-200">
-            <ProfileIcon />
-            <span>{lang === 'bn' ? "প্রোফাইল" : "Profile"}</span>
-          </button>
-
-          <button onClick={() => setIsPremiumModalOpen(true)} className="w-full flex items-center gap-3.5 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl font-medium text-left transition duration-200">
-            <SettingsIcon />
-            <span>{lang === 'bn' ? "সেটিংস" : "Settings"}</span>
-          </button>
-        </nav>
-
-        {/* Upgrade Card at Bottom */}
-        <div className="p-4 border-t border-slate-100">
-          <div className="p-4 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white rounded-2xl relative overflow-hidden shadow-lg shadow-blue-100">
-            <div className="absolute -right-3 -top-3 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center mb-3">
-              <span className="text-lg">👑</span>
-            </div>
-            <h4 className="font-bold text-sm mb-1">{lang === 'bn' ? "প্রিমিয়াম আপডেট" : "Upgrade to Premium"}</h4>
-            <p className="text-white/80 text-xs mb-4 leading-relaxed">
-              {lang === 'bn' ? "উন্নত ফিচার এবং ব্যক্তিগত গাইডেন্স আনলক করুন।" : "Unlock advanced features and personalized guidance."}
-            </p>
-            <button 
-              onClick={() => setIsPremiumModalOpen(true)}
-              className="w-full bg-white text-blue-700 font-bold py-2 rounded-xl text-xs shadow-md hover:bg-slate-50 transition active:scale-95"
+          {/* Back button and Goal notification toast */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <button
+              onClick={() => { setSelectedCareer(null); setDetailTab('overview'); }}
+              className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-blue-600 transition cursor-pointer"
             >
-              {lang === 'bn' ? "এখনই আপডেট করুন" : "Upgrade Now"}
+              <span>←</span> <span>{lang === 'bn' ? "ক্যারিয়ার তালিকায় ফিরে যান" : "Back to Explore Careers"}</span>
             </button>
+
+            {showGoalNotification && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm animate-pulse flex items-center gap-2">
+                <span>🎉</span>
+                <span>{lang === 'bn' ? "লক্ষ্য সফলভাবে সেট করা হয়েছে! আপনার ড্যাশবোর্ডে এটি যুক্ত করা হয়েছে।" : "Goal set successfully! Track progress on your dashboard."}</span>
+              </div>
+            )}
           </div>
-        </div>
-      </aside>
 
-      {/* Main Panel */}
-      <div className="flex-1 flex flex-col min-w-0">
-        
-        {/* 2. TOP HEADER */}
-        <header className="sticky top-0 z-10 bg-white/85 backdrop-blur-md border-b border-slate-200 h-16 px-4 sm:px-6 flex items-center justify-between shrink-0">
-          
-          {/* Mobile navigation toggle */}
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setMobileMenuOpen(prev => !prev)}
-              className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 active:scale-95"
-              aria-label="Toggle Menu"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <Link href="/" className="lg:hidden flex items-center gap-2.5 font-bold text-lg">
-              <span className="text-2xl">🚀</span>
-              <span className="text-slate-900">CareerLeader</span>
-            </Link>
+          {/* Career Title & Summary Header Panel */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
+            <div className="absolute -left-8 -bottom-8 w-44 h-44 bg-indigo-500/5 rounded-full blur-3xl"></div>
 
-            {/* Breadcrumb path for desktop */}
-            <div className="hidden lg:flex items-center gap-2 text-sm text-slate-500 font-medium">
-              <span>{lang === 'bn' ? "হোম" : "Home"}</span>
-              <span>/</span>
-              <button 
-                onClick={() => setSelectedCareer(null)}
-                className={`hover:text-blue-600 transition cursor-pointer ${!selectedCareer ? 'text-blue-600 font-semibold' : 'text-slate-500 font-medium'}`}
-              >
-                {lang === 'bn' ? "ক্যারিয়ার সমূহ" : "Explore Careers"}
-              </button>
-              {selectedCareer && (
-                <>
-                  <span>/</span>
-                  <span className="text-blue-600 font-semibold">{selectedCareer.title}</span>
-                </>
-              )}
-            </div>
-          </div>
- 
-          {/* Quick links, Notifications, User Avatar */}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <nav className="hidden md:flex items-center gap-6">
-              <Link href="/dashboard" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition">{lang === 'bn' ? "ড্যাশবোর্ড" : "Dashboard"}</Link>
-              <Link href="/explore-careers" className="text-sm font-semibold text-blue-600 transition">{lang === 'bn' ? "ক্যারিয়ার অন্বেষণ" : "Explore Careers"}</Link>
-              <Link href="/mentors" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition">{lang === 'bn' ? "মেন্টরবৃন্দ" : "Mentors"}</Link>
-            </nav>
+            <div className="relative flex flex-col md:flex-row md:items-start justify-between gap-6">
+              <div className="space-y-4 max-w-2xl">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-extrabold rounded-full uppercase tracking-wider">
+                    {lang === 'bn' ? "ক্যারিয়ার বিস্তারিত" : "Career Profile"}
+                  </span>
+                  <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-extrabold rounded-full">
+                    {careerFitPercentage[currentCareerDetails.id] || 96}% {lang === 'bn' ? "মিলেছে" : "Match"}
+                  </span>
+                  <span className="inline-block px-3 py-1 bg-amber-50 text-amber-700 text-xs font-extrabold rounded-full">
+                    ★ {currentCareerDetails.demand} {lang === 'bn' ? "চাহিদা" : "Demand"}
+                  </span>
+                  <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-extrabold rounded-full">
+                    {currentCareerDetails.salary}
+                  </span>
+                </div>
 
-            <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
-            
-            <LanguageToggle />
-
-            {/* Notification Bell */}
-            <div className="relative">
-              <button 
-                onClick={() => setIsPremiumModalOpen(true)}
-                className="relative p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-xl transition duration-150 active:scale-95"
-              >
-                <BellIcon />
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-              </button>
-            </div>
-
-            {/* User Avatar */}
-            <div className="relative shrink-0">
-              {user ? (
-                <button 
-                  onClick={() => setIsPremiumModalOpen(true)}
-                  className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold text-sm flex items-center justify-center shadow-md hover:scale-105 transition active:scale-95"
-                >
-                  {user.name.charAt(0).toUpperCase()}
-                </button>
-              ) : (
-                <button 
-                  onClick={() => setIsAuthOpen(true)}
-                  className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-sm font-semibold flex items-center justify-center hover:bg-slate-200 hover:border-slate-300 transition active:scale-95"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {/* 3. MOBILE MENU BAR */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden border-b border-slate-200 bg-white px-4 py-4 space-y-2.5 z-10">
-            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 text-slate-700 hover:text-blue-600 hover:bg-slate-50 font-medium rounded-lg">{lang === 'bn' ? "ড্যাশবোর্ড" : "Dashboard"}</Link>
-            <Link href="/assessment" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 text-slate-700 hover:text-blue-600 hover:bg-slate-50 font-medium rounded-lg">{lang === 'bn' ? "ক্যারিয়ার মূল্যায়ন" : "Career Assessment"}</Link>
-            <Link href="/explore-careers" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 text-blue-600 bg-blue-50 font-semibold rounded-lg">{lang === 'bn' ? "ক্যারিয়ার অন্বেষণ" : "Explore Careers"}</Link>
-            <Link href="/mentors" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 text-slate-700 hover:text-blue-600 hover:bg-slate-50 font-medium rounded-lg">{lang === 'bn' ? "মেন্টরবৃন্দ" : "Mentors"}</Link>
-            <div className="h-px bg-slate-100 my-2"></div>
-            <button 
-              onClick={() => { setMobileMenuOpen(false); setIsPremiumModalOpen(true) }}
-              className="w-full text-left px-4 py-2.5 text-amber-600 hover:bg-amber-50 font-bold rounded-lg flex items-center gap-2"
-            >
-              👑 {lang === 'bn' ? "প্রিমিয়াম আপডেট" : "Upgrade Premium"}
-            </button>
-          </div>
-        )}
-
-        {/* 4. MAIN PAGE CONTENT CONTAINER */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 max-w-6xl mx-auto w-full">
-          
-          {selectedCareer && currentCareerDetails ? (
-            /* Detailed Career Information Panel */
-            <div className="space-y-8 animate-fade-in text-left">
-              
-              {/* Back button and Goal notification toast */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <button
-                  onClick={() => { setSelectedCareer(null); setDetailTab('overview'); }}
-                  className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-blue-600 transition cursor-pointer"
-                >
-                  <span>←</span> <span>{lang === 'bn' ? "ক্যারিয়ার তালিকায় ফিরে যান" : "Back to Explore Careers"}</span>
-                </button>
-
-                {showGoalNotification && (
-                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm animate-pulse flex items-center gap-2">
-                    <span>🎉</span>
-                    <span>{lang === 'bn' ? "লক্ষ্য সফলভাবে সেট করা হয়েছে! আপনার ড্যাশবোর্ডে এটি যুক্ত করা হয়েছে।" : "Goal set successfully! Track progress on your dashboard."}</span>
-                  </div>
-                )}
+                <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-none">
+                  {currentCareerDetails.title}
+                </h1>
+                <p className="text-slate-500 text-sm sm:text-base leading-relaxed">
+                  {currentCareerDetails.about}
+                </p>
               </div>
 
-              {/* Career Title & Summary Header Panel */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm relative overflow-hidden">
-                <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-                <div className="absolute -left-8 -bottom-8 w-44 h-44 bg-indigo-500/5 rounded-full blur-3xl"></div>
+              {/* Primary Action Buttons */}
+              <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 w-full md:w-auto shrink-0 pt-2 md:pt-0">
+                <button
+                  onClick={() => {
+                    const id = currentCareerDetails.id;
+                    setSavedCareers(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+                  }}
+                  className={`flex-1 py-3 px-5 rounded-xl font-bold text-sm shadow-sm transition active:scale-95 text-center flex items-center justify-center gap-2 border cursor-pointer ${
+                    savedCareers.includes(currentCareerDetails.id)
+                      ? "bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200"
+                      : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>{savedCareers.includes(currentCareerDetails.id) ? "❤️" : "🤍"}</span>
+                  <span>{savedCareers.includes(currentCareerDetails.id) ? (lang === 'bn' ? "সংরক্ষিত ক্যারিয়ার" : "Saved Career") : (lang === 'bn' ? "ক্যারিয়ার সংরক্ষণ" : "Save Career")}</span>
+                </button>
 
-                <div className="relative flex flex-col md:flex-row md:items-start justify-between gap-6">
-                  <div className="space-y-4 max-w-2xl">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-extrabold rounded-full uppercase tracking-wider">
-                        {lang === 'bn' ? "ক্যারিয়ার বিস্তারিত" : "Career Profile"}
-                      </span>
-                      <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-extrabold rounded-full">
-                        {careerFitPercentage[currentCareerDetails.id] || 96}% {lang === 'bn' ? "মিলেছে" : "Match"}
-                      </span>
-                      <span className="inline-block px-3 py-1 bg-amber-50 text-amber-700 text-xs font-extrabold rounded-full">
-                        ★ {currentCareerDetails.demand} {lang === 'bn' ? "চাহিদা" : "Demand"}
-                      </span>
-                      <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-extrabold rounded-full">
-                        {currentCareerDetails.salary}
-                      </span>
-                    </div>
+                <button
+                  onClick={() => {
+                    router.push(`/mentors?career=${encodeURIComponent(currentCareerDetails.title)}`);
+                  }}
+                  className="flex-1 py-3 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition active:scale-95 text-center flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>🤝</span>
+                  <span>{lang === 'bn' ? "মেন্টরের সাথে যোগাযোগ" : "Connect Mentor"}</span>
+                </button>
 
-                    <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-none">
-                      {currentCareerDetails.title}
-                    </h1>
-                    <p className="text-slate-500 text-sm sm:text-base leading-relaxed">
+                <button
+                  onClick={() => {
+                    const id = currentCareerDetails.id;
+                    if (!goalsSet.includes(id)) {
+                      setGoalsSet(prev => [...prev, id]);
+                      
+                      // Save goal to localStorage for goals and roadmap page integration
+                      const goalData = {
+                        title: currentCareerDetails.title,
+                        targetDate: "2027-12-31",
+                        skillLevel: "Beginner",
+                        whyImportant: lang === 'bn' 
+                          ? `ক্যারিয়ার এক্সপ্লোরার থেকে লক্ষ্য নির্ধারণ করা হয়েছে: ${currentCareerDetails.title}`
+                          : `Set career goal from explore careers: ${currentCareerDetails.title}`,
+                        focusAreas: currentCareerDetails.topSkills.flatMap(s => s.list).slice(0, 3),
+                        updatedAt: new Date().toISOString()
+                      };
+                      localStorage.setItem("career_goal", JSON.stringify(goalData));
+                      localStorage.removeItem("roadmap_completed_tasks"); // clear tasks for new goal
+                      
+                      setShowGoalNotification(true);
+                      setTimeout(() => setShowGoalNotification(false), 4000);
+                    }
+                  }}
+                  className={`flex-1 py-3 px-5 font-bold text-sm rounded-xl shadow-sm transition active:scale-95 text-center flex items-center justify-center gap-2 border cursor-pointer ${
+                    goalsSet.includes(currentCareerDetails.id)
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>🎯</span>
+                  <span>{goalsSet.includes(currentCareerDetails.id) ? (lang === 'bn' ? "লক্ষ্য নির্ধারিত" : "Goal Set") : (lang === 'bn' ? "লক্ষ্য নির্ধারণ করুন" : "Set Goal")}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Sub Tab Navigation bar */}
+            <div className="flex border-b border-slate-200 mt-10 overflow-x-auto whitespace-nowrap scrollbar-none -mx-6 sm:-mx-8 lg:-mx-10 px-6 sm:px-8 lg:px-10">
+              {([
+                { key: 'overview', bn: 'ওভারভিউ', en: 'Overview' },
+                { key: 'skills', bn: 'প্রয়োজনীয় দক্ষতা', en: 'Skills' },
+                { key: 'day_in_the_life', bn: 'দৈনিক জীবন', en: 'Day in the Life' },
+                { key: 'roadmap', bn: 'রোডম্যাপ', en: 'Roadmap' },
+                { key: 'resources', bn: 'শেখার সম্পদ', en: 'Resources' },
+                { key: 'similar_careers', bn: 'অনুরূপ ক্যারিয়ার', en: 'Similar Careers' }
+              ] as const).map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setDetailTab(tab.key)}
+                  className={`py-3 px-4 sm:px-6 font-extrabold text-sm border-b-2 transition-all duration-200 cursor-pointer ${
+                    detailTab === tab.key
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  {lang === 'bn' ? tab.bn : tab.en}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tab Panel Content */}
+          <div className="mt-8">
+            
+            {/* 1. OVERVIEW PANEL */}
+            {detailTab === 'overview' && (
+              <div className="grid gap-8 lg:grid-cols-3 items-start">
+                
+                {/* Left 2 Cols: About and Timeline */}
+                <div className="lg:col-span-2 space-y-8">
+                  {/* About Card */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+                    <h3 className="font-extrabold text-slate-900 text-lg mb-4 flex items-center gap-2">
+                      <span>📝</span> {lang === 'bn' ? "এই ক্যারিয়ার সম্পর্কে" : "About This Career"}
+                    </h3>
+                    <p className="text-slate-600 text-sm leading-relaxed mb-6">
                       {currentCareerDetails.about}
                     </p>
+                    
+                    <div className="space-y-3 pt-4 border-t border-slate-100">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{lang === 'bn' ? "প্রধান দায়িত্বসমূহ" : "Key Responsibilities"}</h4>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {currentCareerDetails.keyResponsibilities.map((resp, i) => (
+                          <div key={i} className="flex items-start gap-2.5">
+                            <span className="text-blue-500 font-bold">✓</span>
+                            <span className="text-slate-700 text-xs font-medium leading-normal">{resp}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Primary Action Buttons */}
-                  <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 w-full md:w-auto shrink-0 pt-2 md:pt-0">
-                    <button
-                      onClick={() => {
-                        const id = currentCareerDetails.id;
-                        setSavedCareers(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-                      }}
-                      className={`flex-1 py-3 px-5 rounded-xl font-bold text-sm shadow-sm transition active:scale-95 text-center flex items-center justify-center gap-2 border cursor-pointer ${
-                        savedCareers.includes(currentCareerDetails.id)
-                          ? "bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200"
-                          : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span>{savedCareers.includes(currentCareerDetails.id) ? "❤️" : "🤍"}</span>
-                      <span>{savedCareers.includes(currentCareerDetails.id) ? (lang === 'bn' ? "সংরক্ষিত ক্যারিয়ার" : "Saved Career") : (lang === 'bn' ? "ক্যারিয়ার সংরক্ষণ" : "Save Career")}</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        router.push(`/mentors?career=${encodeURIComponent(currentCareerDetails.title)}`);
-                      }}
-                      className="flex-1 py-3 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition active:scale-95 text-center flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <span>🤝</span>
-                      <span>{lang === 'bn' ? "মেন্টরের সাথে যোগাযোগ" : "Connect Mentor"}</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        const id = currentCareerDetails.id;
-                        if (!goalsSet.includes(id)) {
-                          setGoalsSet(prev => [...prev, id]);
-                          
-                          // Save goal to localStorage for goals and roadmap page integration
-                          const goalData = {
-                            title: currentCareerDetails.title,
-                            targetDate: "2027-12-31",
-                            skillLevel: "Beginner",
-                            whyImportant: lang === 'bn' 
-                              ? `ক্যারিয়ার এক্সপ্লোরার থেকে লক্ষ্য নির্ধারণ করা হয়েছে: ${currentCareerDetails.title}`
-                              : `Set career goal from explore careers: ${currentCareerDetails.title}`,
-                            focusAreas: currentCareerDetails.topSkills.flatMap(s => s.list).slice(0, 3),
-                            updatedAt: new Date().toISOString()
-                          };
-                          localStorage.setItem("career_goal", JSON.stringify(goalData));
-                          localStorage.removeItem("roadmap_completed_tasks"); // clear tasks for new goal
-                          
-                          setShowGoalNotification(true);
-                          setTimeout(() => setShowGoalNotification(false), 4000);
-                        }
-                      }}
-                      className={`flex-1 py-3 px-5 font-bold text-sm rounded-xl shadow-sm transition active:scale-95 text-center flex items-center justify-center gap-2 border cursor-pointer ${
-                        goalsSet.includes(currentCareerDetails.id)
-                          ? "bg-emerald-600 text-white border-emerald-600"
-                          : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span>🎯</span>
-                      <span>{goalsSet.includes(currentCareerDetails.id) ? (lang === 'bn' ? "লক্ষ্য নির্ধারিত" : "Goal Set") : (lang === 'bn' ? "লক্ষ্য নির্ধারণ করুন" : "Set Goal")}</span>
-                    </button>
+                  {/* Day in the life preview timeline */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                        <span>🕒</span> {lang === 'bn' ? "দৈনিক জীবন (সংক্ষেপ)" : "Day in the Life (Summary)"}
+                      </h3>
+                      <button
+                        onClick={() => setDetailTab('day_in_the_life')}
+                        className="text-xs font-bold text-blue-600 hover:text-blue-700 transition"
+                      >
+                        {lang === 'bn' ? "detailed দেখুন" : "View Full Schedule"} →
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {currentCareerDetails.dayInTheLife.slice(0, 3).map((item, i) => (
+                        <div key={i} className="flex gap-4 items-start relative group">
+                          <span className="text-xs font-extrabold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-lg shrink-0">
+                            {item.time}
+                          </span>
+                          <p className="text-slate-700 text-xs font-semibold pt-1">{item.task}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Sub Tab Navigation bar */}
-                <div className="flex border-b border-slate-200 mt-10 overflow-x-auto whitespace-nowrap scrollbar-none -mx-6 sm:-mx-8 lg:-mx-10 px-6 sm:px-8 lg:px-10">
-                  {([
-                    { key: 'overview', bn: 'ওভারভিউ', en: 'Overview' },
-                    { key: 'skills', bn: 'প্রয়োজনীয় দক্ষতা', en: 'Skills' },
-                    { key: 'day_in_the_life', bn: 'দৈনিক জীবন', en: 'Day in the Life' },
-                    { key: 'roadmap', bn: 'রোডম্যাপ', en: 'Roadmap' },
-                    { key: 'resources', bn: 'শেখার সম্পদ', en: 'Resources' },
-                    { key: 'similar_careers', bn: 'অনুরূপ ক্যারিয়ার', en: 'Similar Careers' }
-                  ] as const).map(tab => (
-                    <button
-                      key={tab.key}
-                      onClick={() => setDetailTab(tab.key)}
-                      className={`py-3 px-4 sm:px-6 font-extrabold text-sm border-b-2 transition-all duration-200 cursor-pointer ${
-                        detailTab === tab.key
-                          ? "border-blue-600 text-blue-600"
-                          : "border-transparent text-slate-400 hover:text-slate-600"
-                      }`}
-                    >
-                      {lang === 'bn' ? tab.bn : tab.en}
-                    </button>
+                {/* Right 1 Col: Key Stats & Skills Summary */}
+                <div className="lg:col-span-1 space-y-8">
+                  {/* Key Stats Card */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                    <h3 className="font-extrabold text-slate-900 text-base mb-4 flex items-center gap-2">
+                      <span>📊</span> {lang === 'bn' ? "মূল পরিসংখ্যান" : "Key Stats"}
+                    </h3>
+                    
+                    <div className="divide-y divide-slate-100 text-xs font-semibold">
+                      <div className="flex justify-between py-3">
+                        <span className="text-slate-400">{lang === 'bn' ? "চাহিদা" : "Demand"}</span>
+                        <span className="text-emerald-600 font-extrabold">{currentCareerDetails.demand}</span>
+                      </div>
+                      <div className="flex justify-between py-3">
+                        <span className="text-slate-400">{lang === 'bn' ? "চাকরির প্রবৃদ্ধি (১০ বছর)" : "Job Growth (10Y)"}</span>
+                        <span className="text-slate-800 font-bold">{currentCareerDetails.growth}</span>
+                      </div>
+                      <div className="flex justify-between py-3">
+                        <span className="text-slate-400">{lang === 'bn' ? "গড় বেতন" : "Average Salary"}</span>
+                        <span className="text-slate-800 font-bold">{currentCareerDetails.salary}</span>
+                      </div>
+                      <div className="flex justify-between py-3">
+                        <span className="text-slate-400">{lang === 'bn' ? "রিমোট কাজ" : "Remote Jobs"}</span>
+                        <span className="text-slate-800 font-bold">{currentCareerDetails.remote}</span>
+                      </div>
+                      <div className="flex justify-between py-3">
+                        <span className="text-slate-400">{lang === 'bn' ? "প্রয়োজনীয় ডিগ্রি" : "Required Degree"}</span>
+                        <span className="text-slate-800 font-bold">{currentCareerDetails.degree}</span>
+                      </div>
+                      <div className="flex justify-between py-3">
+                        <span className="text-slate-400">{lang === 'bn' ? "অভিজ্ঞতার স্তর" : "Experience Level"}</span>
+                        <span className="text-slate-800 font-bold">{currentCareerDetails.experience}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top Skills Required Card */}
+                  <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                    <h3 className="font-extrabold text-slate-900 text-base mb-4 flex items-center gap-2">
+                      <span>⚡</span> {lang === 'bn' ? "শীর্ষ দক্ষতা সমূহ" : "Top Skills Required"}
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      {currentCareerDetails.topSkills.map((lvl, idx) => {
+                        const badgeColors = lvl.level === 'Beginner' 
+                          ? 'bg-emerald-50 text-emerald-700' 
+                          : lvl.level === 'Intermediate' 
+                          ? 'bg-amber-50 text-amber-700' 
+                          : 'bg-indigo-50 text-indigo-700'
+                        return (
+                          <div key={idx} className="space-y-2">
+                            <span className={`text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded ${badgeColors}`}>
+                              {lvl.level}
+                            </span>
+                            <ul className="text-xs text-slate-600 font-medium space-y-1 pl-1 list-disc list-inside">
+                              {lvl.list.map((sk, sidx) => (
+                                <li key={sidx}>{sk}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* 2. SKILLS PANEL */}
+            {detailTab === 'skills' && (
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                  <span>🛠️</span> {lang === 'bn' ? "দক্ষতা ও সরঞ্জাম সমূহ" : "Skills & Tools Breakdown"}
+                </h3>
+                
+                <div className="grid gap-6 sm:grid-cols-2">
+                  {currentCareerDetails.skillsDetail.map((cat, i) => (
+                    <div key={i} className="border border-slate-100 rounded-2xl p-4 bg-slate-50/50 space-y-3">
+                      <h4 className="font-bold text-slate-900 text-sm border-b border-slate-200/60 pb-1.5">{cat.category}</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {cat.skills.map((sk, sidx) => (
+                          <span key={sidx} className="text-xs font-bold bg-white text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl shadow-xs">
+                            {sk}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
+            )}
 
-              {/* Tab Panel Content */}
-              <div className="mt-8">
-                
-                {/* 1. OVERVIEW PANEL */}
-                {detailTab === 'overview' && (
-                  <div className="grid gap-8 lg:grid-cols-3 items-start">
-                    
-                    {/* Left 2 Cols: About and Timeline */}
-                    <div className="lg:col-span-2 space-y-8">
-                      {/* About Card */}
-                      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
-                        <h3 className="font-extrabold text-slate-900 text-lg mb-4 flex items-center gap-2">
-                          <span>📝</span> {lang === 'bn' ? "এই ক্যারিয়ার সম্পর্কে" : "About This Career"}
-                        </h3>
-                        <p className="text-slate-600 text-sm leading-relaxed mb-6">
-                          {currentCareerDetails.about}
-                        </p>
-                        
-                        <div className="space-y-3 pt-4 border-t border-slate-100">
-                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{lang === 'bn' ? "প্রধান দায়িত্বসমূহ" : "Key Responsibilities"}</h4>
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            {currentCareerDetails.keyResponsibilities.map((resp, i) => (
-                              <div key={i} className="flex items-start gap-2.5">
-                                <span className="text-blue-500 font-bold">✓</span>
-                                <span className="text-slate-700 text-xs font-medium leading-normal">{resp}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Day in the life preview timeline */}
-                      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
-                        <div className="flex justify-between items-center mb-6">
-                          <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
-                            <span>🕒</span> {lang === 'bn' ? "দৈনিক জীবন (সংক্ষেপ)" : "Day in the Life (Summary)"}
-                          </h3>
-                          <button
-                            onClick={() => setDetailTab('day_in_the_life')}
-                            className="text-xs font-bold text-blue-600 hover:text-blue-700 transition"
-                          >
-                            {lang === 'bn' ? "বিস্তারিত দেখুন" : "View Full Schedule"} →
-                          </button>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          {currentCareerDetails.dayInTheLife.slice(0, 3).map((item, i) => (
-                            <div key={i} className="flex gap-4 items-start relative group">
-                              <span className="text-xs font-extrabold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-lg shrink-0">
-                                {item.time}
-                              </span>
-                              <p className="text-slate-700 text-xs font-semibold pt-1">{item.task}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right 1 Col: Key Stats & Skills Summary */}
-                    <div className="lg:col-span-1 space-y-8">
-                      {/* Key Stats Card */}
-                      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                        <h3 className="font-extrabold text-slate-900 text-base mb-4 flex items-center gap-2">
-                          <span>📊</span> {lang === 'bn' ? "মূল পরিসংখ্যান" : "Key Stats"}
-                        </h3>
-                        
-                        <div className="divide-y divide-slate-100 text-xs font-semibold">
-                          <div className="flex justify-between py-3">
-                            <span className="text-slate-400">{lang === 'bn' ? "চাহিদা" : "Demand"}</span>
-                            <span className="text-emerald-600 font-extrabold">{currentCareerDetails.demand}</span>
-                          </div>
-                          <div className="flex justify-between py-3">
-                            <span className="text-slate-400">{lang === 'bn' ? "চাকরির প্রবৃদ্ধি (১০ বছর)" : "Job Growth (10Y)"}</span>
-                            <span className="text-slate-800 font-bold">{currentCareerDetails.growth}</span>
-                          </div>
-                          <div className="flex justify-between py-3">
-                            <span className="text-slate-400">{lang === 'bn' ? "গড় বেতন" : "Average Salary"}</span>
-                            <span className="text-slate-800 font-bold">{currentCareerDetails.salary}</span>
-                          </div>
-                          <div className="flex justify-between py-3">
-                            <span className="text-slate-400">{lang === 'bn' ? "রিমোট কাজ" : "Remote Jobs"}</span>
-                            <span className="text-slate-800 font-bold">{currentCareerDetails.remote}</span>
-                          </div>
-                          <div className="flex justify-between py-3">
-                            <span className="text-slate-400">{lang === 'bn' ? "প্রয়োজনীয় ডিগ্রি" : "Required Degree"}</span>
-                            <span className="text-slate-800 font-bold">{currentCareerDetails.degree}</span>
-                          </div>
-                          <div className="flex justify-between py-3">
-                            <span className="text-slate-400">{lang === 'bn' ? "অভিজ্ঞতার স্তর" : "Experience Level"}</span>
-                            <span className="text-slate-800 font-bold">{currentCareerDetails.experience}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Top Skills Required Card */}
-                      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                        <h3 className="font-extrabold text-slate-900 text-base mb-4 flex items-center gap-2">
-                          <span>⚡</span> {lang === 'bn' ? "শীর্ষ দক্ষতা সমূহ" : "Top Skills Required"}
-                        </h3>
-                        
-                        <div className="space-y-4">
-                          {currentCareerDetails.topSkills.map((lvl, idx) => {
-                            const badgeColors = lvl.level === 'Beginner' 
-                              ? 'bg-emerald-50 text-emerald-700' 
-                              : lvl.level === 'Intermediate' 
-                              ? 'bg-amber-50 text-amber-700' 
-                              : 'bg-indigo-50 text-indigo-700'
-                            return (
-                              <div key={idx} className="space-y-2">
-                                <span className={`text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded ${badgeColors}`}>
-                                  {lvl.level}
-                                </span>
-                                <ul className="text-xs text-slate-600 font-medium space-y-1 pl-1 list-disc list-inside">
-                                  {lvl.list.map((sk, sidx) => (
-                                    <li key={sidx}>{sk}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-                )}
-
-                {/* 2. SKILLS PANEL */}
-                {detailTab === 'skills' && (
-                  <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-                    <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
-                      <span>🛠️</span> {lang === 'bn' ? "দক্ষতা ও সরঞ্জাম সমূহ" : "Skills & Tools Breakdown"}
-                    </h3>
-                    
-                    <div className="grid gap-6 sm:grid-cols-2">
-                      {currentCareerDetails.skillsDetail.map((cat, i) => (
-                        <div key={i} className="border border-slate-100 rounded-2xl p-4 bg-slate-50/50 space-y-3">
-                          <h4 className="font-bold text-slate-900 text-sm border-b border-slate-200/60 pb-1.5">{cat.category}</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {cat.skills.map((sk, sidx) => (
-                              <span key={sidx} className="text-xs font-bold bg-white text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl shadow-xs">
-                                {sk}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. DAY IN THE LIFE PANEL */}
-                {detailTab === 'day_in_the_life' && (
-                  <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-                    <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
-                      <span>📅</span> {lang === 'bn' ? "দৈনিক কাজ ও রুটিন" : "Typical Day Schedule"}
-                    </h3>
-                    
-                    <div className="relative pl-6 border-l-2 border-slate-100 space-y-8 ml-4">
-                      {currentCareerDetails.dayInTheLife.map((item, i) => (
-                        <div key={i} className="relative group">
-                          {/* Timeline dot */}
-                          <div className="absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 border-blue-600 bg-white group-hover:bg-blue-600 transition-colors"></div>
-                          
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                            <span className="text-xs font-extrabold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-lg shrink-0 w-fit">
-                              {item.time}
-                            </span>
-                            <h4 className="text-slate-800 text-sm font-semibold leading-relaxed">{item.task}</h4>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. ROADMAP PANEL */}
-                {detailTab === 'roadmap' && (
-                  <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-                    <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
-                      <span>🗺️</span> {lang === 'bn' ? "রোডম্যাপ ও গাইডলাইন" : "Step-by-Step Learning Roadmap"}
-                    </h3>
-                    
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                      {currentCareerDetails.roadmap.map((step, idx) => (
-                        <div key={idx} className="bg-slate-50 border border-slate-100 hover:border-blue-100 rounded-2xl p-5 relative overflow-hidden group shadow-xs">
-                          <span className="absolute right-3 top-2 font-black text-slate-200/60 text-4xl group-hover:text-blue-100 transition-colors">{idx + 1}</span>
-                          <div className="relative space-y-2.5">
-                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded">
-                              {step.step}
-                            </span>
-                            <h4 className="font-bold text-slate-900 text-sm">{step.title}</h4>
-                            <p className="text-slate-500 text-xs leading-relaxed">{step.description}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 5. RESOURCES PANEL */}
-                {detailTab === 'resources' && (
-                  <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-                    <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
-                      <span>📚</span> {lang === 'bn' ? "প্রস্তাবিত শেখার সম্পদ" : "Recommended Learning Resources"}
-                    </h3>
-                    
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {currentCareerDetails.resources.map((res, i) => (
-                        <a
-                          key={i}
-                          href={res.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-white border border-slate-200 hover:border-blue-300 rounded-2xl p-5 shadow-xs hover:shadow-md transition duration-200 block group"
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <span className="text-[10px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md">
-                              {res.type}
-                            </span>
-                            <span className="text-slate-400 group-hover:text-blue-500 transition-colors">↗</span>
-                          </div>
-                          
-                          <h4 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors mb-1">{res.title}</h4>
-                          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{res.provider}</p>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 6. SIMILAR CAREERS PANEL */}
-                {detailTab === 'similar_careers' && (
-                  <div className="space-y-6">
-                    <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
-                      <span>🔗</span> {lang === 'bn' ? "অনুরূপ ক্যারিয়ার বিকল্পসমূহ" : "Similar Careers Options"}
-                    </h3>
-                    
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                      {currentCareerDetails.similarCareers.length === 0 ? (
-                        <p className="text-sm text-slate-500">{lang === 'bn' ? "কোনো অনুরূপ ক্যারিয়ার পাওয়া যায়নি।" : "No similar careers found."}</p>
-                      ) : (
-                        currentCareerDetails.similarCareers.map(cid => {
-                          const item = careerDetails[cid];
-                          if (!item) return null;
-                          return (
-                            <div
-                              key={cid}
-                              onClick={() => {
-                                const rec = recommendations.find(r => r.id === cid) || { id: item.id, title: item.title, description: item.about };
-                                setSelectedCareer(rec);
-                                setDetailTab('overview');
-                              }}
-                              className="bg-white border border-slate-100 hover:border-blue-200 rounded-2xl p-5 shadow-xs hover:shadow-md transition duration-200 flex items-center gap-4 cursor-pointer group"
-                            >
-                              <div className="shrink-0 transform group-hover:scale-105 transition-transform duration-200">
-                                {getCareerIcon(item.title, true)}
-                              </div>
-                              <div className="min-w-0 flex-grow">
-                                <h4 className="font-extrabold text-slate-900 text-sm truncate leading-snug group-hover:text-blue-600 transition">
-                                  {item.title}
-                                </h4>
-                                <span className="text-xs font-bold text-emerald-600 mt-0.5 block">
-                                  {careerFitPercentage[cid] || 80}% {lang === 'bn' ? "মিলেছে" : "Match"}
-                                </span>
-                              </div>
-                            </div>
-                          )
-                        })
-                      )}
-                    </div>
-                  </div>
-                )}
-
-              </div>
-
-            </div>
-          ) : hasTakenAssessment ? (
-            /* Recommendations Screen */
-            <div className="space-y-8 sm:space-y-10">
-              
-              {/* Header summary panel */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm relative overflow-hidden">
-                <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-                <div className="absolute -left-8 -bottom-8 w-44 h-44 bg-indigo-500/5 rounded-full blur-3xl"></div>
-                
-                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="space-y-2 max-w-xl">
-                    <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wider">
-                      {lang === 'bn' ? "২. ফলাফল ও সুপারিশ" : "2. Explore Career Matches"}
-                    </span>
-                    <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-                      {lang === 'bn' ? "আপনার উপযুক্ত ক্যারিয়ারসমূহ" : "Recommended Careers For You"}
-                    </h1>
-                    <p className="text-slate-500 text-sm sm:text-base leading-relaxed">
-                      {lang === 'bn' ? `${user?.mbti || localMbti || "ESTJ"} ব্যক্তিত্বের ধরণ ভিত্তিক সঠিক পছন্দগুলো` : `Based on your assessment results (${user?.mbti || localMbti || "ESTJ"} Personality Type)`}
-                    </p>
-                  </div>
-
-                  {/* Large Personality Badge */}
-                  <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-6 sm:p-8 rounded-2xl text-center text-white shrink-0 shadow-lg shadow-blue-100 flex flex-col justify-center items-center">
-                    <p className="text-blue-100 text-xs font-bold tracking-wider uppercase mb-1">{lang === 'bn' ? "ব্যক্তিত্ব ধরণ" : "Personality"}</p>
-                    <h2 className="text-4xl sm:text-5xl font-black tracking-tight">{user?.mbti || localMbti || "ESTJ"}</h2>
-                    <p className="text-blue-200 text-[10px] font-semibold mt-2 max-w-[120px] uppercase">{lang === 'bn' ? "ব্যক্তিত্ব প্রোফাইল" : "Profile Type"}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* 1. TOP MATCH CARDS (Vertical cards grid) */}
-              <div className="space-y-4">
-                <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl flex items-center gap-2 text-left">
-                  <span>🎯</span> {lang === 'bn' ? "আপনার জন্য সেরা ক্যারিয়ারসমূহ" : "Recommended Careers For You"}
+            {/* 3. DAY IN THE LIFE PANEL */}
+            {detailTab === 'day_in_the_life' && (
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                  <span>📅</span> {lang === 'bn' ? "দৈনিক কাজ ও রুটিন" : "Typical Day Schedule"}
                 </h3>
-
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                  {topRecommendations.map((rec) => {
-                    const fit = careerFitPercentage[rec.id] || 90
-                    const description = getCareerDescription(rec.title, rec.description)
-                    return (
-                      <div 
-                        key={rec.id} 
-                        className="bg-white border border-slate-100 hover:border-blue-200 rounded-3xl p-6 shadow-sm hover:shadow-lg transition duration-300 flex flex-col items-center text-center relative overflow-hidden group"
-                      >
-                        <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl group-hover:bg-blue-500/10 transition-colors"></div>
-                        
-                        <div className="relative flex flex-col items-center flex-grow space-y-4 w-full">
-                          {/* Fit Rate top bar (centered) */}
-                          <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">
-                            {fit}% {lang === 'bn' ? "মিলেছে" : "Match"}
-                          </span>
-
-                          {/* Custom SVG Icon Container (Squircle) */}
-                          <div className="transform group-hover:scale-105 transition-transform duration-300">
-                            {getCareerIcon(rec.title, false)}
-                          </div>
-
-                          {/* Career Title & Description */}
-                          <div className="space-y-2">
-                            <h4 className="font-extrabold text-slate-900 text-base leading-snug group-hover:text-blue-600 transition">
-                              {rec.title}
-                            </h4>
-                            <p className="text-slate-500 text-xs leading-relaxed line-clamp-2 px-1">
-                              {description}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Centered View Details button/link at bottom */}
-                        <div className="relative w-full mt-6 pt-4 border-t border-slate-100 flex justify-center">
-                          <button
-                            onClick={() => setSelectedCareer(rec)}
-                            className="font-bold text-xs text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                          >
-                            <span>{lang === 'bn' ? "বিস্তারিত দেখুন" : "View Details"}</span>
-                            <span className="group-hover:translate-x-1 transition-transform">→</span>
-                          </button>
-                        </div>
+                
+                <div className="relative pl-6 border-l-2 border-slate-100 space-y-8 ml-4">
+                  {currentCareerDetails.dayInTheLife.map((item, i) => (
+                    <div key={i} className="relative group">
+                      {/* Timeline dot */}
+                      <div className="absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 border-blue-600 bg-white group-hover:bg-blue-600 transition-colors"></div>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <span className="text-xs font-extrabold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-lg shrink-0 w-fit">
+                          {item.time}
+                        </span>
+                        <h4 className="text-slate-800 text-sm font-semibold leading-relaxed">{item.task}</h4>
                       </div>
-                    )
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
+            )}
 
-              {/* 2. MORE CAREER OPTIONS (Grid layout with filter) */}
-              {secondaryRecommendations.length > 0 && (
-                <div className="space-y-4 pt-4">
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                    <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl flex items-center gap-2">
-                      <span>📊</span> {lang === 'bn' ? "আরও ক্যারিয়ার বিকল্পসমূহ" : "More Career Options"}
-                    </h3>
-                    
-                    <button
-                      onClick={() => setFilterActive(prev => !prev)}
-                      className={`px-3.5 py-1.5 rounded-lg border font-bold text-xs flex items-center gap-2 shadow-sm transition active:scale-95 cursor-pointer ${
-                        filterActive 
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                      }`}
+            {/* 4. ROADMAP PANEL */}
+            {detailTab === 'roadmap' && (
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                  <span>🗺️</span> {lang === 'bn' ? "রোডম্যাপ ও গাইডলাইন" : "Step-by-Step Learning Roadmap"}
+                </h3>
+                
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  {currentCareerDetails.roadmap.map((step, idx) => (
+                    <div key={idx} className="bg-slate-50 border border-slate-100 hover:border-blue-100 rounded-2xl p-5 relative overflow-hidden group shadow-xs">
+                      <span className="absolute right-3 top-2 font-black text-slate-200/60 text-4xl group-hover:text-blue-100 transition-colors">{idx + 1}</span>
+                      <div className="relative space-y-2.5">
+                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded">
+                          {step.step}
+                        </span>
+                        <h4 className="font-bold text-slate-900 text-sm">{step.title}</h4>
+                        <p className="text-slate-500 text-xs leading-relaxed">{step.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 5. RESOURCES PANEL */}
+            {detailTab === 'resources' && (
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+                <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                  <span>📚</span> {lang === 'bn' ? "প্রস্তাবিত শেখার সম্পদ" : "Recommended Learning Resources"}
+                </h3>
+                
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {currentCareerDetails.resources.map((res, i) => (
+                    <a
+                      key={i}
+                      href={res.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white border border-slate-200 hover:border-blue-300 rounded-2xl p-5 shadow-xs hover:shadow-md transition duration-200 block group"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                      </svg>
-                      <span>{lang === 'bn' ? "ফিল্টার" : "Filter"}</span>
-                    </button>
-                  </div>
+                      <div className="flex justify-between items-start mb-3">
+                        <span className="text-[10px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md">
+                          {res.type}
+                        </span>
+                        <span className="text-slate-400 group-hover:text-blue-500 transition-colors">↗</span>
+                      </div>
+                      
+                      <h4 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors mb-1">{res.title}</h4>
+                      <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{res.provider}</p>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {secondaryRecommendations.map((rec) => {
-                      const fit = careerFitPercentage[rec.id] || 75
+            {/* 6. SIMILAR CAREERS PANEL */}
+            {detailTab === 'similar_careers' && (
+              <div className="space-y-6">
+                <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                  <span>🔗</span> {lang === 'bn' ? "অনুরূপ ক্যারিয়ার বিকল্পসমূহ" : "Similar Careers Options"}
+                </h3>
+                
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {currentCareerDetails.similarCareers.length === 0 ? (
+                    <p className="text-sm text-slate-500">{lang === 'bn' ? "কোনো অনুরূপ ক্যারিয়ার পাওয়া যায়নি।" : "No similar careers found."}</p>
+                  ) : (
+                    currentCareerDetails.similarCareers.map(cid => {
+                      const item = careerDetails[cid];
+                      if (!item) return null;
                       return (
-                        <div 
-                          key={rec.id}
-                          onClick={() => setSelectedCareer(rec)}
-                          className="bg-white border border-slate-100 hover:border-blue-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition duration-200 flex items-center gap-4 cursor-pointer group text-left"
+                        <div
+                          key={cid}
+                          onClick={() => {
+                            const rec = recommendations.find(r => r.id === cid) || { id: item.id, title: item.title, description: item.about };
+                            setSelectedCareer(rec);
+                            setDetailTab('overview');
+                          }}
+                          className="bg-white border border-slate-100 hover:border-blue-200 rounded-2xl p-5 shadow-xs hover:shadow-md transition duration-200 flex items-center gap-4 cursor-pointer group"
                         >
                           <div className="shrink-0 transform group-hover:scale-105 transition-transform duration-200">
-                            {getCareerIcon(rec.title, true)}
+                            {getCareerIcon(item.title, true)}
                           </div>
                           <div className="min-w-0 flex-grow">
                             <h4 className="font-extrabold text-slate-900 text-sm truncate leading-snug group-hover:text-blue-600 transition">
-                              {rec.title}
+                              {item.title}
                             </h4>
                             <span className="text-xs font-bold text-emerald-600 mt-0.5 block">
-                              {fit}% {lang === 'bn' ? "মিলেছে" : "Match"}
+                              {careerFitPercentage[cid] || 80}% {lang === 'bn' ? "মিলেছে" : "Match"}
                             </span>
                           </div>
                         </div>
                       )
-                    })}
-                  </div>
+                    })
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Go to Dashboard Action */}
-              <div className="border-t border-slate-200 pt-8 flex justify-center">
-                <Link
-                  href="/dashboard"
-                  className="py-4 px-12 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-extrabold text-white transition shadow-md shadow-blue-100 active:scale-95 text-center text-sm"
-                >
-                  {lang === 'bn' ? "ড্যাশবোর্ডে ফিরুন" : "Go to Dashboard"}
-                </Link>
+          </div>
+
+        </div>
+      ) : hasTakenAssessment ? (
+        /* Recommendations Screen */
+        <div className="space-y-8 sm:space-y-10">
+          
+          {/* Header summary panel */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
+            <div className="absolute -left-8 -bottom-8 w-44 h-44 bg-indigo-500/5 rounded-full blur-3xl"></div>
+            
+            <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-2 max-w-xl">
+                <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wider">
+                  {lang === 'bn' ? "২. ফলাফল ও সুপারিশ" : "2. Explore Career Matches"}
+                </span>
+                <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                  {lang === 'bn' ? "আপনার উপযুক্ত ক্যারিয়ারসমূহ" : "Recommended Careers For You"}
+                </h1>
+                <p className="text-slate-500 text-sm sm:text-base leading-relaxed">
+                  {lang === 'bn' ? `${user?.mbti || localMbti || "ESTJ"} ব্যক্তিত্বের ধরণ ভিত্তিক সঠিক পছন্দগুলো` : `Based on your assessment results (${user?.mbti || localMbti || "ESTJ"} Personality Type)`}
+                </p>
               </div>
 
+              {/* Large Personality Badge */}
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-6 sm:p-8 rounded-2xl text-center text-white shrink-0 shadow-lg shadow-blue-100 flex flex-col justify-center items-center">
+                <p className="text-blue-100 text-xs font-bold tracking-wider uppercase mb-1">{lang === 'bn' ? "ব্যক্তিত্ব ধরণ" : "Personality"}</p>
+                <h2 className="text-4xl sm:text-5xl font-black tracking-tight">{user?.mbti || localMbti || "ESTJ"}</h2>
+                <p className="text-blue-200 text-[10px] font-semibold mt-2 max-w-[120px] uppercase">{lang === 'bn' ? "ব্যক্তিত্ব প্রোফাইল" : "Profile Type"}</p>
+              </div>
             </div>
-          ) : (
-            /* Pending CTA Card */
-            <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-sm relative overflow-hidden space-y-6">
-              <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-              <div className="absolute -left-8 -bottom-8 w-44 h-44 bg-indigo-500/5 rounded-full blur-3xl"></div>
-              
-              <div className="text-6xl animate-bounce">🎯</div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                {lang === 'bn' ? "ব্যক্তিত্ব ও ক্যারিয়ার মূল্যায়ন করুন" : "Explore Careers Recommendations"}
-              </h2>
-              <p className="text-slate-500 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
-                {lang === 'bn' 
-                  ? "আপনার ক্যারিয়ার সুপারিশ দেখতে প্রথমে ৫ মিনিটের একটি মূল্যায়ন করতে হবে।" 
-                  : "To view matching career recommendations, please complete the personality and interests assessment first."
-                }
-              </p>
-              <div className="pt-4">
-                <Link 
-                  href="/assessment" 
-                  className="inline-flex justify-center items-center py-4 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-xl shadow-md transition transform hover:scale-105 active:scale-95 text-sm"
+          </div>
+
+          {/* 1. TOP MATCH CARDS (Vertical cards grid) */}
+          <div className="space-y-4">
+            <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl flex items-center gap-2 text-left">
+              <span>🎯</span> {lang === 'bn' ? "আপনার জন্য সেরা ক্যারিয়ারসমূহ" : "Recommended Careers For You"}
+            </h3>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {topRecommendations.map((rec) => {
+                const fit = careerFitPercentage[rec.id] || 90
+                const description = getCareerDescription(rec.title, rec.description)
+                return (
+                  <div 
+                    key={rec.id} 
+                    className="bg-white border border-slate-100 hover:border-blue-200 rounded-3xl p-6 shadow-sm hover:shadow-lg transition duration-300 flex flex-col items-center text-center relative overflow-hidden group"
+                  >
+                    <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl group-hover:bg-blue-500/10 transition-colors"></div>
+                    
+                    <div className="relative flex flex-col items-center flex-grow space-y-4 w-full">
+                      {/* Fit Rate top bar (centered) */}
+                      <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">
+                        {fit}% {lang === 'bn' ? "মিলেছে" : "Match"}
+                      </span>
+
+                      {/* Custom SVG Icon Container (Squircle) */}
+                      <div className="transform group-hover:scale-105 transition-transform duration-300">
+                        {getCareerIcon(rec.title, false)}
+                      </div>
+
+                      {/* Career Title & Description */}
+                      <div className="space-y-2">
+                        <h4 className="font-extrabold text-slate-900 text-base leading-snug group-hover:text-blue-600 transition">
+                          {rec.title}
+                        </h4>
+                        <p className="text-slate-500 text-xs leading-relaxed line-clamp-2 px-1">
+                          {description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Centered View Details button/link at bottom */}
+                    <div className="relative w-full mt-6 pt-4 border-t border-slate-100 flex justify-center">
+                      <button
+                        onClick={() => setSelectedCareer(rec)}
+                        className="font-bold text-xs text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <span>{lang === 'bn' ? "বিস্তারিত দেখুন" : "View Details"}</span>
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* 2. MORE CAREER OPTIONS (Grid layout with filter) */}
+          {secondaryRecommendations.length > 0 && (
+            <div className="space-y-4 pt-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl flex items-center gap-2">
+                  <span>📊</span> {lang === 'bn' ? "আরও ক্যারিয়ার বিকল্পসমূহ" : "More Career Options"}
+                </h3>
+                
+                <button
+                  onClick={() => setFilterActive(prev => !prev)}
+                  className={`px-3.5 py-1.5 rounded-lg border font-bold text-xs flex items-center gap-2 shadow-sm transition active:scale-95 cursor-pointer ${
+                    filterActive 
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                  }`}
                 >
-                  {lang === 'bn' ? "মূল্যায়ন শুরু করুন" : "Start Career Assessment"}
-                </Link>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  <span>{lang === 'bn' ? "ফিল্টার" : "Filter"}</span>
+                </button>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {secondaryRecommendations.map((rec) => {
+                  const fit = careerFitPercentage[rec.id] || 75
+                  return (
+                    <div 
+                      key={rec.id}
+                      onClick={() => setSelectedCareer(rec)}
+                      className="bg-white border border-slate-100 hover:border-blue-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition duration-200 flex items-center gap-4 cursor-pointer group text-left"
+                    >
+                      <div className="shrink-0 transform group-hover:scale-105 transition-transform duration-200">
+                        {getCareerIcon(rec.title, true)}
+                      </div>
+                      <div className="min-w-0 flex-grow">
+                        <h4 className="font-extrabold text-slate-900 text-sm truncate leading-snug group-hover:text-blue-600 transition">
+                          {rec.title}
+                        </h4>
+                        <span className="text-xs font-bold text-emerald-600 mt-0.5 block">
+                          {fit}% {lang === 'bn' ? "মিলেছে" : "Match"}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
 
-        </main>
-      </div>
+          {/* Go to Dashboard Action */}
+          <div className="border-t border-slate-200 pt-8 flex justify-center">
+            <Link
+              href="/dashboard"
+              className="py-4 px-12 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-extrabold text-white transition shadow-md shadow-blue-100 active:scale-95 text-center text-sm"
+            >
+              {lang === 'bn' ? "ড্যাশবোর্ডে ফিরুন" : "Go to Dashboard"}
+            </Link>
+          </div>
 
-      {/* Auth Modal pop-up */}
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
-
-    </div>
+        </div>
+      ) : (
+        /* Pending CTA Card */
+        <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-sm relative overflow-hidden space-y-6">
+          <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
+          <div className="absolute -left-8 -bottom-8 w-44 h-44 bg-indigo-500/5 rounded-full blur-3xl"></div>
+          
+          <div className="text-6xl animate-bounce">🎯</div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+            {lang === 'bn' ? "ব্যক্তিত্ব ও ক্যারিয়ার মূল্যায়ন করুন" : "Explore Careers Recommendations"}
+          </h2>
+          <p className="text-slate-500 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
+            {lang === 'bn' 
+              ? "আপনার ক্যারিয়ার সুপারিশ দেখতে প্রথমে ৫ মিনিটের একটি মূল্যায়ন করতে হবে।" 
+              : "To view matching career recommendations, please complete the personality and interests assessment first."
+            }
+          </p>
+          <div className="pt-4">
+            <Link 
+              href="/assessment" 
+              className="inline-flex justify-center items-center py-4 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-xl shadow-md transition transform hover:scale-105 active:scale-95 text-sm"
+            >
+              {lang === 'bn' ? "মূল্যায়ন শুরু করুন" : "Start Career Assessment"}
+            </Link>
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
   )
 }
-
 function getCareerIcon(title: string, isCircular: boolean = false) {
   const label = title.toLowerCase()
   const paddingClass = isCircular ? "p-3 rounded-full" : "p-4 rounded-2xl"

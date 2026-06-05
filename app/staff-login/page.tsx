@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "../contexts/UserContext";
+import { useLanguage } from "../contexts/LanguageContext";
 import LanguageToggle from "../components/LanguageToggle";
 
 async function readJsonSafely(res: Response) {
@@ -19,6 +20,9 @@ async function readJsonSafely(res: Response) {
 export default function StaffLoginPage() {
   const router = useRouter();
   const { user, setUser } = useUser();
+  const { lang, t } = useLanguage();
+  const a = t.auth;
+
   const [mode, setMode] = useState<"login" | "register">("login");
   const [type, setType] = useState<"mentor" | "admin">("mentor");
   const [name, setName] = useState("");
@@ -61,7 +65,7 @@ export default function StaffLoginPage() {
     }
 
     if (mode === "register") {
-      setMessage("Mentor registration successful. You can now log in.");
+      setMessage(lang === 'bn' ? "মেন্টর নিবন্ধন সফল হয়েছে। আপনি এখন লগইন করতে পারেন।" : "Mentor registration successful. You can now log in.");
       setMessageType("success");
       setMode("login");
       setPassword("");
@@ -69,7 +73,7 @@ export default function StaffLoginPage() {
     }
 
     setUser(data?.user || null);
-    setMessage("Login successful");
+    setMessage(lang === 'bn' ? "লগইন সফল হয়েছে।" : "Login successful");
     setMessageType("success");
 
     const role = data?.user?.type;
@@ -86,30 +90,46 @@ export default function StaffLoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="relative min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 overflow-hidden select-none">
+      {/* Glow decorations */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl"></div>
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-purple-500/10 blur-3xl"></div>
+
       <div className="absolute top-4 right-4 z-10">
         <LanguageToggle />
       </div>
 
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white text-center">
-            <h1 className="text-2xl font-bold">Staff Login</h1>
-            <p className="text-white/80 mt-2 text-sm">For mentor and admin access only</p>
+      <div className="w-full max-w-md z-10">
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 shadow-2xl rounded-3xl overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="bg-slate-900/60 border-b border-slate-800/60 px-6 py-6 sm:py-8 text-center relative">
+            <div className="relative inline-flex items-center justify-center mb-3">
+              <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-lg scale-125"></div>
+              <div className="relative w-16 h-16 bg-slate-800/80 border border-slate-700/60 text-3xl rounded-2xl flex items-center justify-center shadow-lg">
+                💼
+              </div>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
+              {lang === 'bn' ? "স্টাফ পোর্টাল" : "Staff Portal"}
+            </h1>
+            <p className="text-slate-400 text-xs sm:text-sm mt-1.5 font-medium">
+              {lang === 'bn' ? "কেবলমাত্র মেন্টর ও অ্যাডমিনদের অ্যাক্সেস" : "For mentor and admin access only"}
+            </p>
           </div>
 
-          <div className="p-6">
-            <div className="flex gap-2 mb-5">
+          <div className="px-6 py-6 sm:px-8 sm:py-8 space-y-6">
+            {/* Mode Toggle */}
+            <div className="flex bg-slate-950/60 p-1 rounded-2xl border border-slate-800/60 gap-1">
               <button
                 type="button"
                 onClick={() => setMode("login")}
-                className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
                   mode === "login"
-                    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-indigo-600/10"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
                 }`}
               >
-                Login
+                {a.login}
               </button>
               <button
                 type="button"
@@ -117,19 +137,22 @@ export default function StaffLoginPage() {
                   setType("mentor");
                   setMode("register");
                 }}
-                className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
                   mode === "register"
-                    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-indigo-600/10"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
                 }`}
               >
-                Register as Mentor
+                {lang === 'bn' ? "মেন্টর নিবন্ধন" : "Register as Mentor"}
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+              {/* Role dropdown (only active/changeable in login mode) */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                  {lang === 'bn' ? "ভূমিকা" : "Access Role"}
+                </label>
                 <select
                   value={type}
                   onChange={e => {
@@ -139,81 +162,95 @@ export default function StaffLoginPage() {
                       setMode("login");
                     }
                   }}
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition bg-none cursor-pointer"
                   title="Staff role"
                   disabled={mode === "register"}
                 >
-                  <option value="mentor">Mentor</option>
-                  <option value="admin">Admin</option>
+                  <option value="mentor" className="bg-slate-950 text-slate-200">{lang === 'bn' ? "মেন্টর (Mentor)" : "Mentor"}</option>
+                  <option value="admin" className="bg-slate-950 text-slate-200">{lang === 'bn' ? "অ্যাডমিন (Admin)" : "Admin"}</option>
                 </select>
               </div>
 
+              {/* Full name (only during mentor registration) */}
               {mode === "register" && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">{a.fullName}</label>
                   <input
                     type="text"
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-300 shadow-inner"
                     placeholder="Your full name"
                     required
                   />
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+              {/* Email */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">{a.email}</label>
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-300 shadow-inner"
                   placeholder="staff@example.com"
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+              {/* Password */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">{a.password}</label>
                 <input
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-300 shadow-inner"
                   placeholder="••••••••"
                   required
                 />
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full py-3 px-4 rounded-lg font-bold text-white transition ${
-                  loading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700"
-                }`}
+                className="w-full py-3.5 px-4 rounded-xl font-extrabold text-sm text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 active:scale-98 transition transform cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-3"
               >
-                {loading ? (mode === "register" ? "Registering..." : "Signing in...") : (mode === "register" ? "Create Mentor Account" : "Sign In")}
+                {loading && (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                )}
+                <span>
+                  {loading 
+                    ? (mode === "register" ? a.processing : a.processing) 
+                    : (mode === "register" ? (lang === 'bn' ? "অ্যাকাউন্ট তৈরি করুন" : "Create Mentor Account") : a.signInBtn)
+                  }
+                </span>
               </button>
             </form>
 
+            {/* Success/Error Alert Messages */}
             {message && (
               <div
-                className={`mt-4 p-3 rounded-lg text-sm font-semibold text-center ${
+                className={`px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2 border transition duration-200 ${
                   messageType === "success"
-                    ? "bg-green-100 text-green-800 border-l-4 border-green-500"
-                    : "bg-red-100 text-red-800 border-l-4 border-red-500"
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                    : "bg-rose-500/10 text-rose-400 border-rose-500/20"
                 }`}
               >
-                {message}
+                <span className="text-base shrink-0">{messageType === "success" ? "✅" : "❌"}</span>
+                <span className="leading-snug">{message}</span>
               </div>
             )}
 
-            <div className="mt-4 text-center">
-              <Link href="/" className="text-blue-600 hover:text-blue-700 font-semibold text-sm">
-                Back to home
+            {/* Bottom Back Button */}
+            <div className="pt-2 text-center border-t border-slate-800/60">
+              <Link 
+                href="/" 
+                className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-all"
+              >
+                ← {lang === 'bn' ? "মূল পাতায় ফিরে যান" : "Back to Home"}
               </Link>
             </div>
           </div>

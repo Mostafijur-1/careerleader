@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../contexts/UserContext";
@@ -9,7 +10,7 @@ const typeIcons = {
 };
 
 const typeColors = {
-  student: "from-blue-500 to-blue-600",
+  student: "from-blue-500 to-indigo-605",
 };
 
 interface AuthModalProps {
@@ -100,42 +101,53 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto"
+      className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[92vh] flex flex-col relative my-4 sm:my-8" onClick={(e) => e.stopPropagation()}>
+      <div 
+        className="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 shadow-2xl w-full max-w-md max-h-[92vh] flex flex-col relative my-4 sm:my-8 rounded-3xl overflow-hidden select-none" 
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl z-10"
+          className="absolute top-4 right-4 text-slate-400 hover:text-white text-xl z-20 transition active:scale-95 cursor-pointer"
+          aria-label="Close"
         >
           ✕
         </button>
 
-        {/* Header - Fixed */}
-        <div className={`bg-gradient-to-r ${typeColors[type]} px-4 sm:px-6 py-4 sm:py-5 text-white text-center flex-shrink-0`}>
-          <div className="text-4xl sm:text-5xl mb-1 sm:mb-2">{typeIcons[type]}</div>
-          <h2 className="text-xl sm:text-2xl font-bold capitalize">{mode === "login" ? a.welcomeBack : a.joinUs}</h2>
-          <p className="text-white/80 text-sm mt-1">
+        {/* Header */}
+        <div className="bg-slate-900/40 border-b border-slate-800/60 px-6 py-6 sm:py-8 text-center flex-shrink-0 relative">
+          <div className="relative inline-flex items-center justify-center mb-3">
+            <div className="absolute inset-0 bg-indigo-500/20 rounded-full blur-lg scale-125"></div>
+            <div className="relative w-16 h-16 bg-slate-800/80 border border-slate-700/60 text-3xl rounded-2xl flex items-center justify-center shadow-lg">
+              {typeIcons[type]}
+            </div>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
+            {mode === "login" ? a.welcomeBack : a.joinUs}
+          </h2>
+          <p className="text-slate-400 text-xs sm:text-sm mt-1.5 font-medium">
             {mode === "login" ? a.signIn : a.createAccount}
           </p>
         </div>
 
-        {/* Form Container - Scrollable */}
-        <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6 py-3 sm:py-4">
+        {/* Form Container */}
+        <div className="flex-1 overflow-y-auto min-h-0 px-6 py-6 sm:px-8 sm:py-8 space-y-6">
           {/* Mode Toggle */}
-          <div className="flex gap-2 mb-5">
+          <div className="flex bg-slate-950/60 p-1 rounded-2xl border border-slate-800/60 gap-1">
             <button
               type="button"
               onClick={() => setMode("login")}
-              className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition ${
+              className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
                 mode === "login"
-                  ? `bg-gradient-to-r ${typeColors[type]} text-white`
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-indigo-600/10"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
               }`}
             >
               {a.login}
@@ -143,54 +155,53 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <button
               type="button"
               onClick={() => setMode("register")}
-              className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition ${
+              className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
                 mode === "register"
-                  ? `bg-gradient-to-r ${typeColors[type]} text-white`
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-indigo-600/10"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
               }`}
             >
               {a.register}
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Registration Fields */}
             {mode === "register" && (
-              <>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">{a.fullName}</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                    placeholder="John Doe"
-                    required
-                  />
-                </div>
-              </>
+              <div className="space-y-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">{a.fullName}</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-300 shadow-inner"
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
             )}
 
-            {/* Email & Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">{a.email}</label>
+            {/* Email */}
+            <div className="space-y-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">{a.email}</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-300 shadow-inner"
                 placeholder="you@example.com"
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">{a.password}</label>
+            {/* Password */}
+            <div className="space-y-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">{a.password}</label>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-300 shadow-inner"
                 placeholder="••••••••"
                 required
               />
@@ -200,26 +211,26 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-2.5 px-4 rounded-lg font-bold text-sm text-white transition transform hover:scale-105 mt-3 ${
-                loading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : `bg-gradient-to-r ${typeColors[type]} hover:shadow-lg`
-              }`}
+              className="w-full py-3.5 px-4 rounded-xl font-extrabold text-sm text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 active:scale-98 transition transform cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-3"
             >
-              {loading ? a.processing : mode === "login" ? a.signInBtn : a.createAccountBtn}
+              {loading && (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              )}
+              <span>{loading ? a.processing : mode === "login" ? a.signInBtn : a.createAccountBtn}</span>
             </button>
           </form>
 
-          {/* Success/Error Message */}
+          {/* Success/Error Alerts */}
           {message && (
             <div
-              className={`mt-3 p-2.5 rounded-lg text-sm font-semibold text-center transition ${
+              className={`px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2 border transition duration-200 ${
                 messageType === "success"
-                  ? "bg-green-100 text-green-800 border-l-4 border-green-500"
-                  : "bg-red-100 text-red-800 border-l-4 border-red-500"
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                  : "bg-rose-500/10 text-rose-400 border-rose-500/20"
               }`}
             >
-              {messageType === "success" && "✅ "}{messageType === "error" && "❌ "}{message}
+              <span className="text-base shrink-0">{messageType === "success" ? "✅" : "❌"}</span>
+              <span className="leading-snug">{message}</span>
             </div>
           )}
         </div>

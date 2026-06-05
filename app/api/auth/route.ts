@@ -12,6 +12,9 @@ function mapUserForClient(user: {
   name?: string
   mbti?: string
   goal?: any
+  bio?: string
+  skills?: string[]
+  education?: any[]
 }) {
   return {
     id: user._id ? String(user._id) : '',
@@ -20,6 +23,9 @@ function mapUserForClient(user: {
     name: user.name || '',
     mbti: typeof user.mbti === 'string' ? user.mbti : '',
     goal: user.goal || null,
+    bio: user.bio || '',
+    skills: Array.isArray(user.skills) ? user.skills : [],
+    education: Array.isArray(user.education) ? user.education : [],
   }
 }
 
@@ -81,7 +87,7 @@ export async function GET(req: Request) {
       const users = await getCollection('users')
       const dbUser = await users.findOne(
         { email: tokenUser.email, type: tokenUser.type },
-        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1, goal: 1 } }
+        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1, goal: 1, bio: 1, skills: 1, education: 1 } }
       )
       if (!dbUser) {
         return NextResponse.json({ user: null }, { status: 401 })
@@ -102,13 +108,17 @@ export async function POST(req: Request) {
   const { action, type, email, password, name, expertise, role, adminEmail, adminPassword, mentorEmail, zoomLink, meetLink } = body
   
   // Skip generic field check for actions that don't use email/password/type payload.
-  if (action !== 'activate-mentor' && action !== 'deactivate-mentor' && action !== 'logout') {
+  if (action !== 'activate-mentor' && action !== 'deactivate-mentor' && action !== 'logout' && action !== 'update-profile') {
     if (!action || !type || !email || !password) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
   } else if (action === 'activate-mentor' || action === 'deactivate-mentor') {
     // Mentor activation/deactivation uses admin credentials + target mentor email.
     if (!action || !adminEmail || !adminPassword || !mentorEmail) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+  } else if (action === 'update-profile') {
+    if (!action || !type || !email) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
   }
@@ -254,6 +264,28 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ message: 'Mentor deactivated successfully' })
+  }
+
+  if (action === 'update-profile') {
+    const { email, type, name, mbti, goal, bio, skills, education } = body
+    if (!email || !type) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    const updateDoc: any = {}
+    if (typeof name === 'string') updateDoc.name = name
+    if (typeof mbti === 'string') updateDoc.mbti = mbti
+    if (goal !== undefined) updateDoc.goal = goal
+    if (typeof bio === 'string') updateDoc.bio = bio
+    if (Array.isArray(skills)) updateDoc.skills = skills
+    if (Array.isArray(education)) updateDoc.education = education
+
+    await users.updateOne({ email, type }, { $set: updateDoc })
+    const updatedUser = await users.findOne({ email, type })
+    if (!updatedUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+    return NextResponse.json({ success: true, user: mapUserForClient(updatedUser) })
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

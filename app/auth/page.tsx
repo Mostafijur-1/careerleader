@@ -1,7 +1,9 @@
 "use client";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../contexts/UserContext";
+import { useLanguage } from "../contexts/LanguageContext";
 import LanguageToggle from "../components/LanguageToggle";
 
 const typeIcons = {
@@ -9,7 +11,7 @@ const typeIcons = {
 };
 
 const typeColors = {
-  student: "from-blue-500 to-blue-600",
+  student: "from-blue-500 to-indigo-600",
 };
 
 async function readJsonSafely(res: Response) {
@@ -23,7 +25,9 @@ async function readJsonSafely(res: Response) {
 }
 
 export default function AuthPage() {
-  const { setUser: setGlobalUser } = useUser();
+  const { user: globalUser, setUser: setGlobalUser } = useUser();
+  const { t } = useLanguage();
+  const a = t.auth;
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [type] = useState<"student">("student");
@@ -34,6 +38,15 @@ export default function AuthPage() {
   const [messageType, setMessageType] = useState<"success" | "error" | "">();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<{ email: string; type: string; name: string } | null>(null);
+
+  // Sync state with global user context
+  useEffect(() => {
+    if (globalUser) {
+      setUser(globalUser);
+    } else {
+      setUser(null);
+    }
+  }, [globalUser]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -92,6 +105,7 @@ export default function AuthPage() {
       .catch(() => undefined)
       .finally(() => {
         setUser(null);
+        setGlobalUser(null);
         setMessage("Logged out successfully!");
         setMessageType("success");
         setTimeout(() => setMessage(""), 3000);
@@ -99,115 +113,141 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4 py-8 sm:py-12">
+    <div className="relative min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 py-8 sm:py-12 overflow-hidden select-none">
+      {/* Dynamic glow highlights */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl"></div>
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl"></div>
+
       <div className="absolute top-4 right-4 z-10">
         <LanguageToggle />
       </div>
-      <div className="w-full max-w-md min-w-0">
+
+      <div className="w-full max-w-md min-w-0 z-10">
         {user ? (
-          <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8">
-            <div className="text-center mb-6 sm:mb-8">
-              <div className={`text-5xl sm:text-6xl mb-3 sm:mb-4`}>{typeIcons[user.type as keyof typeof typeIcons]}</div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome Back!</h2>
-              <p className="text-gray-600">You're logged in as a</p>
-              <p className={`text-lg font-bold mt-1 bg-gradient-to-r ${typeColors[user.type as keyof typeof typeColors]} bg-clip-text text-transparent capitalize`}>
-                {user.type}
+          /* Logged In View */
+          <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 shadow-2xl rounded-3xl p-6 sm:p-8 text-center space-y-6">
+            <div className="space-y-2">
+              <div className="relative inline-flex items-center justify-center mb-2">
+                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-lg scale-125"></div>
+                <div className="relative w-20 h-20 bg-slate-800/80 border border-slate-700/60 text-4xl rounded-2xl flex items-center justify-center shadow-lg">
+                  {typeIcons[user.type as keyof typeof typeIcons] || "👤"}
+                </div>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-none">
+                Welcome Back!
+              </h2>
+              <p className="text-slate-400 text-xs sm:text-sm font-medium">
+                You're logged in as a{" "}
+                <span className="text-indigo-400 font-bold capitalize">
+                  {user.type}
+                </span>
               </p>
             </div>
-            <div className="bg-blue-50 rounded-lg p-4 mb-6">
-              <p className="text-sm text-gray-600">Email</p>
-              <p className="font-semibold text-gray-900">{user.email}</p>
+
+            <div className="bg-slate-950/40 border border-slate-800/80 rounded-2xl p-5 text-left space-y-3 font-semibold text-xs text-slate-400">
+              <div>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Email Address</p>
+                <p className="text-sm font-extrabold text-slate-200">{user.email}</p>
+              </div>
               {user.name && (
-                <>
-                  <p className="text-sm text-gray-600 mt-3">Name</p>
-                  <p className="font-semibold text-gray-900">{user.name}</p>
-                </>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Full Name</p>
+                  <p className="text-sm font-extrabold text-slate-200">{user.name}</p>
+                </div>
               )}
             </div>
+
             <button
               onClick={handleLogout}
-              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 rounded-lg transition transform hover:scale-105"
+              className="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-red-500/10 hover:shadow-red-500/25 active:scale-98 transition transform cursor-pointer"
             >
               🚪 Logout
             </button>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          /* Login/Register Form View */
+          <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 shadow-2xl rounded-3xl overflow-hidden flex flex-col">
             {/* Header */}
-            <div className={`bg-gradient-to-r ${typeColors[type]} p-5 sm:p-8 text-white text-center`}>
-              <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">{typeIcons[type]}</div>
-              <h2 className="text-2xl sm:text-3xl font-bold capitalize">{mode === "login" ? "Welcome Back" : "Join Us"}</h2>
-              <p className="text-white/80 mt-2">
-                {mode === "login" ? "Sign in to your account" : "Create a new account"}
+            <div className="bg-slate-900/60 border-b border-slate-800/60 px-6 py-6 sm:py-8 text-center relative">
+              <div className="relative inline-flex items-center justify-center mb-3">
+                <div className="absolute inset-0 bg-indigo-500/20 rounded-full blur-lg scale-125"></div>
+                <div className="relative w-16 h-16 bg-slate-800/80 border border-slate-700/60 text-3xl rounded-2xl flex items-center justify-center shadow-lg">
+                  {typeIcons[type]}
+                </div>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
+                {mode === "login" ? a.welcomeBack : a.joinUs}
+              </h2>
+              <p className="text-slate-400 text-xs sm:text-sm mt-1.5 font-medium">
+                {mode === "login" ? a.signIn : a.createAccount}
               </p>
             </div>
 
-            {/* Form */}
-            <div className="p-5 sm:p-8">
-              {/* Mode Toggle */}
-              <div className="flex gap-2 mb-6">
+            {/* Form Fields */}
+            <div className="px-6 py-6 sm:px-8 sm:py-8 space-y-6">
+              {/* Tab Selector */}
+              <div className="flex bg-slate-950/60 p-1 rounded-2xl border border-slate-800/60 gap-1">
                 <button
                   type="button"
                   onClick={() => setMode("login")}
-                  className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                  className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
                     mode === "login"
-                      ? `bg-gradient-to-r ${typeColors[type]} text-white`
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-indigo-600/10"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
                   }`}
                 >
-                  Login
+                  {a.login}
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode("register")}
-                  className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                  className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
                     mode === "register"
-                      ? `bg-gradient-to-r ${typeColors[type]} text-white`
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-indigo-600/10"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
                   }`}
                 >
-                  Register
+                  {a.register}
                 </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Registration Fields */}
                 {mode === "register" && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
-                        placeholder="John Doe"
-                        required
-                      />
-                    </div>
-                  </>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">{a.fullName}</label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-300 shadow-inner"
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
                 )}
 
-                {/* Email & Password */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                {/* Email */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">{a.email}</label>
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-300 shadow-inner"
                     placeholder="you@example.com"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                {/* Password */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">{a.password}</label>
                   <input
                     type="password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-300 shadow-inner"
                     placeholder="••••••••"
                     required
                   />
@@ -217,26 +257,26 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full py-3 px-4 rounded-lg font-bold text-white transition transform hover:scale-105 ${
-                    loading
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : `bg-gradient-to-r ${typeColors[type]} hover:shadow-lg`
-                  }`}
+                  className="w-full py-3.5 px-4 rounded-xl font-extrabold text-sm text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 active:scale-98 transition transform cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {loading ? "Processing..." : mode === "login" ? "Sign In" : "Create Account"}
+                  {loading && (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  )}
+                  <span>{loading ? a.processing : mode === "login" ? a.signInBtn : a.createAccountBtn}</span>
                 </button>
               </form>
 
-              {/* Message */}
+              {/* Success/Error Alert Messages */}
               {message && (
                 <div
-                  className={`mt-4 p-3 rounded-lg text-sm font-semibold text-center transition ${
+                  className={`px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2 border transition duration-200 ${
                     messageType === "success"
-                      ? "bg-green-100 text-green-800 border-l-4 border-green-500"
-                      : "bg-red-100 text-red-800 border-l-4 border-red-500"
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : "bg-rose-500/10 text-rose-400 border-rose-500/20"
                   }`}
                 >
-                  {messageType === "success" && "✅ "}{messageType === "error" && "❌ "}{message}
+                  <span className="text-base shrink-0">{messageType === "success" ? "✅" : "❌"}</span>
+                  <span className="leading-snug">{message}</span>
                 </div>
               )}
             </div>

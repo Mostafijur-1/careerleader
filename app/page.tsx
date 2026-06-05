@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState, useEffect, useRef, useCallback } from "react"
 import AuthButton from "./components/AuthButton"
 import AuthModal from "./components/AuthModal"
@@ -116,12 +117,26 @@ function minimalMentorFromEmail(email: string): MentorVM {
 
 export default function Home() {
   const { user, setUser } = useUser()
-  const { t } = useLanguage()
+  const { lang, t } = useLanguage()
+  const router = useRouter()
   const [isMounted, setIsMounted] = useState(false)
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"job" | "higher_study" | "entrepreneurship">("job")
   const [selectedMentor, setSelectedMentor] = useState<MentorVM | null>(null)
   const [mentors, setMentors] = useState<MentorVM[]>([])
+
+  const [interestedCareers, setInterestedCareers] = useState<string[]>([])
+  const handleToggleInterest = (careerTitle: string) => {
+    if (!user) {
+      setIsAuthOpen(true)
+      return
+    }
+    if (interestedCareers.includes(careerTitle)) {
+      setInterestedCareers(prev => prev.filter(t => t !== careerTitle))
+    } else {
+      setInterestedCareers(prev => [...prev, careerTitle])
+    }
+  }
 
   const [chatMessages, setChatMessages] = useState<MentorMessage[]>([])
   const [chatInput, setChatInput] = useState("")
@@ -433,9 +448,20 @@ export default function Home() {
           </div>
           <nav className="hidden md:flex gap-4 lg:gap-6 items-center flex-wrap">
             <LanguageToggle variant="light" compact />
-            <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.home}</Link>
-            <Link href="#careers" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.exploreCareers}</Link>
-            <Link href={user ? "/mentors" : "#mentors"} className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.mentors}</Link>
+            {user ? (
+              <>
+                <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.home}</Link>
+                <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.dashboard}</Link>
+                <Link href="/explore-careers" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.exploreCareers}</Link>
+                <Link href="/mentors" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.mentors}</Link>
+              </>
+            ) : (
+              <>
+                <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.home}</Link>
+                <Link href="#careers" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.exploreCareers}</Link>
+                <Link href="#mentors" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.mentors}</Link>
+              </>
+            )}
             <div className="relative" ref={notificationsDesktopRef}>
               <button type="button" onClick={toggleNotifications} className="relative text-gray-700 hover:text-blue-600 transition">
                 🔔
@@ -519,9 +545,20 @@ export default function Home() {
             <div className="pb-2">
               <LanguageToggle variant="light" />
             </div>
-            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.home}</Link>
-            <Link href="#careers" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.exploreCareers}</Link>
-            <Link href={user ? "/mentors" : "#mentors"} onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.mentors}</Link>
+            {user ? (
+              <>
+                <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.home}</Link>
+                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.dashboard}</Link>
+                <Link href="/explore-careers" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.exploreCareers}</Link>
+                <Link href="/mentors" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.mentors}</Link>
+              </>
+            ) : (
+              <>
+                <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.home}</Link>
+                <Link href="#careers" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.exploreCareers}</Link>
+                <Link href="#mentors" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.mentors}</Link>
+              </>
+            )}
             <div className="pt-2 border-t border-gray-100">
               <AuthButton onOpenAuth={() => { setIsAuthOpen(true); setMobileMenuOpen(false) }} onLogout={handleLogout} />
             </div>
@@ -638,7 +675,7 @@ export default function Home() {
               <div className="text-5xl mb-4">🎯</div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">{t.home.cardRecommendedTitle}</h3>
               <p className="text-gray-600 mb-6">{t.home.cardRecommendedBody}</p>
-              <Link href="#careers" className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
+              <Link href={user ? "/explore-careers" : "#careers"} className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
                 {t.home.cardRecommendedCta}
               </Link>
             </div>
@@ -650,9 +687,18 @@ export default function Home() {
               <h3 className="text-2xl font-bold text-gray-900 mb-3">{t.home.cardProgressTitle}</h3>
               <p className="text-gray-600 mb-6">{t.home.cardProgressBody}</p>
               <div className="flex items-center gap-4">
-                <button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
-                  {t.home.cardProgressView}
-                </button>
+                {user ? (
+                  <Link href="/dashboard" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
+                    {t.home.cardProgressView}
+                  </Link>
+                ) : (
+                  <button 
+                    onClick={() => setIsAuthOpen(true)}
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer"
+                  >
+                    {t.home.cardProgressView}
+                  </button>
+                )}
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                     <span className="text-2xl font-bold text-green-600">0%</span>
@@ -704,7 +750,16 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-2 rounded-lg font-bold shadow-md hover:shadow-lg transition">{t.home.previewInterested}</button>
+                  <button
+                    onClick={() => handleToggleInterest(career.title)}
+                    className={`flex-1 py-2 rounded-lg font-bold shadow-md transition cursor-pointer select-none ${
+                      interestedCareers.includes(career.title)
+                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                        : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                    }`}
+                  >
+                    {interestedCareers.includes(career.title) ? (lang === 'bn' ? "✓ আগ্রহী" : "✓ Interested") : t.home.previewInterested}
+                  </button>
                   <Link
                     href="/explore-careers"
                     className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 rounded-lg font-bold transition text-center"
@@ -724,11 +779,25 @@ export default function Home() {
         <div className="lg:col-span-1">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.home.learningResources}</h2>
-            <Link href="#" className="text-blue-600 hover:text-blue-700 font-bold text-sm">{t.home.seeAll}</Link>
+            {user ? (
+              <Link href="/dashboard?view=resources" className="text-blue-600 hover:text-blue-700 font-bold text-sm">{t.home.seeAll}</Link>
+            ) : (
+              <button onClick={() => setIsAuthOpen(true)} className="text-blue-600 hover:text-blue-700 font-bold text-sm cursor-pointer">{t.home.seeAll}</button>
+            )}
           </div>
           <div className="space-y-4">
             {resources.map(resource => (
-              <div key={resource.id} className="group bg-white rounded-xl p-5 shadow-md hover:shadow-xl border border-gray-100 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+              <div 
+                key={resource.id} 
+                onClick={() => {
+                  if (user) {
+                    router.push("/dashboard?view=resources");
+                  } else {
+                    setIsAuthOpen(true);
+                  }
+                }}
+                className="group bg-white rounded-xl p-5 shadow-md hover:shadow-xl border border-gray-100 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer text-left select-none"
+              >
                 <div className="text-4xl mb-3 group-hover:scale-110 transition">{resource.icon}</div>
                 <h3 className="font-bold text-gray-900 text-lg">{resource.title}</h3>
                 <div className="flex gap-2 mt-3 text-xs font-medium text-gray-600">
@@ -811,50 +880,56 @@ export default function Home() {
                       return (
                         <button
                           onClick={() => setIsAuthOpen(true)}
-                          className="w-full bg-gray-100 text-gray-700 font-bold py-2 rounded-lg border border-gray-300 hover:bg-gray-200 transition"
+                          className="w-full bg-gray-100 text-gray-700 font-bold py-2 rounded-lg border border-gray-300 hover:bg-gray-200 transition text-center"
                         >
                           {t.home.loginToConnect}
                         </button>
                       )
                     }
+
+                    let btnText = ""
+                    let btnClass = ""
+                    let btnDisabled = false
+                    let onClickHandler = () => {}
+                    let showIcon: 'chat' | 'pending' | 'none' = 'none'
+
                     if (status === "accepted") {
-                      return (
-                        <button
-                          onClick={() => setSelectedMentor(mentor)}
-                          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 rounded-lg shadow-md hover:shadow-lg transition"
-                        >
-                          {t.home.chatNow}
-                        </button>
-                      )
+                      btnText = t.home.chatNow
+                      btnClass = "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                      onClickHandler = () => setSelectedMentor(mentor)
+                      showIcon = 'chat'
+                    } else if (status === "pending") {
+                      btnText = t.home.requestPending
+                      btnClass = "bg-yellow-50 text-yellow-700 border border-yellow-200 cursor-not-allowed"
+                      btnDisabled = true
+                      showIcon = 'pending'
+                    } else if (status === "rejected") {
+                      btnText = isLoadingReq ? t.home.sending : t.home.requestAgain
+                      btnClass = "bg-orange-100 text-orange-800 border border-orange-300 hover:bg-orange-200 disabled:opacity-60"
+                      btnDisabled = isLoadingReq
+                      onClickHandler = () => sendConnectionRequest(mentor.email)
+                    } else {
+                      btnText = isLoadingReq ? t.home.sending : t.home.requestToConnect
+                      btnClass = "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white disabled:opacity-60"
+                      btnDisabled = isLoadingReq
+                      onClickHandler = () => sendConnectionRequest(mentor.email)
                     }
-                    if (status === "pending") {
-                      return (
-                        <button
-                          disabled
-                          className="w-full bg-yellow-100 text-yellow-800 font-bold py-2 rounded-lg border border-yellow-300 cursor-not-allowed"
-                        >
-                          {t.home.requestPending}
-                        </button>
-                      )
-                    }
-                    if (status === "rejected") {
-                      return (
-                        <button
-                          onClick={() => sendConnectionRequest(mentor.email)}
-                          disabled={isLoadingReq}
-                          className="w-full bg-orange-100 text-orange-800 font-bold py-2 rounded-lg border border-orange-300 hover:bg-orange-200 transition disabled:opacity-60"
-                        >
-                          {isLoadingReq ? t.home.sending : t.home.requestAgain}
-                        </button>
-                      )
-                    }
+
                     return (
                       <button
-                        onClick={() => sendConnectionRequest(mentor.email)}
-                        disabled={isLoadingReq}
-                        className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 rounded-lg shadow-md hover:shadow-lg transition disabled:opacity-60"
+                        onClick={onClickHandler}
+                        disabled={btnDisabled}
+                        className={`w-full font-bold py-2 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-1.5 ${btnClass}`}
                       >
-                        {isLoadingReq ? t.home.sending : t.home.requestToConnect}
+                        {isLoadingReq && (
+                          <svg className="animate-spin h-3.5 w-3.5 text-current" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        )}
+                        {!isLoadingReq && showIcon === 'chat' && <span>💬</span>}
+                        {!isLoadingReq && showIcon === 'pending' && <span>⏳</span>}
+                        <span>{btnText}</span>
                       </button>
                     )
                   })()}
