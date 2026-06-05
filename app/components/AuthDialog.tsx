@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useUser } from "../contexts/UserContext";
 
 const typeIcons = {
@@ -22,6 +23,7 @@ async function readJsonSafely(res: Response) {
 
 export default function AuthDialog() {
   const { user, setUser } = useUser();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [type] = useState<"student">("student");
@@ -57,7 +59,17 @@ export default function AuthDialog() {
 
       if (mode === "login") {
         setUser(data?.user || null);
-        setTimeout(() => setIsOpen(false), 1500);
+        const role = data?.user?.type;
+        setTimeout(() => {
+          setIsOpen(false);
+          if (role === "mentor") {
+            router.push("/mentor");
+          } else if (role === "admin") {
+            router.push("/admin");
+          } else {
+            router.push("/dashboard");
+          }
+        }, 1500);
       }
       if (mode === "register") {
         setTimeout(() => {

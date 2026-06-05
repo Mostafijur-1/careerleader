@@ -6,6 +6,7 @@ export interface User {
   type: string;
   name: string;
   mbti?: string;
+  goal?: any;
 }
 
 interface UserContextType {

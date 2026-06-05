@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useUser } from "../contexts/UserContext";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -29,6 +30,7 @@ async function readJsonSafely(res: Response) {
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const { setUser } = useUser();
   const { t } = useLanguage();
+  const router = useRouter();
   const a = t.auth;
   const [mode, setMode] = useState<"login" | "register">("login");
   const [type] = useState<"student">("student");
@@ -64,9 +66,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       
       if (mode === "login") {
         setUser(data?.user || null);
+        const role = data?.user?.type;
         setTimeout(() => {
           onClose();
           setMessage("");
+          if (role === "mentor") {
+            router.push("/mentor");
+          } else if (role === "admin") {
+            router.push("/admin");
+          } else {
+            router.push("/dashboard");
+          }
         }, 1500);
       }
       if (mode === "register") {

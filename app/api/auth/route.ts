@@ -11,6 +11,7 @@ function mapUserForClient(user: {
   type?: string
   name?: string
   mbti?: string
+  goal?: any
 }) {
   return {
     id: user._id ? String(user._id) : '',
@@ -18,6 +19,7 @@ function mapUserForClient(user: {
     type: (user.type || 'student') as 'student' | 'mentor' | 'admin',
     name: user.name || '',
     mbti: typeof user.mbti === 'string' ? user.mbti : '',
+    goal: user.goal || null,
   }
 }
 
@@ -79,7 +81,7 @@ export async function GET(req: Request) {
       const users = await getCollection('users')
       const dbUser = await users.findOne(
         { email: tokenUser.email, type: tokenUser.type },
-        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1 } }
+        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1, goal: 1 } }
       )
       if (!dbUser) {
         return NextResponse.json({ user: null }, { status: 401 })
@@ -162,7 +164,10 @@ export async function POST(req: Request) {
   }
 
   if (action === 'login') {
-    const user = await users.findOne({ email, type })
+    let user = await users.findOne({ email, type })
+    if (!user) {
+      user = await users.findOne({ email })
+    }
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }

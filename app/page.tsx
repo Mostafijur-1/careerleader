@@ -435,7 +435,7 @@ export default function Home() {
             <LanguageToggle variant="light" compact />
             <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.home}</Link>
             <Link href="#careers" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.exploreCareers}</Link>
-            <Link href="#mentors" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.mentors}</Link>
+            <Link href={user ? "/mentors" : "#mentors"} className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.mentors}</Link>
             <div className="relative" ref={notificationsDesktopRef}>
               <button type="button" onClick={toggleNotifications} className="relative text-gray-700 hover:text-blue-600 transition">
                 🔔
@@ -521,7 +521,7 @@ export default function Home() {
             </div>
             <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.home}</Link>
             <Link href="#careers" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.exploreCareers}</Link>
-            <Link href="#mentors" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.mentors}</Link>
+            <Link href={user ? "/mentors" : "#mentors"} onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.mentors}</Link>
             <div className="pt-2 border-t border-gray-100">
               <AuthButton onOpenAuth={() => { setIsAuthOpen(true); setMobileMenuOpen(false) }} onLogout={handleLogout} />
             </div>
@@ -706,7 +706,7 @@ export default function Home() {
                 <div className="flex gap-3">
                   <button className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-2 rounded-lg font-bold shadow-md hover:shadow-lg transition">{t.home.previewInterested}</button>
                   <Link
-                    href="/career-options"
+                    href="/explore-careers"
                     className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 rounded-lg font-bold transition text-center"
                   >
                     {t.home.previewGuidance}

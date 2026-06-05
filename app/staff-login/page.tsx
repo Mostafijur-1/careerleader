@@ -32,7 +32,7 @@ export default function StaffLoginPage() {
     if (!user) return;
     if (user.type === "mentor") router.replace("/mentor");
     if (user.type === "admin") router.replace("/admin");
-    if (user.type === "student") router.replace("/");
+    if (user.type === "student") router.replace("/dashboard");
   }, [user, router]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -82,7 +82,7 @@ export default function StaffLoginPage() {
       return;
     }
 
-    router.replace("/");
+    router.replace("/dashboard");
   }
 
   return (

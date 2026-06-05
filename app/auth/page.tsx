@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "../contexts/UserContext";
 import LanguageToggle from "../components/LanguageToggle";
 
 const typeIcons = {
@@ -21,6 +23,8 @@ async function readJsonSafely(res: Response) {
 }
 
 export default function AuthPage() {
+  const { setUser: setGlobalUser } = useUser();
+  const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [type] = useState<"student">("student");
   const [email, setEmail] = useState("");
@@ -52,7 +56,21 @@ export default function AuthPage() {
     if (res.ok) {
       setMessage(data?.message || "Success");
       setMessageType("success");
-      if (mode === "login") setUser(data?.user || null);
+      if (mode === "login") {
+        const loggedInUser = data?.user || null;
+        setUser(loggedInUser);
+        setGlobalUser(loggedInUser);
+        const role = loggedInUser?.type;
+        setTimeout(() => {
+          if (role === "mentor") {
+            router.push("/mentor");
+          } else if (role === "admin") {
+            router.push("/admin");
+          } else {
+            router.push("/dashboard");
+          }
+        }, 1500);
+      }
       if (mode === "register") {
         setTimeout(() => setMode("login"), 1500);
         setEmail("");
