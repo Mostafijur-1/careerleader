@@ -15,6 +15,10 @@ function mapUserForClient(user: {
   bio?: string
   skills?: string[]
   education?: any[]
+  zoomLink?: string
+  meetLink?: string
+  expertise?: string[]
+  headline?: string
 }) {
   return {
     id: user._id ? String(user._id) : '',
@@ -26,6 +30,10 @@ function mapUserForClient(user: {
     bio: user.bio || '',
     skills: Array.isArray(user.skills) ? user.skills : [],
     education: Array.isArray(user.education) ? user.education : [],
+    zoomLink: user.zoomLink || '',
+    meetLink: user.meetLink || '',
+    expertise: Array.isArray(user.expertise) ? user.expertise : [],
+    headline: user.headline || '',
   }
 }
 
@@ -87,7 +95,7 @@ export async function GET(req: Request) {
       const users = await getCollection('users')
       const dbUser = await users.findOne(
         { email: tokenUser.email, type: tokenUser.type },
-        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1, goal: 1, bio: 1, skills: 1, education: 1 } }
+        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1, goal: 1, bio: 1, skills: 1, education: 1, zoomLink: 1, meetLink: 1, expertise: 1, headline: 1 } }
       )
       if (!dbUser) {
         return NextResponse.json({ user: null }, { status: 401 })
@@ -267,7 +275,7 @@ export async function POST(req: Request) {
   }
 
   if (action === 'update-profile') {
-    const { email, type, name, mbti, goal, bio, skills, education } = body
+    const { email, type, name, mbti, goal, bio, skills, education, zoomLink, meetLink, expertise, headline } = body
     if (!email || !type) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
@@ -279,6 +287,10 @@ export async function POST(req: Request) {
     if (typeof bio === 'string') updateDoc.bio = bio
     if (Array.isArray(skills)) updateDoc.skills = skills
     if (Array.isArray(education)) updateDoc.education = education
+    if (typeof zoomLink === 'string') updateDoc.zoomLink = zoomLink.trim()
+    if (typeof meetLink === 'string') updateDoc.meetLink = meetLink.trim()
+    if (Array.isArray(expertise)) updateDoc.expertise = expertise
+    if (typeof headline === 'string') updateDoc.headline = headline.trim()
 
     await users.updateOne({ email, type }, { $set: updateDoc })
     const updatedUser = await users.findOne({ email, type })

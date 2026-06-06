@@ -150,6 +150,26 @@ export type SiteMessages = {
   }
   auth: {
     welcomeBack: string
+    welcomeBackSub: string
+    dontHaveAccount: string
+    signUpHere: string
+    signUpTitle: string
+    alreadyHaveAccount: string
+    logInHere: string
+    rememberMe: string
+    forgotPassword: string
+    loginWithFacebook: string
+    loginWithGoogle: string
+    signupWithFacebook: string
+    signupWithGoogle: string
+    loginTerms: string
+    privacyPolicy: string
+    termsConditions: string
+    agreeToTerms: string
+    receiveUpdates: string
+    emailPlaceholder: string
+    passwordPlaceholder: string
+    fullNamePlaceholder: string
     joinUs: string
     signIn: string
     createAccount: string
@@ -401,7 +421,27 @@ const en: SiteMessages = {
     studentMbti: v => `Student MBTI: ${v}`,
   },
   auth: {
-    welcomeBack: "Welcome Back",
+    welcomeBack: "Welcome back! 👋",
+    welcomeBackSub: "Log in to Career Leader",
+    dontHaveAccount: "Don't have an account?",
+    signUpHere: "Sign up here.",
+    signUpTitle: "Sign up to Career Leader, we'd be stoked to have you! 🎉",
+    alreadyHaveAccount: "Already have an account?",
+    logInHere: "Log in here.",
+    rememberMe: "Remember me",
+    forgotPassword: "Forgot password?",
+    loginWithFacebook: "Login with Facebook",
+    loginWithGoogle: "Login with Google",
+    signupWithFacebook: "Signup with Facebook",
+    signupWithGoogle: "Signup with Google",
+    loginTerms: "By logging in, you're agreeing to Career Leader's",
+    privacyPolicy: "privacy policy",
+    termsConditions: "terms & conditions",
+    agreeToTerms: "I agree to the privacy policy & terms & conditions",
+    receiveUpdates: "Receive updates, competitions and special Rewards offers. Unsubscribe anytime.",
+    emailPlaceholder: "Email address*",
+    passwordPlaceholder: "Password*",
+    fullNamePlaceholder: "Full name*",
     joinUs: "Join Us",
     signIn: "Sign in to your account",
     createAccount: "Create a new account",
@@ -658,7 +698,27 @@ const bn: SiteMessages = {
     studentMbti: v => `শিক্ষার্থীর MBTI: ${v}`,
   },
   auth: {
-    welcomeBack: "আবার স্বাগতম",
+    welcomeBack: "আবার স্বাগতম! 👋",
+    welcomeBackSub: "ক্যারিয়ার লিডারে লগ ইন করুন",
+    dontHaveAccount: "অ্যাকাউন্ট নেই?",
+    signUpHere: "এখানে সাইন আপ করুন।",
+    signUpTitle: "ক্যারিয়ার লিডারে সাইন আপ করুন, আপনাকে পেয়ে আমরা আনন্দিত হব! 🎉",
+    alreadyHaveAccount: "ইতিমধ্যে অ্যাকাউন্ট আছে?",
+    logInHere: "এখানে লগ ইন করুন।",
+    rememberMe: "আমাকে মনে রাখুন",
+    forgotPassword: "পাসওয়ার্ড ভুলে গেছেন?",
+    loginWithFacebook: "ফেসবুক দিয়ে লগইন",
+    loginWithGoogle: "গুগল দিয়ে লগইন",
+    signupWithFacebook: "ফেসবুক দিয়ে সাইনআপ",
+    signupWithGoogle: "গুগল দিয়ে সাইনআপ",
+    loginTerms: "লগইন করার মাধ্যমে, আপনি ক্যারিয়ার লিডারের",
+    privacyPolicy: "প্রাইভেসি পলিসি",
+    termsConditions: "শর্তাবলী ও নিয়মের সাথে সম্মত হচ্ছেন",
+    agreeToTerms: "আমি প্রাইভেসি পলিসি এবং শর্তাবলীতে সম্মত",
+    receiveUpdates: "আপডেট, প্রতিযোগিতা এবং বিশেষ পুরস্কারের অফার পেতে চাই। যেকোনো সময় আনসাবস্ক্রাইব করা যাবে।",
+    emailPlaceholder: "ইমেইল ঠিকানা*",
+    passwordPlaceholder: "পাসওয়ার্ড*",
+    fullNamePlaceholder: "পূর্ণ নাম*",
     joinUs: "যোগ দিন",
     signIn: "আপনার অ্যাকাউন্টে সাইন ইন করুন",
     createAccount: "নতুন অ্যাকাউন্ট তৈরি করুন",

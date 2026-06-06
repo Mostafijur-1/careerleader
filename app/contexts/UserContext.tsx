@@ -10,6 +10,10 @@ export interface User {
   bio?: string;
   skills?: string[];
   education?: any[];
+  zoomLink?: string;
+  meetLink?: string;
+  expertise?: string[];
+  headline?: string;
 }
 
 interface UserContextType {

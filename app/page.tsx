@@ -115,6 +115,25 @@ function minimalMentorFromEmail(email: string): MentorVM {
   }
 }
 
+type FeaturedContentItem = {
+  id: string
+  title: string
+  description: string
+  badge?: string
+  link?: string
+  linkText?: string
+  active: boolean
+}
+
+type AdItem = {
+  id: string
+  title: string
+  description: string
+  imageUrl?: string
+  link?: string
+  active: boolean
+}
+
 export default function Home() {
   const { user, setUser } = useUser()
   const { lang, t } = useLanguage()
@@ -152,11 +171,21 @@ export default function Home() {
   const [homeRecommendations, setHomeRecommendations] = useState<HomeRecommendation[]>([])
   const [showHomeRecommendations, setShowHomeRecommendations] = useState(false)
   const [homeRecommendationsLoading, setHomeRecommendationsLoading] = useState(false)
+  const [featuredList, setFeaturedList] = useState<FeaturedContentItem[]>([])
+  const [adsList, setAdsList] = useState<AdItem[]>([])
   const notificationsDesktopRef = useRef<HTMLDivElement>(null)
   const notificationsMobileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setIsMounted(true)
+    fetch('/api/admin/featured')
+      .then(res => res.json())
+      .then(data => setFeaturedList(data.featured || []))
+      .catch(() => undefined)
+    fetch('/api/admin/ads')
+      .then(res => res.json())
+      .then(data => setAdsList(data.ads || []))
+      .catch(() => undefined)
   }, [])
 
   useEffect(() => {
@@ -595,6 +624,41 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Featured Announcements */}
+      {isMounted && featuredList.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+          <div className="mb-6">
+            <h2 className="text-2xl sm:text-3.5xl font-extrabold text-[#112954]">
+              {lang === 'bn' ? 'বিশেষ ঘোষণা ও আপডেট' : 'Featured Announcements'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {lang === 'bn' ? 'ক্যারিয়ার লিডার থেকে সর্বশেষ গুরুত্বপূর্ণ আপডেটসমূহ' : 'Latest updates and opportunities from Career Leader'}
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {featuredList.map(item => (
+              <div key={item.id} className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden flex flex-col justify-between hover:shadow-lg transition">
+                <div className="absolute right-[-20px] bottom-[-20px] w-40 h-40 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                <div>
+                  {item.badge && (
+                    <span className="inline-block mb-3 px-3 py-1 bg-white/20 text-white rounded-full text-xs font-bold uppercase tracking-wider">{item.badge}</span>
+                  )}
+                  <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                  <p className="text-white/80 text-sm leading-relaxed mb-6">{item.description}</p>
+                </div>
+                {item.link && (
+                  <div>
+                    <a href={item.link} className="inline-flex items-center gap-2 bg-white text-blue-600 font-bold px-6 py-2.5 rounded-full text-sm hover:bg-gray-100 transition transform hover:scale-[1.01]">
+                      {item.linkText || (lang === 'bn' ? 'বিস্তারিত দেখুন' : 'Learn More')} →
+                    </a>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Greeting & Feature Cards */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
         <div className="mb-12">
@@ -944,6 +1008,37 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Sponsored Ads placement */}
+      {isMounted && adsList.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-6 border-t border-gray-100 mt-8">
+          <div className="grid md:grid-cols-2 gap-4">
+            {adsList.map(ad => (
+              <a
+                key={ad.id}
+                href={ad.link || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block relative bg-white border border-gray-100 rounded-3xl p-5 hover:shadow-md transition overflow-hidden text-left"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <span className="px-1.5 py-0.5 border border-gray-300 text-gray-400 rounded text-[9px] font-extrabold uppercase shrink-0">Ad</span>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-gray-900 text-sm sm:text-base truncate">{ad.title}</h4>
+                      <p className="text-gray-500 text-xs sm:text-sm mt-0.5 truncate">{ad.description}</p>
+                    </div>
+                  </div>
+                  {ad.imageUrl && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={ad.imageUrl} alt={ad.title} className="h-10 w-24 object-contain bg-slate-50 border border-gray-100 rounded-lg shrink-0" />
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-10 sm:py-12 text-center text-gray-600 mt-12 sm:mt-16">
