@@ -93,7 +93,7 @@ function DashboardContent() {
 
   const viewParam = searchParams.get("view")
   const mentorParam = searchParams.get("mentor")
-  const [activeView, setActiveView] = useState<"dashboard" | "resources" | "messages" | "profile">("dashboard")
+  const [activeView, setActiveView] = useState<"dashboard" | "resources" | "messages" | "profile" | "ai-advisor">("dashboard")
 
   const [isMounted, setIsMounted] = useState(false)
   const [mockInterests, setMockInterests] = useState<string[]>([])
@@ -101,14 +101,14 @@ function DashboardContent() {
 
   // Tab switching sync
   useEffect(() => {
-    if (viewParam === "resources" || viewParam === "messages" || viewParam === "profile") {
+    if (viewParam === "resources" || viewParam === "messages" || viewParam === "profile" || viewParam === "ai-advisor") {
       setActiveView(viewParam)
     } else {
       setActiveView("dashboard")
     }
   }, [viewParam])
 
-  const changeView = (view: "dashboard" | "resources" | "messages" | "profile") => {
+  const changeView = (view: "dashboard" | "resources" | "messages" | "profile" | "ai-advisor") => {
     setActiveView(view)
     router.push(`/dashboard?view=${view}`)
   }
@@ -129,6 +129,11 @@ function DashboardContent() {
   const [chatInput, setChatInput] = useState("")
   const [chatLoading, setChatLoading] = useState(false)
   const [chatSending, setChatSending] = useState(false)
+
+  // AI Advisor Chat states
+  const [aiChatMessages, setAiChatMessages] = useState<Array<{ id: string; sender: 'user' | 'ai'; text: string; createdAt: string }>>([])
+  const [aiChatInput, setAiChatInput] = useState("")
+  const [aiChatSending, setAiChatSending] = useState(false)
 
   // Profile states
   const [profileName, setProfileName] = useState("")
@@ -286,7 +291,103 @@ function DashboardContent() {
   // Auto scroll chat to bottom
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [chatMessages])
+  }, [chatMessages, aiChatMessages, aiChatSending])
+
+  // AI Chat initial messages loading
+  useEffect(() => {
+    if (isMounted && typeof window !== "undefined") {
+      const saved = localStorage.getItem("ai_chat_messages")
+      if (saved) {
+        try {
+          setAiChatMessages(JSON.parse(saved))
+        } catch {}
+      } else {
+        const welcomeMsg = lang === 'bn' 
+          ? "হ্যালো! আমি ক্যারিয়ার লিডার এআই। আপনার ক্যারিয়ার বিষয়ক যেকোনো প্রশ্ন আমাকে করতে পারেন (যেমন: 'এইচএসসির পর কি করব?', 'কম্পিউটার সায়েন্স পড়তে কেমন জিপিএ লাগবে?' ইত্যাদি)।" 
+          : "Hello! I am Career Leader AI. You can ask me any career-related questions (e.g. 'What can I study after HSC?', 'What skills are needed for UI/UX?', etc.)."
+        
+        const initial = [{
+          id: "welcome",
+          sender: "ai" as const,
+          text: welcomeMsg,
+          createdAt: new Date().toISOString()
+        }]
+        setAiChatMessages(initial)
+        localStorage.setItem("ai_chat_messages", JSON.stringify(initial))
+      }
+    }
+  }, [isMounted, lang])
+
+  async function handleSendAiMessage() {
+    if (!aiChatInput.trim() || aiChatSending) return
+    const userText = aiChatInput.trim()
+    setAiChatInput("")
+    
+    const userMsg = {
+      id: `user-${Date.now()}`,
+      sender: "user" as const,
+      text: userText,
+      createdAt: new Date().toISOString()
+    }
+    
+    const updated = [...aiChatMessages, userMsg]
+    setAiChatMessages(updated)
+    localStorage.setItem("ai_chat_messages", JSON.stringify(updated))
+    
+    setAiChatSending(true)
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userText })
+      })
+      const data = await res.json()
+      if (res.ok && data?.response) {
+        const aiMsg = {
+          id: `ai-${Date.now()}`,
+          sender: "ai" as const,
+          text: data.response,
+          createdAt: new Date().toISOString()
+        }
+        const finalMsgs = [...updated, aiMsg]
+        setAiChatMessages(finalMsgs)
+        localStorage.setItem("ai_chat_messages", JSON.stringify(finalMsgs))
+      } else {
+        throw new Error(data?.error || "AI failed to respond")
+      }
+    } catch (err) {
+      console.error("AI Advisor error:", err)
+      const errorMsg = lang === 'bn'
+        ? "দুঃখিত, এআই সংযোগে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।"
+        : "Sorry, I encountered an error connecting to the service. Please try again."
+      const aiMsg = {
+        id: `ai-err-${Date.now()}`,
+        sender: "ai" as const,
+        text: errorMsg,
+        createdAt: new Date().toISOString()
+      }
+      const finalMsgs = [...updated, aiMsg]
+      setAiChatMessages(finalMsgs)
+      localStorage.setItem("ai_chat_messages", JSON.stringify(finalMsgs))
+    } finally {
+      setAiChatSending(false)
+    }
+  }
+
+  function handleClearAiChat() {
+    const welcomeMsg = lang === 'bn' 
+      ? "হ্যালো! আমি ক্যারিয়ার লিডার এআই। আপনার ক্যারিয়ার বিষয়ক যেকোনো প্রশ্ন আমাকে করতে পারেন।" 
+      : "Hello! I am Career Leader AI. You can ask me any career-related questions."
+    
+    const initial = [{
+      id: "welcome",
+      sender: "ai" as const,
+      text: welcomeMsg,
+      createdAt: new Date().toISOString()
+    }]
+    setAiChatMessages(initial)
+    localStorage.setItem("ai_chat_messages", JSON.stringify(initial))
+  }
 
   // Enroll resource logic
   const handleEnroll = (id: string) => {
@@ -1139,6 +1240,146 @@ function DashboardContent() {
 
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ==============================================
+              VIEW: AI ADVISOR (CAREER LEADER AI CHAT)
+             ============================================== */}
+          {activeView === "ai-advisor" && (
+            <div className="space-y-6 animate-fade-in text-left">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                    <span>✨</span> {lang === 'bn' ? "এআই ক্যারিয়ার পরামর্শক" : "AI Career Advisor"}
+                  </h1>
+                  <p className="text-slate-500 text-sm sm:text-base mt-1 leading-relaxed">
+                    {lang === 'bn' ? "আপনার পড়াশোনা ও ক্যারিয়ার বিষয়ক যেকোনো প্রশ্ন করুন ক্যারিয়ার লিডার এআইকে।" : "Ask Career Leader AI any questions about academic paths, career opportunities, or skill roadmaps."}
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleClearAiChat}
+                  className="px-4 py-2 border border-slate-300 hover:border-red-300 hover:bg-red-50 text-slate-600 hover:text-red-600 font-bold text-xs rounded-xl shadow-xs transition active:scale-95 cursor-pointer shrink-0"
+                >
+                  {lang === 'bn' ? "ইতিহাস মুছুন 🧹" : "Clear Chat History 🧹"}
+                </button>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col h-[550px]">
+                
+                {/* Status Bar */}
+                <div className="px-6 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50/50 shrink-0 select-none">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 text-white font-bold flex items-center justify-center shadow-xs">
+                      🤖
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-xs leading-none">Career Leader AI</h4>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Online</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md shadow-2xs border border-indigo-100">
+                    Bilingual Mode Active
+                  </span>
+                </div>
+
+                {/* Messages Container */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/30 space-y-4">
+                  {aiChatMessages.map((msg) => {
+                    const isUser = msg.sender === "user"
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex flex-col max-w-[80%] ${
+                          isUser ? "ml-auto items-end" : "mr-auto items-start"
+                        }`}
+                      >
+                        <span className="text-[9px] text-slate-400 font-semibold mb-0.5">
+                          {isUser ? (lang === 'bn' ? "আপনি" : "You") : "Career Leader AI"} • {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <div className={`p-3.5 rounded-2xl text-xs sm:text-sm shadow-xs leading-relaxed whitespace-pre-wrap text-left ${
+                          isUser
+                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none shadow-indigo-50/30"
+                            : "bg-white border border-slate-200 text-slate-800 rounded-tl-none"
+                        }`}>
+                          {msg.text}
+                        </div>
+                      </div>
+                    )
+                  })}
+                  
+                  {/* Thinking Bubble */}
+                  {aiChatSending && (
+                    <div className="flex flex-col max-w-[80%] mr-auto items-start animate-pulse">
+                      <span className="text-[9px] text-slate-400 font-semibold mb-0.5">
+                        Career Leader AI
+                      </span>
+                      <div className="p-3.5 rounded-2xl text-xs text-slate-500 bg-white border border-slate-200 rounded-tl-none flex items-center gap-1.5 shadow-xs">
+                        <span className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce"></span>
+                        <span className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                        <span className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div ref={chatBottomRef} />
+                </div>
+
+                {/* Prompt Suggestions Shortcuts */}
+                <div className="px-4 py-2 border-t border-slate-100 flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-none bg-slate-50/20 shrink-0 select-none">
+                  {[
+                    lang === 'bn' ? "এইচএসসি-র পর সেরা ক্যারিয়ার কি?" : "Best career paths after HSC?",
+                    lang === 'bn' ? "কম্পিউটার সায়েন্স পড়ার জন্য রোডম্যাপ?" : "Roadmap for Computer Science?",
+                    lang === 'bn' ? "ইউআই/ইউএক্স ডিজাইনার হতে কি দক্ষতা দরকার?" : "Skills needed for UI/UX Designer?",
+                    lang === 'bn' ? "একজন মেন্টর কিভাবে ক্যারিয়ারে সাহায্য করে?" : "How does a mentor help in career?"
+                  ].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      disabled={aiChatSending}
+                      onClick={() => { setAiChatInput(s); }}
+                      className="px-3 py-1.5 bg-white border border-slate-200 hover:border-indigo-400 hover:text-indigo-600 rounded-lg text-[10px] font-bold text-slate-500 shadow-2xs transition active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
+                    >
+                      💡 {s}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Input Area */}
+                <div className="p-4 border-t border-slate-200 bg-white shrink-0">
+                  <form
+                    onSubmit={(e) => { e.preventDefault(); handleSendAiMessage(); }}
+                    className="flex gap-2.5 items-center"
+                  >
+                    <input
+                      type="text"
+                      value={aiChatInput}
+                      onChange={(e) => setAiChatInput(e.target.value)}
+                      placeholder={lang === 'bn' ? "আপনার ক্যারিয়ার বিষয়ক প্রশ্নটি এখানে লিখুন..." : "Ask your career question here..."}
+                      disabled={aiChatSending}
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs sm:text-sm focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition disabled:bg-slate-100 disabled:cursor-not-allowed"
+                      style={{ color: "#000000", WebkitTextFillColor: "#000000" }}
+                    />
+                    
+                    <button
+                      type="submit"
+                      disabled={aiChatSending || !aiChatInput.trim()}
+                      className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-100 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed shrink-0 transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      {aiChatSending ? (
+                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      ) : (
+                        <span>{lang === 'bn' ? "পাঠান" : "Send"}</span>
+                      )}
+                    </button>
+                  </form>
+                </div>
+
+              </div>
             </div>
           )}
 

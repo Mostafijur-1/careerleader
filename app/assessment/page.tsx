@@ -307,8 +307,64 @@ export default function AssessmentPage() {
       }
 
       const scoredMbti = data.result?.personality
+      const interests = data.result?.interests || []
+      
       if (scoredMbti && typeof window !== "undefined") {
         localStorage.setItem("guestMbti", scoredMbti)
+        
+        try {
+          const aiRes = await fetch('/api/recommend/ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              personality: scoredMbti,
+              interests: interests,
+            }),
+          })
+          if (!aiRes.ok) throw new Error('AI API failed')
+          const aiData = await aiRes.json()
+          
+          if (aiData && aiData.career_title) {
+            const goalData = {
+              title: aiData.career_title,
+              targetDate: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+              skillLevel: "Beginner",
+              whyImportant: aiData.reasoning,
+              focusAreas: aiData.skills_to_learn,
+              steps: aiData.roadmap_steps,
+              isAiGenerated: true,
+              updatedAt: new Date().toISOString()
+            }
+            localStorage.setItem("career_goal", JSON.stringify(goalData))
+            localStorage.removeItem("roadmap_completed_tasks")
+          } else {
+            throw new Error('Invalid AI response structure')
+          }
+        } catch (aiErr) {
+          console.warn("AI recommendation failed, falling back to local heuristic recommendations:", aiErr)
+          // Fallback UI State: call local lib/recommendation.ts function
+          const { recommend } = await import('../../lib/recommendation')
+          const localRecs = recommend(scoredMbti, interests, 5)
+          if (localRecs && localRecs.length > 0) {
+            const primaryCareer = localRecs[0]
+            const goalData = {
+              title: primaryCareer.title,
+              targetDate: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+              skillLevel: "Beginner",
+              whyImportant: primaryCareer.description || "Based on your personality assessment.",
+              focusAreas: primaryCareer.skills,
+              steps: [
+                "Step 1: Acquire core skills and basic tools.",
+                "Step 2: Practice by building beginner-friendly projects.",
+                "Step 3: Complete advanced courses and apply for jobs/internships."
+              ],
+              isAiGenerated: false,
+              updatedAt: new Date().toISOString()
+            }
+            localStorage.setItem("career_goal", JSON.stringify(goalData))
+            localStorage.removeItem("roadmap_completed_tasks")
+          }
+        }
       }
 
       if (user) {

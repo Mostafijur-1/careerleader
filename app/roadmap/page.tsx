@@ -14,6 +14,7 @@ interface Goal {
   skillLevel: string
   whyImportant?: string
   focusAreas?: string[]
+  steps?: string[]
 }
 
 interface Phase {
@@ -154,6 +155,34 @@ export default function RoadmapPage() {
   // Roadmap generation matching active goal title
   const phases: Phase[] = useMemo(() => {
     if (!activeGoal) return []
+
+    // If goal has custom steps (e.g. from AI recommendation or fallback)
+    if (activeGoal.steps && Array.isArray(activeGoal.steps) && activeGoal.steps.length > 0) {
+      const steps = activeGoal.steps;
+      return [
+        {
+          title: lang === 'bn' ? "ফেজ ১: ফাউন্ডেশন ও শুরু" : "Phase 1: Foundation & Kickstart",
+          duration: "1 - 3 Months",
+          colorClass: "bg-emerald-500",
+          borderColorClass: "border-emerald-500",
+          tasks: [steps[0] || "Acquire basic skills and tools."]
+        },
+        {
+          title: lang === 'bn' ? "ফেজ ২: ইন্টারমিডিয়েট ও অনুশীলন" : "Phase 2: Practice & Intermediate Goals",
+          duration: "4 - 9 Months",
+          colorClass: "bg-amber-500",
+          borderColorClass: "border-amber-500",
+          tasks: [steps[1] || "Practice by building projects."]
+        },
+        {
+          title: lang === 'bn' ? "ফেজ ৩: অ্যাডভান্সড ও কর্মজীবন প্রবেশ" : "Phase 3: Advanced Skills & Career Entry",
+          duration: "10 - 18 Months",
+          colorClass: "bg-indigo-600",
+          borderColorClass: "border-indigo-600",
+          tasks: [steps[2] || "Apply for jobs and finish advanced courses."]
+        }
+      ]
+    }
 
     const title = activeGoal.title.toLowerCase()
     
