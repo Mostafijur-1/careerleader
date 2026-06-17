@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "../contexts/UserContext"
 import { useLanguage } from "../contexts/LanguageContext"
@@ -652,6 +653,27 @@ export default function RoadmapPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* CV Generator Card */}
+                  {activeGoal && (
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-3xl p-6 shadow-xs space-y-3">
+                      <h2 className="text-xs font-bold text-emerald-700 uppercase tracking-wider">
+                        {lang === 'bn' ? "সিভি প্রস্তুতি" : "CV Preparation"}
+                      </h2>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        {lang === 'bn'
+                          ? `আপনার "${activeGoal.title}" লক্ষ্যের জন্য AI-চালিত সিভি তৈরি করুন।`
+                          : `Build an AI-tailored CV for your "${activeGoal.title}" goal.`}
+                      </p>
+                      <Link
+                        href="/cv"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition active:scale-95"
+                      >
+                        <span>📄</span>
+                        <span>{lang === 'bn' ? "সিভি জেনারেট করুন" : "Generate CV"}</span>
+                      </Link>
+                    </div>
+                  )}
 
                   {/* Milestones Card */}
                   <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">

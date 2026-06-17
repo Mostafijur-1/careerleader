@@ -98,6 +98,7 @@ function DashboardContent() {
   const [isMounted, setIsMounted] = useState(false)
   const [mockInterests, setMockInterests] = useState<string[]>([])
   const [localMbti, setLocalMbti] = useState<string>("")
+  const [hasGeneratedCv, setHasGeneratedCv] = useState(false)
 
   // Tab switching sync
   useEffect(() => {
@@ -152,6 +153,7 @@ function DashboardContent() {
     setIsMounted(true)
     if (typeof window !== "undefined") {
       setLocalMbti(localStorage.getItem("guestMbti") || "")
+      setHasGeneratedCv(!!localStorage.getItem("generated_cv"))
       const stored = localStorage.getItem("enrolled_resources")
       if (stored) {
         try {
@@ -503,8 +505,8 @@ function DashboardContent() {
   const studentName = isMounted && user ? user.name : (lang === 'bn' ? "অতিথি" : "Guest")
 
   // Progress summary
-  const totalSteps = 4
-  const completedSteps = hasTakenAssessment ? 2 : 0
+  const totalSteps = 5
+  const completedSteps = (hasTakenAssessment ? 2 : 0) + (hasGeneratedCv ? 1 : 0)
   const totalProgressPercent = Math.round((completedSteps / totalSteps) * 100)
 
   const preparationSteps = [
@@ -535,6 +537,13 @@ function DashboardContent() {
       status: "pending",
       desc: lang === 'bn' ? "প্রস্তাবিত রিসোর্স ব্যবহার করে শেখা শুরু করুন।" : "Enrol in recommended video courses & tutorials.",
       link: "/explore-careers"
+    },
+    {
+      id: 5,
+      title: lang === 'bn' ? "৫. লক্ষ্য-ভিত্তিক সিভি তৈরি" : "5. Generate Goal-Based CV",
+      status: hasGeneratedCv ? "completed" : "pending",
+      desc: lang === 'bn' ? "আপনার ক্যারিয়ার লক্ষ্যের জন্য AI সিভি তৈরি করুন।" : "Create an AI-tailored CV aligned with your career goal.",
+      link: "/cv"
     }
   ]
 

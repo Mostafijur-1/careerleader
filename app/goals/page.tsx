@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "../contexts/UserContext"
 import { useLanguage } from "../contexts/LanguageContext"
@@ -464,6 +465,24 @@ export default function GoalsPage() {
                 95% Match
               </span>
             </div>
+
+            {/* CV Generator CTA */}
+            {goalTitle.trim() && (
+              <div className="border-t border-slate-100 pt-4">
+                <Link
+                  href="/cv"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold rounded-xl shadow-md transition active:scale-98 text-xs"
+                >
+                  <span>📄</span>
+                  <span>{lang === 'bn' ? "লক্ষ্য-ভিত্তিক সিভি তৈরি করুন" : "Generate Goal-Based CV"}</span>
+                </Link>
+                <p className="text-[10px] text-slate-400 text-center mt-2 leading-relaxed">
+                  {lang === 'bn'
+                    ? "আপনার লক্ষ্য ও দক্ষতার উপর ভিত্তি করে AI সিভি তৈরি করুন"
+                    : "Create an AI-tailored CV from your goal and skills"}
+                </p>
+              </div>
+            )}
 
           </div>
         </div>
