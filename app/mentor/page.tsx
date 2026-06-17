@@ -892,6 +892,14 @@ export default function MentorPage() {
           })}
         </nav>
 
+        {/* Mobile Language Switcher (Sidebar only) */}
+        <div className="lg:hidden px-4 py-3 border-t border-slate-800">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-400">Language / ভাষা:</span>
+            <LanguageToggle variant="dark" compact />
+          </div>
+        </div>
+
         {/* Sidebar Footer Banner */}
         <div className="p-4 border-t border-slate-800">
           <div className="p-4 bg-gradient-to-br from-indigo-950 to-blue-950 rounded-2xl border border-slate-800 text-center relative overflow-hidden">
@@ -914,27 +922,32 @@ export default function MentorPage() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
         {/* TOP MOBILE / HEADER BAR */}
-        <header className="sticky top-0 z-10 bg-white border-b border-slate-200 h-16 px-4 lg:px-8 flex items-center justify-between shrink-0 select-none">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-10 bg-white border-b border-slate-200 h-16 px-3 lg:px-8 flex items-center justify-between shrink-0 select-none">
+          <div className="flex items-center gap-2">
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+              className="lg:hidden p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 hover:text-blue-600 hover:bg-blue-50/50 hover:border-blue-200 active:scale-95 transition"
               aria-label="Toggle Menu"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
             <h2 className="hidden md:block text-xl font-bold text-slate-900 capitalize">
               {menuItems.find(m => m.id === activeTab)?.label}
             </h2>
           </div>
-
-          <div className="flex items-center gap-4 sm:gap-6">
+ 
+          <div className="flex items-center gap-2.5 sm:gap-6">
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold border border-amber-200 rounded-full shadow-xs animate-pulse">
               🛡️ {loc.demoWorkspace}
             </span>
-            <LanguageToggle />
-            <div className="h-6 w-px bg-slate-200"></div>
+            
+            {/* Language Switcher (Desktop only in top bar) */}
+            <div className="hidden sm:block">
+              <LanguageToggle variant="light" compact />
+            </div>
 
+            <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
+ 
             {/* Profile Brief Info */}
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
@@ -945,7 +958,7 @@ export default function MentorPage() {
                 {user.name.charAt(0).toUpperCase()}
               </div>
             </div>
-
+ 
             <div className="flex items-center gap-2">
               <button 
                 onClick={handleLogout} 

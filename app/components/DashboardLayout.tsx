@@ -384,26 +384,26 @@ export default function DashboardLayout({
         <div className="flex-1 flex flex-col min-w-0">
           
           {/* 2. TOP HEADER */}
-          <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 px-4 sm:px-6 flex items-center justify-between shrink-0 select-none">
+          <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 px-3 sm:px-6 flex items-center justify-between shrink-0 select-none">
             
             {/* Mobile Hamburger Toggle */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button 
                 onClick={() => setMobileMenuOpen(prev => !prev)}
-                className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 active:scale-95"
+                className="lg:hidden p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 hover:text-blue-600 hover:bg-blue-50/50 hover:border-blue-200 active:scale-95 transition"
                 aria-label="Toggle Menu"
               >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
               
               {/* Mobile Brand Link */}
-              <Link href="/" className="lg:hidden flex items-center gap-2.5 font-bold text-lg">
-                <span className="text-2xl">🚀</span>
-                <span className="text-slate-900">CareerLeader</span>
+              <Link href="/" className="lg:hidden flex items-center gap-1.5 font-bold text-lg">
+                <span className="text-xl">🚀</span>
+                <span className="text-slate-900 hidden sm:inline">CareerLeader</span>
               </Link>
-
+ 
               {/* Breadcrumbs for desktop */}
               <div className="hidden lg:flex items-center gap-2 text-sm text-slate-500 font-medium">
                 <span>{lang === 'bn' ? "হোম" : "Home"}</span>
@@ -419,9 +419,9 @@ export default function DashboardLayout({
                 )}
               </div>
             </div>
-
+ 
             {/* Quick Links & Avatar */}
-            <div className="flex items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-2.5 sm:gap-6">
               <nav className="hidden md:flex items-center gap-6">
                 <Link href="/dashboard" className={`text-sm font-semibold transition ${activeTab === "dashboard" ? "text-blue-600" : "text-slate-600 hover:text-blue-600"}`}>
                   {lang === 'bn' ? "ড্যাশবোর্ড" : "Dashboard"}
@@ -433,12 +433,14 @@ export default function DashboardLayout({
                   {lang === 'bn' ? "মেন্টরবৃন্দ" : "Mentors"}
                 </Link>
               </nav>
-
+ 
               <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
               
-              {/* Language Switcher */}
-              <LanguageToggle />
-
+              {/* Language Switcher (Desktop only) */}
+              <div className="hidden sm:block">
+                <LanguageToggle variant="light" compact />
+              </div>
+ 
               {/* Dynamic Notification Bell */}
               <div className="relative">
                 <Link 
@@ -451,7 +453,7 @@ export default function DashboardLayout({
                   )}
                 </Link>
               </div>
-
+ 
               {/* User Avatar Initials / Login Action */}
               <div className="relative shrink-0">
                 {displayUserInitial ? (
@@ -474,10 +476,17 @@ export default function DashboardLayout({
               </div>
             </div>
           </header>
-
+ 
           {/* 3. MOBILE MENU BAR DROPDOWN */}
           {mobileMenuOpen && (
             <div className="lg:hidden border-b border-slate-200 bg-white px-4 py-4 space-y-2.5 z-10 shadow-md animate-slide-down select-none">
+              
+              {/* Language Switcher inside menu for mobile screens */}
+              <div className="pb-3 mb-2 border-b border-slate-100 flex items-center justify-between">
+                <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Language / ভাষা:</span>
+                <LanguageToggle variant="light" compact className="bg-slate-50" />
+              </div>
+
               {navItems.map((item) => {
                 const isActive = activeTab === item.key
                 return (
@@ -502,7 +511,7 @@ export default function DashboardLayout({
                   </Link>
                 )
               })}
-
+ 
               {/* Mobile Logout option */}
               {isMounted && user && (
                 <button
