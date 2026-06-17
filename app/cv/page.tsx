@@ -261,14 +261,14 @@ export default function CvGeneratorPage() {
               </button>
 
               {cv && (
-                <div className="grid grid-cols-3 gap-2">
-                  <button onClick={handleCopy} className="py-2 text-[10px] font-bold border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button onClick={handleCopy} className="py-2.5 sm:py-2 text-xs sm:text-[10px] font-bold border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
                     {copied ? "✓" : lang === "bn" ? "কপি" : "Copy"}
                   </button>
-                  <button onClick={handleDownload} className="py-2 text-[10px] font-bold border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
+                  <button onClick={handleDownload} className="py-2.5 sm:py-2 text-xs sm:text-[10px] font-bold border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
                     {lang === "bn" ? "ডাউনলোড" : "Download"}
                   </button>
-                  <button onClick={handlePrint} className="py-2 text-[10px] font-bold border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
+                  <button onClick={handlePrint} className="py-2.5 sm:py-2 text-xs sm:text-[10px] font-bold border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
                     {lang === "bn" ? "প্রিন্ট" : "Print/PDF"}
                   </button>
                 </div>

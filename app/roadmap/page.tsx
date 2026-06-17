@@ -521,7 +521,7 @@ export default function RoadmapPage() {
                           <div className="flex-1 space-y-4">
                             
                             {/* Phase Title, Period & Progress Ratio badge */}
-                            <div className="flex items-start justify-between gap-4">
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
                               <div className="space-y-0.5">
                                 <h3 className="font-extrabold text-slate-900 text-base leading-tight">
                                   {phase.title}

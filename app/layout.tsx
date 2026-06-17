@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   description: "Get personalized career recommendations based on your personality and interests using our 16-type assessment.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

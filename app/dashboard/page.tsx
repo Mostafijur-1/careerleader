@@ -109,6 +109,12 @@ function DashboardContent() {
     }
   }, [viewParam])
 
+  useEffect(() => {
+    if (activeView !== "messages") {
+      setChatMobileView("list")
+    }
+  }, [activeView])
+
   const changeView = (view: "dashboard" | "resources" | "messages" | "profile" | "ai-advisor") => {
     setActiveView(view)
     router.push(`/dashboard?view=${view}`)
@@ -130,6 +136,7 @@ function DashboardContent() {
   const [chatInput, setChatInput] = useState("")
   const [chatLoading, setChatLoading] = useState(false)
   const [chatSending, setChatSending] = useState(false)
+  const [chatMobileView, setChatMobileView] = useState<"list" | "pane">("list")
 
   // AI Advisor Chat states
   const [aiChatMessages, setAiChatMessages] = useState<Array<{ id: string; sender: 'user' | 'ai'; text: string; createdAt: string }>>([])
@@ -1081,8 +1088,8 @@ function DashboardContent() {
               VIEW: MESSAGES (MENTOR CONVERSATIONS)
              ============================================== */}
           {activeView === "messages" && (
-            <div className="space-y-6 animate-fade-in text-left">
-              <div>
+            <div className="flex-1 flex flex-col min-h-0 space-y-4 md:space-y-6 animate-fade-in text-left">
+              <div className="shrink-0">
                 <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                   {lang === 'bn' ? "মেন্টর চ্যাট 💬" : "Mentor Chat 💬"}
                 </h1>
@@ -1092,7 +1099,7 @@ function DashboardContent() {
               </div>
 
               {acceptedMentors.length === 0 ? (
-                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500 max-w-lg mx-auto">
+                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500 max-w-lg mx-auto shrink-0">
                   <span className="text-5xl block mb-4">👥</span>
                   <p className="font-bold text-base mb-1">{lang === 'bn' ? "কোনো কথোপকথন চালু নেই" : "No Active Conversations"}</p>
                   <p className="text-xs max-w-sm mx-auto mb-6">{lang === 'bn' ? "কথোপকথন শুরু করতে প্রথমে মেন্টরের সাথে কানেক্ট করুন।" : "You can send messages once a mentor accepts your connection request."}</p>
@@ -1104,10 +1111,13 @@ function DashboardContent() {
                   </Link>
                 </div>
               ) : (
-                <div className="bg-white border border-slate-200 rounded-3xl shadow-xs overflow-hidden flex h-[580px]">
+                <div className="bg-white border border-slate-200 rounded-3xl shadow-xs overflow-hidden flex flex-1 min-h-[300px]">
                   
                   {/* Left contacts list pane */}
-                  <div className="w-64 sm:w-72 border-r border-slate-200 flex flex-col shrink-0">
+                  <div className={`
+                    w-full md:w-64 lg:w-72 border-r border-slate-200 flex flex-col shrink-0
+                    ${chatMobileView === "pane" ? "hidden md:flex" : "flex"}
+                  `}>
                     <div className="p-4 border-b border-slate-100 bg-slate-50/50">
                       <h3 className="font-extrabold text-slate-900 text-sm">{lang === 'bn' ? "কথোপকথনসমূহ" : "Active Channels"}</h3>
                     </div>
@@ -1117,7 +1127,10 @@ function DashboardContent() {
                         return (
                           <button
                             key={mentor.email}
-                            onClick={() => setSelectedMentor(mentor)}
+                            onClick={() => {
+                              setSelectedMentor(mentor)
+                              setChatMobileView("pane")
+                            }}
                             className={`w-full text-left p-4 flex items-center gap-3 transition-colors ${
                               isSelected ? "bg-indigo-50/80 border-l-4 border-indigo-600 pl-3.5" : "hover:bg-slate-50/80"
                             }`}
@@ -1137,12 +1150,23 @@ function DashboardContent() {
                   </div>
 
                   {/* Right Chat window pane */}
-                  <div className="flex-1 flex flex-col min-w-0">
+                  <div className={`
+                    flex-1 flex flex-col min-w-0
+                    ${chatMobileView === "list" ? "hidden md:flex" : "flex"}
+                  `}>
                     
                     {/* Chat Header */}
                     {selectedMentor && (
-                      <div className="px-6 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50/50 shrink-0">
-                        <div className="flex items-center gap-3 min-w-0">
+                      <div className="px-4 sm:px-6 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50 shrink-0">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => setChatMobileView("list")}
+                            className="md:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 shrink-0"
+                            aria-label={lang === 'bn' ? "তালিকায় ফিরুন" : "Back to conversations"}
+                          >
+                            ←
+                          </button>
                           <div className="w-9 h-9 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center shadow-xs shrink-0">
                             {selectedMentor.image}
                           </div>
@@ -1154,7 +1178,7 @@ function DashboardContent() {
 
                         {/* Meeting Links */}
                         {(selectedMentor.zoomLink || selectedMentor.meetLink) && (
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:justify-end">
                             {selectedMentor.zoomLink && (
                               <a 
                                 href={selectedMentor.zoomLink} 
@@ -1256,8 +1280,8 @@ function DashboardContent() {
               VIEW: AI ADVISOR (CAREER LEADER AI CHAT)
              ============================================== */}
           {activeView === "ai-advisor" && (
-            <div className="space-y-6 animate-fade-in text-left">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex-1 flex flex-col min-h-0 space-y-4 md:space-y-6 animate-fade-in text-left">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
                 <div>
                   <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
                     <span>✨</span> {lang === 'bn' ? "এআই ক্যারিয়ার পরামর্শক" : "AI Career Advisor"}
@@ -1275,7 +1299,7 @@ function DashboardContent() {
                 </button>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col h-[550px]">
+              <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-[300px]">
                 
                 {/* Status Bar */}
                 <div className="px-6 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50/50 shrink-0 select-none">

@@ -248,11 +248,11 @@ export default function AssessmentPage() {
 
   // horizontal rating emojis list from Strongly Agree (5) on left to Strongly Disagree (1) on right
   const likertSmileys = [
-    { value: 5, label: ta.likert[4], smiley: <StronglyAgreeSmiley className="w-11 h-11" />, selectColor: "border-emerald-500 bg-emerald-50 text-emerald-700" },
-    { value: 4, label: ta.likert[3], smiley: <AgreeSmiley className="w-11 h-11" />, selectColor: "border-lime-500 bg-lime-50 text-lime-700" },
-    { value: 3, label: ta.likert[2], smiley: <NeutralSmiley className="w-11 h-11" />, selectColor: "border-amber-500 bg-amber-50 text-amber-700" },
-    { value: 2, label: ta.likert[1], smiley: <DisagreeSmiley className="w-11 h-11" />, selectColor: "border-orange-500 bg-orange-50 text-orange-700" },
-    { value: 1, label: ta.likert[0], smiley: <StronglyDisagreeSmiley className="w-11 h-11" />, selectColor: "border-red-500 bg-red-50 text-red-700" }
+    { value: 5, label: ta.likert[4], Smiley: StronglyAgreeSmiley, selectColor: "border-emerald-500 bg-emerald-50 text-emerald-700" },
+    { value: 4, label: ta.likert[3], Smiley: AgreeSmiley, selectColor: "border-lime-500 bg-lime-50 text-lime-700" },
+    { value: 3, label: ta.likert[2], Smiley: NeutralSmiley, selectColor: "border-amber-500 bg-amber-50 text-amber-700" },
+    { value: 2, label: ta.likert[1], Smiley: DisagreeSmiley, selectColor: "border-orange-500 bg-orange-50 text-orange-700" },
+    { value: 1, label: ta.likert[0], Smiley: StronglyDisagreeSmiley, selectColor: "border-red-500 bg-red-50 text-red-700" }
   ]
 
   const progress = qs.length ? Math.round((Object.keys(answers).length / qs.length) * 100) : 0
@@ -466,40 +466,47 @@ export default function AssessmentPage() {
                   <div className="p-6 sm:p-8 lg:p-10">
                     
                     <div className="max-w-2xl mx-auto">
-                      <div className="grid grid-cols-5 gap-2 sm:gap-4 justify-items-center">
+                      <div className="grid grid-cols-5 gap-1 sm:gap-4 justify-items-center">
                         {likertSmileys.map(smileyOpt => {
                           const isSelected = answers[qs[currentQuestion].id] === smileyOpt.value
+                          const SmileyIcon = smileyOpt.Smiley
                           return (
                             <button
                               key={smileyOpt.value}
                               type="button"
                               onClick={() => setAnswer(qs[currentQuestion].id, smileyOpt.value)}
-                              className={`flex flex-col items-center gap-3 p-3 rounded-2xl border-2 transition-all duration-200 w-full group cursor-pointer active:scale-95 ${
+                              className={`flex flex-col items-center gap-1 sm:gap-3 p-1.5 sm:p-3 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 w-full group cursor-pointer active:scale-95 ${
                                 isSelected 
                                   ? `${smileyOpt.selectColor} scale-105 shadow-md`
                                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                               }`}
                             >
-                              {/* Animated/Scaled Emoji container */}
                               <div className={`transition-transform duration-200 group-hover:scale-110 ${isSelected ? 'scale-115' : 'opacity-85'}`}>
-                                {smileyOpt.smiley}
+                                <SmileyIcon className="w-8 h-8 sm:w-11 sm:h-11" />
                               </div>
-                              <span className={`text-[10px] sm:text-xs font-bold text-center leading-tight transition duration-150 truncate max-w-full ${isSelected ? 'text-inherit font-extrabold' : 'text-slate-500'}`}>
+                              <span className={`hidden sm:block text-xs font-bold text-center leading-tight transition duration-150 truncate max-w-full ${isSelected ? 'text-inherit font-extrabold' : 'text-slate-500'}`}>
                                 {smileyOpt.label}
                               </span>
                             </button>
                           )
                         })}
                       </div>
+
+                      {/* Selected option helper text on mobile */}
+                      {answers[qs[currentQuestion].id] !== undefined && (
+                        <div className="sm:hidden text-center mt-5 text-sm font-extrabold text-indigo-600 animate-fade-in bg-indigo-50 border border-indigo-100 rounded-xl py-2 px-4">
+                          {lang === 'bn' ? "নির্বাচিত: " : "Selected: "}{likertSmileys.find(s => s.value === answers[qs[currentQuestion].id])?.label}
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Card Navigation Footer */}
-                  <div className="px-6 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+                  <div className="px-4 sm:px-6 py-4 sm:py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-3">
                     <button
                       onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
                       disabled={currentQuestion === 0}
-                      className="px-5 py-2.5 sm:px-6 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-300 transition duration-150 flex items-center gap-2 text-sm"
+                      className="px-4 sm:px-6 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-300 transition duration-150 flex items-center gap-2 text-sm shrink-0"
                     >
                       <span>{ta.previous}</span>
                     </button>

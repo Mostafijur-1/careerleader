@@ -516,7 +516,11 @@ export default function DashboardLayout({
           )}
 
           {/* 4. MAIN PAGE CONTENT CONTAINER */}
-          <main className={`flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 mx-auto w-full ${maxWidthClass}`}>
+          <main className={`flex-1 flex flex-col ${
+            activeTab === 'messages' || activeTab === 'ai-advisor'
+              ? 'overflow-hidden px-2 py-3 sm:px-6 lg:px-8 sm:py-6'
+              : 'overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10'
+          } mx-auto w-full ${maxWidthClass}`}>
             {children}
           </main>
         </div>

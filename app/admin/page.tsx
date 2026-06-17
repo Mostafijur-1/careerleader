@@ -46,6 +46,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Search & filter states
   const [userSearch, setUserSearch] = useState('')
@@ -367,19 +368,43 @@ export default function AdminPage() {
   const activeAdsCount = ads.filter(a => a.active).length
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col md:flex-row">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-20 bg-slate-900/50 backdrop-blur-xs md:hidden"
+        />
+      )}
+
       {/* Sidebar navigation */}
-      <aside className="w-full md:w-64 bg-white border-r border-gray-100 flex flex-col justify-between shrink-0 shadow-sm">
+      <aside className={`
+        fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-100 flex flex-col justify-between shrink-0 shadow-sm transform transition-transform duration-300
+        md:static md:translate-x-0
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
         <div className="p-6">
-          <div className="flex items-center gap-2 text-xl font-bold text-[#112954]">
-            <span>🚀</span>
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">CareerLeader</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xl font-bold text-[#112954]">
+              <span>🚀</span>
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">CareerLeader</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+              aria-label="Close menu"
+            >
+              ✕
+            </button>
           </div>
           <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">Admin Portal</p>
           
           <nav className="mt-8 space-y-1">
             <button
-              onClick={() => setActiveTab('overview')}
+              onClick={() => { setActiveTab('overview'); setSidebarOpen(false) }}
               className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'overview'
                   ? 'bg-blue-50 text-blue-600'
@@ -389,7 +414,7 @@ export default function AdminPage() {
               📊 Overview
             </button>
             <button
-              onClick={() => setActiveTab('users')}
+              onClick={() => { setActiveTab('users'); setSidebarOpen(false) }}
               className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'users'
                   ? 'bg-blue-50 text-blue-600'
@@ -399,7 +424,7 @@ export default function AdminPage() {
               👥 Manage Users
             </button>
             <button
-              onClick={() => setActiveTab('featured')}
+              onClick={() => { setActiveTab('featured'); setSidebarOpen(false) }}
               className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'featured'
                   ? 'bg-blue-50 text-blue-600'
@@ -409,7 +434,7 @@ export default function AdminPage() {
               📢 Featured Announcements
             </button>
             <button
-              onClick={() => setActiveTab('ads')}
+              onClick={() => { setActiveTab('ads'); setSidebarOpen(false) }}
               className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'ads'
                   ? 'bg-blue-50 text-blue-600'
@@ -435,8 +460,23 @@ export default function AdminPage() {
         </div>
       </aside>
 
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile header */}
+        <header className="md:hidden sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shrink-0">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
+          <span className="font-bold text-[#112954] text-sm">Admin Portal</span>
+          <LanguageToggle variant="light" compact />
+        </header>
+
       {/* Main container */}
-      <main className="flex-grow p-6 sm:p-10 max-w-7xl mx-auto w-full">
+      <main className="flex-grow p-4 sm:p-6 md:p-10 max-w-7xl mx-auto w-full">
         {/* Banner notifications */}
         {error && (
           <div className="mb-6 px-4 py-3 bg-rose-50 border border-rose-100 text-rose-600 font-semibold rounded-2xl flex items-center justify-between gap-3 text-sm animate-fade-in shadow-sm">
@@ -592,7 +632,89 @@ export default function AdminPage() {
               ) : filteredUsers.length === 0 ? (
                 <div className="py-20 text-center text-gray-400 font-bold">No users match your criteria</div>
               ) : (
-                <div className="overflow-x-auto">
+                <>
+                {/* Mobile card list */}
+                <div className="md:hidden divide-y divide-gray-100">
+                  {filteredUsers.map(u => (
+                    <div key={u.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-bold text-gray-900 truncate">{u.name || 'Anonymous'}</div>
+                          <div className="text-xs text-gray-400 font-semibold truncate">{u.email}</div>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 ${
+                          u.type === 'student' ? 'bg-blue-50 text-blue-600' : 'bg-indigo-50 text-indigo-600'
+                        }`}>
+                          {u.type === 'student' ? '👨‍🎓 Student' : '👨‍🏫 Mentor'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {u.type === 'student' ? (
+                          u.mbti ? (
+                            <span className="font-bold">MBTI: <strong className="text-indigo-600">{u.mbti}</strong></span>
+                          ) : (
+                            <span className="font-semibold">No assessment taken</span>
+                          )
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {u.expertise.slice(0, 3).map(exp => (
+                              <span key={exp} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded">{exp}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        {u.type === 'student' ? (
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                            u.blocked ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'
+                          }`}>
+                            {u.blocked ? 'Blocked' : 'Active'}
+                          </span>
+                        ) : (
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                            u.active ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                          }`}>
+                            {u.active ? 'Activated' : 'Pending Approval'}
+                          </span>
+                        )}
+                        <div className="flex gap-2 flex-wrap justify-end">
+                          {u.type === 'student' ? (
+                            <button
+                              onClick={() => handleToggleBlock(u.id, u.blocked)}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                                u.blocked
+                                  ? 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+                                  : 'border-rose-200 text-rose-600 hover:bg-rose-50'
+                              }`}
+                            >
+                              {u.blocked ? 'Unblock' : 'Block'}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleToggleActive(u.id, u.active)}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                                u.active
+                                  ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
+                                  : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+                              }`}
+                            >
+                              {u.active ? 'Deactivate' : 'Activate'}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setDeleteUserModal({ isOpen: true, userId: u.id, userName: u.name || u.email })}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 border-b border-gray-100 text-gray-400 text-xs font-bold uppercase tracking-wider">
@@ -684,6 +806,7 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+                </>
               )}
             </div>
           </div>
@@ -1098,6 +1221,7 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

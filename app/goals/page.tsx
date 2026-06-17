@@ -365,7 +365,7 @@ export default function GoalsPage() {
           </div>
 
           {/* Form Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button
               onClick={() => router.push("/dashboard")}
               className="px-5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition active:scale-95 cursor-pointer"
@@ -383,7 +383,7 @@ export default function GoalsPage() {
         </div>
 
         {/* Right Goal Preview Column (1/3 width) */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col h-fit sticky top-24 text-left">
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col h-fit lg:sticky lg:top-24 text-left">
           <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">
             {lang === 'bn' ? "লক্ষ্যের প্রাকদর্শন" : "Goal Preview"}
           </h2>

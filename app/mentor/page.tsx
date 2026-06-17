@@ -118,6 +118,7 @@ const localTranslations = {
     shareKnowledge: "Share knowledge.",
     inspireGrowth: "Inspire growth.",
     backToHome: "Back Home",
+    backToConversations: "Back to Chats",
     logout: "Logout",
     demoWorkspace: "Demo Workspace (Simulated data mixed with real DB results)",
     send: "Send",
@@ -194,6 +195,7 @@ const localTranslations = {
     shareKnowledge: "জ্ঞান ভাগ করুন।",
     inspireGrowth: "বৃদ্ধি অনুপ্রাণিত করুন।",
     backToHome: "মূল পাতা",
+    backToConversations: "চ্যাটে ফিরুন",
     logout: "লগআউট",
     demoWorkspace: "ডেমো ওয়ার্কস্পেস (বাস্তব ও ডেমো ডেটা মিশ্রিত)",
     send: "পাঠান",
@@ -960,7 +962,11 @@ export default function MentorPage() {
         </header>
 
         {/* 3. SCROLLABLE TAB PAGE WORKSPACE */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+        <main className={`flex-1 ${
+          activeTab === 'chat'
+            ? 'overflow-hidden flex flex-col p-2 lg:p-4'
+            : 'overflow-y-auto p-4 lg:p-8'
+        }`}>
           
           {/* TAB: DASHBOARD VIEW */}
           {activeTab === "dashboard" && (
@@ -1527,7 +1533,7 @@ export default function MentorPage() {
 
           {/* TAB: MESSAGES / CHAT CLIENT */}
           {activeTab === "chat" && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden flex h-[78vh]">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden flex flex-1 min-h-[300px]">
               
               {/* CHAT CLIENT: LEFT SIDEBAR (Hide on mobile in pane view) */}
               <div className={`
@@ -1600,7 +1606,7 @@ export default function MentorPage() {
                           onClick={() => setChatMobileView("list")}
                           className="md:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
                         >
-                          ← {loc.backToHome}
+                          ← {loc.backToConversations}
                         </button>
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white font-bold flex items-center justify-center shrink-0">
                           {selectedConversation.studentName ? selectedConversation.studentName.charAt(0) : "S"}

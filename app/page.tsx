@@ -142,7 +142,12 @@ export default function Home() {
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"job" | "higher_study" | "entrepreneurship">("job")
   const [selectedMentor, setSelectedMentor] = useState<MentorVM | null>(null)
+  const [modalTab, setModalTab] = useState<"profile" | "chat">("profile")
   const [mentors, setMentors] = useState<MentorVM[]>([])
+
+  useEffect(() => {
+    setModalTab("profile")
+  }, [selectedMentor])
 
   const [interestedCareers, setInterestedCareers] = useState<string[]>([])
   const handleToggleInterest = (careerTitle: string) => {
@@ -596,7 +601,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-20 overflow-hidden">
+      <section className="relative py-12 sm:py-20 overflow-hidden">
         <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute -bottom-8 right-0 w-96 h-96 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center relative z-10">
@@ -1111,154 +1116,192 @@ export default function Home() {
               </p>
             )}
 
-            <div className="space-y-4 mb-6 text-left">
-              {selectedMentor.education.length > 0 && (
-                <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80">
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.education}</h3>
-                  <ul className="space-y-2">
-                    {selectedMentor.education.map((ed, i) => (
-                      <li key={`${ed.degree}-${i}`} className="text-sm text-gray-700">
-                        <span className="font-semibold text-gray-900">{ed.degree}</span>
-                        <span className="text-gray-600"> — {ed.institution}</span>
-                        {ed.year ? <span className="text-gray-500"> ({ed.year})</span> : null}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {selectedMentor.currentJob && (
-                <div className="border border-gray-100 rounded-xl p-4 bg-white">
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.currentRole}</h3>
-                  <p className="text-sm text-gray-900 font-semibold">{selectedMentor.currentJob.title}</p>
-                  <p className="text-sm text-gray-600">{selectedMentor.currentJob.company}</p>
-                </div>
-              )}
-
-              {selectedMentor.experience.length > 0 && (
-                <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80">
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.experience}</h3>
-                  <ul className="space-y-3">
-                    {selectedMentor.experience.map((ex, i) => (
-                      <li key={`${ex.title}-${i}`} className="text-sm border-l-2 border-indigo-200 pl-3">
-                        <p className="font-semibold text-gray-900">{ex.title}</p>
-                        <p className="text-gray-600">{ex.organization} · {ex.period}</p>
-                        {ex.summary ? <p className="text-gray-600 mt-1">{ex.summary}</p> : null}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {selectedMentor.bio ? (
-                <div className="border border-gray-100 rounded-xl p-4 bg-white">
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.about}</h3>
-                  <p className="text-sm text-gray-700 leading-relaxed">{selectedMentor.bio}</p>
-                </div>
-              ) : null}
-
-              {selectedMentor.expertise.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.expertise}</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedMentor.expertise.map(skill => (
-                      <span key={skill} className="text-xs font-medium bg-blue-50 text-blue-800 px-2.5 py-1 rounded-lg">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Contact Buttons */}
-            {(selectedMentor.zoomLink || selectedMentor.meetLink) ? (
-              <div className="flex gap-3 mb-6">
-                {selectedMentor.zoomLink ? (
-                  <a
-                    href={selectedMentor.zoomLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition text-center"
-                  >
-                    Zoom
-                  </a>
-                ) : null}
-                {selectedMentor.meetLink ? (
-                  <a
-                    href={selectedMentor.meetLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-1 px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md hover:shadow-lg transition text-center"
-                  >
-                    Meet
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
-
-            {/* Chat */}
-            <div className="rounded-lg border border-gray-200 p-3">
-            <div className="h-44 sm:h-48 overflow-y-auto bg-gray-50 rounded-md p-3 space-y-2 mb-3">
-                {selectedMentor.demo || !selectedMentor.email ? (
-                  <p className="text-sm text-gray-600">{t.home.mentorModal.chatRegistered}</p>
-                ) : !user ? (
-                  <p className="text-sm text-gray-600">{t.home.mentorModal.loginStudentChat}</p>
-                ) : (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted" ? (
-                  <p className="text-sm text-gray-600">
-                    {t.home.mentorModal.chatAfterAccept}
-                  </p>
-                ) : chatLoading ? (
-                  <p className="text-sm text-gray-500">{t.home.mentorModal.loadingMessages}</p>
-                ) : chatMessages.length === 0 ? (
-                  <p className="text-sm text-gray-500">{t.home.mentorModal.noMessages}</p>
-                ) : (
-                  chatMessages.map(msg => (
-                    <div
-                      key={msg.id}
-                      className={`text-sm p-2 rounded-md ${
-                        msg.senderType === "student"
-                          ? "bg-blue-100 text-blue-900 ml-8"
-                          : "bg-white border border-gray-200 mr-8"
-                      }`}
-                    >
-                      <p className="font-semibold">{msg.senderType === "student" ? t.home.mentorModal.you : selectedMentor.name}</p>
-                      <p>{msg.text}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  value={chatInput}
-                  onChange={e => setChatInput(e.target.value)}
-                  placeholder={user ? t.home.mentorModal.placeholderChat : t.home.mentorModal.placeholderLogin}
-                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={
-                    !user ||
-                    chatSending ||
-                    selectedMentor.demo ||
-                    !selectedMentor.email ||
-                    (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"
-                  }
-                />
+            {/* Tab Switched Content */}
+            {selectedMentor.email && (requestStatuses[selectedMentor.email.toLowerCase()] || "none") === "accepted" && (
+              <div className="flex border-b border-gray-200 mb-6 font-sans shrink-0">
                 <button
-                  onClick={sendMessage}
-                  disabled={
-                    !user ||
-                    chatSending ||
-                    !chatInput.trim() ||
-                    selectedMentor.demo ||
-                    !selectedMentor.email ||
-                    (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"
-                  }
-                  className="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  onClick={() => setModalTab("profile")}
+                  className={`flex-1 py-2.5 text-center font-bold text-sm border-b-2 transition cursor-pointer ${
+                    modalTab === "profile"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
                 >
-                  {chatSending ? t.home.mentorModal.sending : t.home.mentorModal.send}
+                  {t.home.mentorModal.about}
+                </button>
+                <button
+                  onClick={() => setModalTab("chat")}
+                  className={`flex-1 py-2.5 text-center font-bold text-sm border-b-2 transition cursor-pointer ${
+                    modalTab === "chat"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {lang === 'bn' ? "চ্যাট ও মিটিং" : "Chat & Meetings"}
                 </button>
               </div>
-            </div>
+            )}
+
+            {/* Profile Tab Details */}
+            {(!selectedMentor.email || (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted" || modalTab === "profile") && (
+              <div className="space-y-4 mb-6 text-left">
+                {selectedMentor.education.length > 0 && (
+                  <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80">
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.education}</h3>
+                    <ul className="space-y-2">
+                      {selectedMentor.education.map((ed, i) => (
+                        <li key={`${ed.degree}-${i}`} className="text-sm text-gray-700">
+                          <span className="font-semibold text-gray-900">{ed.degree}</span>
+                          <span className="text-gray-600"> — {ed.institution}</span>
+                          {ed.year ? <span className="text-gray-500"> ({ed.year})</span> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {selectedMentor.currentJob && (
+                  <div className="border border-gray-100 rounded-xl p-4 bg-white">
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.currentRole}</h3>
+                    <p className="text-sm text-gray-900 font-semibold">{selectedMentor.currentJob.title}</p>
+                    <p className="text-sm text-gray-600">{selectedMentor.currentJob.company}</p>
+                  </div>
+                )}
+
+                {selectedMentor.experience.length > 0 && (
+                  <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80">
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.experience}</h3>
+                    <ul className="space-y-3">
+                      {selectedMentor.experience.map((ex, i) => (
+                        <li key={`${ex.title}-${i}`} className="text-sm border-l-2 border-indigo-200 pl-3">
+                          <p className="font-semibold text-gray-900">{ex.title}</p>
+                          <p className="text-gray-600">{ex.organization} · {ex.period}</p>
+                          {ex.summary ? <p className="text-gray-600 mt-1">{ex.summary}</p> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {selectedMentor.bio ? (
+                  <div className="border border-gray-100 rounded-xl p-4 bg-white">
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.about}</h3>
+                    <p className="text-sm text-gray-700 leading-relaxed">{selectedMentor.bio}</p>
+                  </div>
+                ) : null}
+
+                {selectedMentor.expertise.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.expertise}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedMentor.expertise.map(skill => (
+                        <span key={skill} className="text-xs font-medium bg-blue-50 text-blue-800 px-2.5 py-1 rounded-lg">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Chat & Meetings Tab Details */}
+            {(!selectedMentor.email || (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted" || modalTab === "chat") && (
+              <>
+                {/* Contact Buttons */}
+                {(selectedMentor.zoomLink || selectedMentor.meetLink) ? (
+                  <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                    {selectedMentor.zoomLink ? (
+                      <a
+                        href={selectedMentor.zoomLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition text-center"
+                      >
+                        Zoom
+                      </a>
+                    ) : null}
+                    {selectedMentor.meetLink ? (
+                      <a
+                        href={selectedMentor.meetLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md hover:shadow-lg transition text-center"
+                      >
+                        Meet
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {/* Chat */}
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className={`overflow-y-auto bg-gray-50 rounded-md p-3 space-y-2 mb-3 ${
+                    selectedMentor.email && (requestStatuses[selectedMentor.email.toLowerCase()] || "none") === "accepted"
+                      ? "h-64 sm:h-72"
+                      : "min-h-[10rem] max-h-[40vh] sm:h-48"
+                  }`}>
+                    {selectedMentor.demo || !selectedMentor.email ? (
+                      <p className="text-sm text-gray-600">{t.home.mentorModal.chatRegistered}</p>
+                    ) : !user ? (
+                      <p className="text-sm text-gray-600">{t.home.mentorModal.loginStudentChat}</p>
+                    ) : (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted" ? (
+                      <p className="text-sm text-gray-600">
+                        {t.home.mentorModal.chatAfterAccept}
+                      </p>
+                    ) : chatLoading ? (
+                      <p className="text-sm text-gray-500">{t.home.mentorModal.loadingMessages}</p>
+                    ) : chatMessages.length === 0 ? (
+                      <p className="text-sm text-gray-500">{t.home.mentorModal.noMessages}</p>
+                    ) : (
+                      chatMessages.map(msg => (
+                        <div
+                          key={msg.id}
+                          className={`text-sm p-2 rounded-md ${
+                            msg.senderType === "student"
+                              ? "bg-blue-100 text-blue-900 ml-8"
+                              : "bg-white border border-gray-200 mr-8"
+                          }`}
+                        >
+                          <p className="font-semibold">{msg.senderType === "student" ? t.home.mentorModal.you : selectedMentor.name}</p>
+                          <p>{msg.text}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <input
+                      value={chatInput}
+                      onChange={e => setChatInput(e.target.value)}
+                      placeholder={user ? t.home.mentorModal.placeholderChat : t.home.mentorModal.placeholderLogin}
+                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
+                      disabled={
+                        !user ||
+                        chatSending ||
+                        selectedMentor.demo ||
+                        !selectedMentor.email ||
+                        (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"
+                      }
+                    />
+                    <button
+                      onClick={sendMessage}
+                      disabled={
+                        !user ||
+                        chatSending ||
+                        !chatInput.trim() ||
+                        selectedMentor.demo ||
+                        !selectedMentor.email ||
+                        (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"
+                      }
+                      className="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                      {chatSending ? t.home.mentorModal.sending : t.home.mentorModal.send}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
             <ClientOnly>
               <div />
