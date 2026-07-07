@@ -70,19 +70,15 @@ export async function getAiRecommendations(
   interests: string[] = [],
   limit = 5
 ): Promise<Recommendation[]> {
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) {
+  const apiKeyRaw = process.env.GEMINI_API_KEY
+  if (!apiKeyRaw) {
     throw new Error("GEMINI_API_KEY is not configured")
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey)
-  const model = genAI.getGenerativeModel({
-    model: MODEL,
-    generationConfig: {
-      temperature: 0.7,
-      responseMimeType: "application/json",
-    },
-  })
+  const apiKeys = apiKeyRaw.split(',').map(k => k.trim()).filter(Boolean)
+  if (apiKeys.length === 0) {
+    throw new Error("GEMINI_API_KEY is configured but has no valid keys")
+  }
 
   const safeInterests = (interests || []).filter(Boolean).slice(0, 8)
   const prompt = `You are a career guidance assistant. Return only valid JSON with this exact shape (no markdown, no extra keys at root):
@@ -90,26 +86,50 @@ export async function getAiRecommendations(
 
 Suggest up to ${limit} career recommendations for MBTI type "${personality}" and interests [${safeInterests.join(", ")}]. Make descriptions practical and concise.`
 
-  const maxAttempts = 3
-  let result: Awaited<ReturnType<typeof model.generateContent>> | null = null
   let lastErr: unknown
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+  for (let idx = 0; idx < apiKeys.length; idx++) {
+    const apiKey = apiKeys[idx]
+    const keyLabel = apiKeys.length > 1 ? `Gemini Key ${idx + 1}` : 'Gemini'
     try {
-      result = await model.generateContent(prompt)
-      break
-    } catch (err) {
+      console.log(`Attempting career recommendations using: ${keyLabel}`)
+      const genAI = new GoogleGenerativeAI(apiKey)
+      const model = genAI.getGenerativeModel({
+        model: MODEL,
+        generationConfig: {
+          temperature: 0.7,
+          responseMimeType: "application/json",
+        },
+      })
+
+      const maxAttempts = 3
+      let result: Awaited<ReturnType<typeof model.generateContent>> | null = null
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          result = await model.generateContent(prompt)
+          break
+        } catch (err) {
+          lastErr = err
+          if (!isRateLimitedError(err) || attempt === maxAttempts) {
+            throw err
+          }
+          await sleep(retryDelayMsFromError(err))
+        }
+      }
+      if (!result) throw lastErr
+
+      const text = result.response.text()
+      if (!text) return []
+
+      const jsonStr = extractJsonObject(text)
+      const parsed = JSON.parse(jsonStr) as { recommendations?: unknown[] }
+      const items = Array.isArray(parsed.recommendations) ? parsed.recommendations : []
+      return items.map(toRecommendation).filter((x): x is Recommendation => x !== null).slice(0, limit)
+    } catch (err: any) {
+      console.warn(`${keyLabel} failed:`, err?.message || err)
       lastErr = err
-      if (!isRateLimitedError(err) || attempt === maxAttempts) throw err
-      await sleep(retryDelayMsFromError(err))
+      // Continue to next key
     }
   }
-  if (!result) throw lastErr
 
-  const text = result.response.text()
-  if (!text) return []
-
-  const jsonStr = extractJsonObject(text)
-  const parsed = JSON.parse(jsonStr) as { recommendations?: unknown[] }
-  const items = Array.isArray(parsed.recommendations) ? parsed.recommendations : []
-  return items.map(toRecommendation).filter((x): x is Recommendation => x !== null).slice(0, limit)
+  throw new Error(`All Gemini API keys failed. Last error: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`)
 }
