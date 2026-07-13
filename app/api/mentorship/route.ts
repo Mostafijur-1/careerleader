@@ -421,11 +421,32 @@ export async function POST(req: Request) {
       status: status || 'upcoming',
       updatedAt: new Date()
     }
+    const messages = await getCollection('mentor_messages')
     if (id && ObjectId.isValid(id)) {
       await schedules.updateOne({ _id: new ObjectId(id) }, { $set: doc })
+      // Notify student of reschedule
+      const notifText = `🔄 Session Rescheduled: "${category}" is now on ${date} at ${time} / সেশন পুনঃনির্ধারিত হয়েছে: "${category}", নতুন তারিখ: ${date}, সময়: ${time}`
+      await messages.insertOne({
+        studentEmail: studentEmail.toLowerCase(),
+        mentorEmail: mentorEmail.toLowerCase(),
+        senderEmail: mentorEmail.toLowerCase(),
+        senderType: 'mentor',
+        text: notifText,
+        createdAt: new Date()
+      })
       return NextResponse.json({ success: true, id })
     } else {
       const result = await schedules.insertOne({ ...doc, createdAt: new Date() })
+      // Notify student of new schedule
+      const notifText = `🗓️ New Session Scheduled: "${category}" on ${date} at ${time} / নতুন সেশন নির্ধারিত হয়েছে: "${category}", তারিখ: ${date}, সময়: ${time}`
+      await messages.insertOne({
+        studentEmail: studentEmail.toLowerCase(),
+        mentorEmail: mentorEmail.toLowerCase(),
+        senderEmail: mentorEmail.toLowerCase(),
+        senderType: 'mentor',
+        text: notifText,
+        createdAt: new Date()
+      })
       return NextResponse.json({ success: true, id: String(result.insertedId) })
     }
   }
