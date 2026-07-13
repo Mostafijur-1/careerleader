@@ -120,7 +120,7 @@ const localTranslations = {
     backToHome: "Back Home",
     backToConversations: "Back to Chats",
     logout: "Logout",
-    demoWorkspace: "Demo Workspace (Simulated data mixed with real DB results)",
+    demoWorkspace: "Live Dashboard",
     send: "Send",
     replyPlaceholder: "Type your message to student...",
     loading: "Loading data...",
@@ -197,7 +197,7 @@ const localTranslations = {
     backToHome: "মূল পাতা",
     backToConversations: "চ্যাটে ফিরুন",
     logout: "লগআউট",
-    demoWorkspace: "ডেমো ওয়ার্কস্পেস (বাস্তব ও ডেমো ডেটা মিশ্রিত)",
+    demoWorkspace: "লাইভ ড্যাশবোর্ড",
     send: "পাঠান",
     replyPlaceholder: "শিক্ষার্থীকে উত্তর দিন...",
     loading: "লোড হচ্ছে...",
@@ -215,31 +215,9 @@ const localTranslations = {
 }
 
 // Dynamic Simulated Data for High-Fidelity Mock UI when database collections are sparse
-const demoRequests: PendingRequest[] = [
-  { id: "demo-r1", studentEmail: "neha.kapoor@demo.com", studentName: "Neha Kapoor", studentMbti: "INFJ", messagePreview: "Hi Mentor, I'm looking for guidance on transitioning into Data Science and UI UX tools...", isDemo: true },
-  { id: "demo-r2", studentEmail: "vikram.joshi@demo.com", studentName: "Vikram Joshi", studentMbti: "ENTJ", messagePreview: "I would love to get your advice on product management roadmap planning and strategy...", isDemo: true },
-  { id: "demo-r3", studentEmail: "ananya.verma@demo.com", studentName: "Ananya Verma", studentMbti: "INFP", messagePreview: "Can you help me improve my portfolio and design thinking frameworks?", isDemo: true }
-]
-
-const demoConversations: Conversation[] = [
-  { studentEmail: "arjun.mehta@demo.com", studentName: "Arjun Mehta", studentMbti: "INTJ", lastMessage: "Thank you for the great session today! Looking forward to next week.", lastMessageAt: "2026-06-06T10:30:00.000Z", isDemo: true },
-  { studentEmail: "priya.nair@demo.com", studentName: "Priya Nair", studentMbti: "ENFJ", lastMessage: "I have shared the resume draft in the Google drive link.", lastMessageAt: "2026-06-05T18:15:00.000Z", isDemo: true },
-  { studentEmail: "rohan.singh@demo.com", studentName: "Rohan Singh", studentMbti: "INTP", lastMessage: "Can we reschedule tomorrow's mock interview session to 5 PM?", lastMessageAt: "2026-06-04T12:00:00.000Z", isDemo: true },
-  { studentEmail: "sneha.iyer@demo.com", studentName: "Sneha Iyer", studentMbti: "ESTJ", lastMessage: "Mock assignment submitted. Please review when free.", lastMessageAt: "2026-06-03T09:45:00.000Z", isDemo: true }
-]
-
-const demoMessages: Record<string, MentorMessage[]> = {
-  "arjun.mehta@demo.com": [
-    { id: "m1", studentEmail: "arjun.mehta@demo.com", mentorEmail: "mentor@demo.com", senderType: "student", senderEmail: "arjun.mehta@demo.com", text: "Hello! I am preparing for software engineering interviews.", createdAt: "2026-06-06T09:00:00Z" },
-    { id: "m2", studentEmail: "arjun.mehta@demo.com", mentorEmail: "mentor@demo.com", senderType: "mentor", senderEmail: "mentor@demo.com", text: "Hi Arjun, glad to support you. Let's schedule a Zoom call to review system design fundamentals.", createdAt: "2026-06-06T09:05:00Z" },
-    { id: "m3", studentEmail: "arjun.mehta@demo.com", mentorEmail: "mentor@demo.com", senderType: "student", senderEmail: "arjun.mehta@demo.com", text: "Thank you for the great session today! Looking forward to next week.", createdAt: "2026-06-06T10:30:00Z" }
-  ],
-  "priya.nair@demo.com": [
-    { id: "m4", studentEmail: "priya.nair@demo.com", mentorEmail: "mentor@demo.com", senderType: "student", senderEmail: "priya.nair@demo.com", text: "Hi! Can you review my resume design?", createdAt: "2026-06-05T18:00:00Z" },
-    { id: "m5", studentEmail: "priya.nair@demo.com", mentorEmail: "mentor@demo.com", senderType: "mentor", senderEmail: "mentor@demo.com", text: "Of course! Drop the link here.", createdAt: "2026-06-05T18:10:00Z" },
-    { id: "m6", studentEmail: "priya.nair@demo.com", mentorEmail: "mentor@demo.com", senderType: "student", senderEmail: "priya.nair@demo.com", text: "I have shared the resume draft in the Google drive link.", createdAt: "2026-06-05T18:15:00Z" }
-  ]
-}
+const demoRequests: PendingRequest[] = []
+const demoConversations: Conversation[] = []
+const demoMessages: Record<string, MentorMessage[]> = {}
 
 export default function MentorPage() {
   const { user, setUser } = useUser()
@@ -395,14 +373,7 @@ export default function MentorPage() {
     if (notesJson) {
       setSessionNotes(JSON.parse(notesJson))
     } else {
-      // Seed default notes
-      const seedNotes: SessionNote[] = [
-        { id: "n-seed-1", studentEmail: "arjun.mehta@demo.com", studentName: "Arjun Mehta", date: "2026-06-04", category: "Career Guidance", text: "Discussed long-term career goals and industry exploration. Suggested focusing on system design paradigms.", followUp: "Follow-up in 2 weeks" },
-        { id: "n-seed-2", studentEmail: "priya.nair@demo.com", studentName: "Priya Nair", date: "2026-05-20", category: "Resume Review", text: "Reviewed resume layout and recommended expanding on internship impact points.", followUp: "Follow-up in 1 week" },
-        { id: "n-seed-3", studentEmail: "rohan.singh@demo.com", studentName: "Rohan Singh", date: "2026-05-18", category: "Mock Interview", text: "Conducted mock interview on web fundamentals. Code readability was good but algorithmic complexity needs practice.", followUp: "Follow-up completed" }
-      ]
-      localStorage.setItem("mentor_session_notes", JSON.stringify(seedNotes))
-      setSessionNotes(seedNotes)
+      setSessionNotes([])
     }
 
     // 2. Scheduled Sessions
@@ -410,13 +381,7 @@ export default function MentorPage() {
     if (schedJson) {
       setSchedules(JSON.parse(schedJson))
     } else {
-      const seedScheds: ScheduledSession[] = [
-        { id: "s-seed-1", studentEmail: "arjun.mehta@demo.com", studentName: "Arjun Mehta", date: "2026-06-06", time: "16:00", category: "Career Guidance", status: "upcoming" },
-        { id: "s-seed-2", studentEmail: "priya.nair@demo.com", studentName: "Priya Nair", date: "2026-06-07", time: "11:00", category: "Resume Review", status: "upcoming" },
-        { id: "s-seed-3", studentEmail: "rohan.singh@demo.com", studentName: "Rohan Singh", date: "2026-06-08", time: "14:00", category: "Mock Interview", status: "upcoming" }
-      ]
-      localStorage.setItem("mentor_schedules", JSON.stringify(seedScheds))
-      setSchedules(seedScheds)
+      setSchedules([])
     }
 
     // 3. Student Progress Map
@@ -424,16 +389,50 @@ export default function MentorPage() {
     if (progJson) {
       setStudentProgress(JSON.parse(progJson))
     } else {
-      const seedProgress = {
-        "arjun.mehta@demo.com": 75,
-        "priya.nair@demo.com": 60,
-        "rohan.singh@demo.com": 40,
-        "sneha.iyer@demo.com": 80
-      }
-      localStorage.setItem("mentor_student_progress", JSON.stringify(seedProgress))
-      setStudentProgress(seedProgress)
+      setStudentProgress({})
     }
   }, [])
+
+  // Load notes, schedules, and progress from Database for the logged in mentor
+  useEffect(() => {
+    async function loadMentorData() {
+      if (!user?.email || user.type !== "mentor") return
+      
+      try {
+        // Fetch session notes
+        const resNotes = await fetch(`/api/mentorship?action=get-session-notes&email=${encodeURIComponent(user.email)}&role=mentor`)
+        const dataNotes = await resNotes.json()
+        if (dataNotes?.notes) {
+          setSessionNotes(dataNotes.notes || [])
+        }
+
+        // Fetch schedules
+        const resScheds = await fetch(`/api/mentorship?action=get-schedules&email=${encodeURIComponent(user.email)}&role=mentor`)
+        const dataScheds = await resScheds.json()
+        if (dataScheds?.schedules) {
+          const dbScheds: ScheduledSession[] = dataScheds.schedules || []
+          setSchedules(dbScheds.sort((a, b) => a.date.localeCompare(b.date)))
+        }
+
+        // Fetch student progress
+        const resProgress = await fetch(`/api/mentorship?action=get-student-progress&email=${encodeURIComponent(user.email)}&role=mentor`)
+        const dataProgress = await resProgress.json()
+        if (dataProgress?.progress) {
+          const progMap: Record<string, number> = {}
+          dataProgress.progress.forEach((p: { studentEmail: string; progress: number }) => {
+            progMap[p.studentEmail.toLowerCase()] = p.progress
+          })
+          setStudentProgress(progMap)
+        }
+      } catch (err) {
+        console.error("Failed to load mentor database stats", err)
+      }
+    }
+    
+    if (user?.email && user.type === "mentor") {
+      loadMentorData()
+    }
+  }, [user])
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -673,69 +672,183 @@ export default function MentorPage() {
   }
 
   // Actions: Create Session Note
-  function handleSaveNote(e: React.FormEvent) {
+  async function handleSaveNote(e: React.FormEvent) {
     e.preventDefault()
-    if (!noteStudentEmail || !noteText.trim()) return
+    if (!noteStudentEmail || !noteText.trim() || !user?.email) return
 
     const studentName = getStudentName(noteStudentEmail)
-    const newNote: SessionNote = {
-      id: "note-" + Date.now(),
-      studentEmail: noteStudentEmail,
-      studentName,
-      date: new Date().toISOString().split("T")[0],
-      category: noteCategory,
-      text: noteText.trim(),
-      followUp: noteFollowUp
+
+    if (noteStudentEmail.endsWith("@demo.com")) {
+      const newNote: SessionNote = {
+        id: "note-" + Date.now(),
+        studentEmail: noteStudentEmail,
+        studentName,
+        date: new Date().toISOString().split("T")[0],
+        category: noteCategory,
+        text: noteText.trim(),
+        followUp: noteFollowUp
+      }
+      const updated = [newNote, ...sessionNotes]
+      setSessionNotes(updated)
+      localStorage.setItem("mentor_session_notes", JSON.stringify(updated))
+      setNoteText("")
+      setActiveTab("notes")
+      return
     }
 
-    const updated = [newNote, ...sessionNotes]
-    setSessionNotes(updated)
-    localStorage.setItem("mentor_session_notes", JSON.stringify(updated))
-    
-    // reset form
-    setNoteText("")
-    // redirect to notes tab
-    setActiveTab("notes")
+    try {
+      const res = await fetch("/api/mentorship", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "save-session-note",
+          studentEmail: noteStudentEmail,
+          studentName,
+          mentorEmail: user.email,
+          date: new Date().toISOString().split("T")[0],
+          category: noteCategory,
+          text: noteText.trim(),
+          followUp: noteFollowUp
+        })
+      })
+      const data = await res.json()
+      if (res.ok && data?.success) {
+        const newNote: SessionNote = {
+          id: data.id,
+          studentEmail: noteStudentEmail,
+          studentName,
+          date: new Date().toISOString().split("T")[0],
+          category: noteCategory,
+          text: noteText.trim(),
+          followUp: noteFollowUp
+        }
+        setSessionNotes(prev => [newNote, ...prev])
+        setNoteText("")
+        setActiveTab("notes")
+      }
+    } catch (err) {
+      console.error("Failed to save note to database", err)
+    }
   }
 
   // Actions: Delete Session Note
-  function handleDeleteNote(id: string) {
-    const updated = sessionNotes.filter(n => n.id !== id)
-    setSessionNotes(updated)
-    localStorage.setItem("mentor_session_notes", JSON.stringify(updated))
+  async function handleDeleteNote(id: string) {
+    const noteToDelete = sessionNotes.find(n => n.id === id)
+    if (!noteToDelete) return
+
+    if (noteToDelete.studentEmail.endsWith("@demo.com") || id.startsWith("note-") || id.startsWith("n-seed-")) {
+      const updated = sessionNotes.filter(n => n.id !== id)
+      setSessionNotes(updated)
+      localStorage.setItem("mentor_session_notes", JSON.stringify(updated))
+      return
+    }
+
+    try {
+      const res = await fetch("/api/mentorship", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete-session-note",
+          id
+        })
+      })
+      if (res.ok) {
+        setSessionNotes(prev => prev.filter(n => n.id !== id))
+      }
+    } catch (err) {
+      console.error("Failed to delete note from database", err)
+    }
   }
 
   // Actions: Create scheduled session
-  function handleScheduleSession(e: React.FormEvent) {
+  async function handleScheduleSession(e: React.FormEvent) {
     e.preventDefault()
-    if (!schedStudentEmail || !schedDate || !schedTime) return
+    if (!schedStudentEmail || !schedDate || !schedTime || !user?.email) return
 
     const studentName = getStudentName(schedStudentEmail)
-    const newSession: ScheduledSession = {
-      id: "sched-" + Date.now(),
-      studentEmail: schedStudentEmail,
-      studentName,
-      date: schedDate,
-      time: schedTime,
-      category: schedCategory,
-      status: "upcoming"
+
+    if (schedStudentEmail.endsWith("@demo.com")) {
+      const newSession: ScheduledSession = {
+        id: "sched-" + Date.now(),
+        studentEmail: schedStudentEmail,
+        studentName,
+        date: schedDate,
+        time: schedTime,
+        category: schedCategory,
+        status: "upcoming"
+      }
+      const updated = [newSession, ...schedules].sort((a, b) => a.date.localeCompare(b.date))
+      setSchedules(updated)
+      localStorage.setItem("mentor_schedules", JSON.stringify(updated))
+      setShowScheduleModal(false)
+      setSchedStudentEmail("")
+      setSchedDate("")
+      setSchedTime("")
+      return
     }
 
-    const updated = [newSession, ...schedules].sort((a, b) => a.date.localeCompare(b.date))
-    setSchedules(updated)
-    localStorage.setItem("mentor_schedules", JSON.stringify(updated))
-
-    setShowScheduleModal(false)
-    setSchedStudentEmail("")
-    setSchedDate("")
-    setSchedTime("")
+    try {
+      const res = await fetch("/api/mentorship", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "save-schedule",
+          studentEmail: schedStudentEmail,
+          studentName,
+          mentorEmail: user.email,
+          date: schedDate,
+          time: schedTime,
+          category: schedCategory,
+          status: "upcoming"
+        })
+      })
+      const data = await res.json()
+      if (res.ok && data?.success) {
+        const newSession: ScheduledSession = {
+          id: data.id,
+          studentEmail: schedStudentEmail,
+          studentName,
+          date: schedDate,
+          time: schedTime,
+          category: schedCategory,
+          status: "upcoming"
+        }
+        setSchedules(prev => [...prev, newSession].sort((a, b) => a.date.localeCompare(b.date)))
+        setShowScheduleModal(false)
+        setSchedStudentEmail("")
+        setSchedDate("")
+        setSchedTime("")
+      }
+    } catch (err) {
+      console.error("Failed to schedule session in database", err)
+    }
   }
 
   // Actions: Update Student Progress Slider
-  function handleProgressChange(email: string, val: number) {
+  async function handleProgressChange(email: string, val: number) {
     const updated = { ...studentProgress, [email]: val }
     setStudentProgress(updated)
-    localStorage.setItem("mentor_student_progress", JSON.stringify(updated))
+
+    if (email.endsWith("@demo.com")) {
+      localStorage.setItem("mentor_student_progress", JSON.stringify(updated))
+      return
+    }
+
+    if (!user?.email) return
+    try {
+      await fetch("/api/mentorship", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update-student-progress",
+          studentEmail: email,
+          mentorEmail: user.email,
+          progress: val
+        })
+      })
+    } catch (err) {
+      console.error("Failed to save progress update to database", err)
+    }
   }
 
   // Action: Logout
@@ -779,6 +892,15 @@ export default function MentorPage() {
       </div>
     )
   }
+
+  // Dynamic stats calculation for live metrics
+  const currentMonthStr = new Date().toISOString().substring(0, 7) // "YYYY-MM"
+  const sessionsThisMonthCount = schedules.filter(s => s.date.startsWith(currentMonthStr)).length
+  const completedSessionsCount = schedules.filter(s => s.status === "completed").length
+  const hoursMentored = completedSessionsCount * 1.0
+  const mentorUser = user as { rating?: number; reviews?: number } | null
+  const avgRating = mentorUser?.rating ?? 4.6
+  const reviewsCount = mentorUser?.reviews ?? 0
 
   // Navigation Items with Icons & Badge counts
   const menuItems = [
@@ -937,8 +1059,8 @@ export default function MentorPage() {
           </div>
  
           <div className="flex items-center gap-2.5 sm:gap-6">
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold border border-amber-200 rounded-full shadow-xs animate-pulse">
-              🛡️ {loc.demoWorkspace}
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-250 rounded-full shadow-xs">
+              🟢 {loc.demoWorkspace}
             </span>
             
             {/* Language Switcher (Desktop only in top bar) */}
@@ -1008,34 +1130,34 @@ export default function MentorPage() {
                   <div>
                     <h3 className="text-2xl font-bold text-slate-900">{allConversations.length}</h3>
                     <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">{loc.activeMentees}</p>
-                    <span className="text-[11px] text-emerald-600 font-semibold">+2 {loc.thisMonth}</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">{lang === "bn" ? "সক্রিয় যোগাযোগ" : "Active chats"}</span>
                   </div>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex items-center gap-4 hover:-translate-y-0.5 transition duration-200 hover:shadow-sm">
                   <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold">📅</div>
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-900">{schedules.length + 12}</h3>
+                    <h3 className="text-2xl font-bold text-slate-900">{sessionsThisMonthCount}</h3>
                     <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">{loc.sessionsThisMonth}</p>
-                    <span className="text-[11px] text-emerald-600 font-semibold">+12% {loc.fromLastMonth}</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">{lang === "bn" ? "এই চলতি মাসে" : "In current month"}</span>
                   </div>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex items-center gap-4 hover:-translate-y-0.5 transition duration-200 hover:shadow-sm">
                   <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-bold">🕒</div>
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-900">45.5</h3>
+                    <h3 className="text-2xl font-bold text-slate-900">{hoursMentored}</h3>
                     <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">{loc.hoursMentored}</p>
-                    <span className="text-[11px] text-emerald-600 font-semibold">+8.5 {loc.thisMonth}</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">{lang === "bn" ? "সম্পন্ন সেশন থেকে" : "From completed sessions"}</span>
                   </div>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex items-center gap-4 hover:-translate-y-0.5 transition duration-200 hover:shadow-sm">
                   <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xl font-bold">⭐</div>
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-900">4.9</h3>
+                    <h3 className="text-2xl font-bold text-slate-900">{avgRating}</h3>
                     <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">{loc.avgRating}</p>
-                    <span className="text-[11px] text-slate-500 font-medium">from 18 mentees</span>
+                    <span className="text-[11px] text-slate-500 font-medium">{lang === "bn" ? `${reviewsCount} সেশন থেকে` : `from ${reviewsCount} sessions`}</span>
                   </div>
                 </div>
               </div>

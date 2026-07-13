@@ -84,6 +84,28 @@ function GuestDashboardView() {
   )
 }
 
+interface DashboardSchedule {
+  id: string
+  studentEmail: string
+  studentName: string
+  mentorEmail: string
+  date: string
+  time: string
+  category: string
+  status: "upcoming" | "completed"
+}
+
+interface DashboardNote {
+  id: string
+  studentEmail: string
+  studentName: string
+  mentorEmail: string
+  date: string
+  category: string
+  text: string
+  followUp?: string
+}
+
 function DashboardContent() {
   const { user, loading, setUser } = useUser()
   const { lang, t } = useLanguage()
@@ -138,6 +160,11 @@ function DashboardContent() {
   const [chatSending, setChatSending] = useState(false)
   const [chatMobileView, setChatMobileView] = useState<"list" | "pane">("list")
 
+  // Mentorship shared features states
+  const [studentSchedules, setStudentSchedules] = useState<DashboardSchedule[]>([])
+  const [studentNotes, setStudentNotes] = useState<DashboardNote[]>([])
+  const [studentProgressValue, setStudentProgressValue] = useState<number>(0)
+
   // AI Advisor Chat states
   const [aiChatMessages, setAiChatMessages] = useState<Array<{ id: string; sender: 'user' | 'ai'; text: string; createdAt: string }>>([])
   const [aiChatInput, setAiChatInput] = useState("")
@@ -186,6 +213,43 @@ function DashboardContent() {
       setMockInterests(["Software Development", "Analytical Design", "Planning", "Teamwork"])
     }
   }, [user, localMbti])
+
+  // Load mentorship data for logged in student (schedules, notes, progress)
+  useEffect(() => {
+    async function loadStudentMentorshipData() {
+      if (!user?.email || user.type !== "student") return
+
+      try {
+        // Fetch schedules
+        const resScheds = await fetch(`/api/mentorship?action=get-schedules&email=${encodeURIComponent(user.email)}&role=student`)
+        const dataScheds = await resScheds.json()
+        if (dataScheds?.schedules) {
+          setStudentSchedules(dataScheds.schedules)
+        }
+
+        // Fetch session notes
+        const resNotes = await fetch(`/api/mentorship?action=get-session-notes&email=${encodeURIComponent(user.email)}&role=student`)
+        const dataNotes = await resNotes.json()
+        if (dataNotes?.notes) {
+          setStudentNotes(dataNotes.notes)
+        }
+
+        // Fetch progress updates
+        const resProgress = await fetch(`/api/mentorship?action=get-student-progress&email=${encodeURIComponent(user.email)}&role=student`)
+        const dataProgress = await resProgress.json()
+        if (dataProgress?.progress && dataProgress.progress.length > 0) {
+          const val = dataProgress.progress[0].progress || 0
+          setStudentProgressValue(val)
+        }
+      } catch (err) {
+        console.error("Failed to load student mentorship info", err)
+      }
+    }
+
+    if (user?.email && user.type === "student") {
+      loadStudentMentorshipData()
+    }
+  }, [user])
 
   // Load recommendations if user has already taken the assessment
   useEffect(() => {
@@ -511,9 +575,16 @@ function DashboardContent() {
   const topRecommendations = recommendations.slice(0, 4)
   const studentName = isMounted && user ? user.name : (lang === 'bn' ? "অতিথি" : "Guest")
 
+  const hasMentorsConnected = acceptedMentors.length > 0
+  const hasEnrolledResources = Object.keys(enrolledResources).length > 0
+
   // Progress summary
   const totalSteps = 5
-  const completedSteps = (hasTakenAssessment ? 2 : 0) + (hasGeneratedCv ? 1 : 0)
+  const completedSteps = 
+    (hasTakenAssessment ? 2 : 0) + 
+    (hasGeneratedCv ? 1 : 0) + 
+    (hasMentorsConnected ? 1 : 0) + 
+    (hasEnrolledResources ? 1 : 0)
   const totalProgressPercent = Math.round((completedSteps / totalSteps) * 100)
 
   const preparationSteps = [
@@ -534,14 +605,14 @@ function DashboardContent() {
     {
       id: 3,
       title: lang === 'bn' ? "৩. মেন্টরের সাথে সংযোগ স্থাপন" : "3. Connect with Mentors",
-      status: "pending",
+      status: hasMentorsConnected ? "completed" : "pending",
       desc: lang === 'bn' ? "আপনার ক্যারিয়ার ট্র্যাকের একজন মেন্টরকে অনুরোধ পাঠান।" : "Request mentorship session with industry leaders.",
       link: "/mentors"
     },
     {
       id: 4,
       title: lang === 'bn' ? "৪. দক্ষতা উন্নয়নের কোর্সসমূহ" : "4. Start Skill Development",
-      status: "pending",
+      status: hasEnrolledResources ? "completed" : "pending",
       desc: lang === 'bn' ? "প্রস্তাবিত রিসোর্স ব্যবহার করে শেখা শুরু করুন।" : "Enrol in recommended video courses & tutorials.",
       link: "/explore-careers"
     },
@@ -764,6 +835,142 @@ function DashboardContent() {
                       })}
                     </div>
                   </div>
+
+                  {/* Mentorship & Schedules Section */}
+                  {user?.type === "student" && hasMentorsConnected && (
+                    <div className="space-y-6">
+                      {/* Upcoming Sessions */}
+                      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs space-y-4">
+                        <div>
+                          <h3 className="font-extrabold text-slate-900 text-lg">
+                            {lang === 'bn' ? "আসন্ন সেশনসমূহ" : "Upcoming Scheduled Sessions"}
+                          </h3>
+                          <p className="text-slate-400 text-xs font-semibold mt-0.5">
+                            {lang === 'bn' ? "আপনার মেন্টরদের সাথে নির্ধারিত সেশন" : "Sessions scheduled by your mentors"}
+                          </p>
+                        </div>
+                        <div className="divide-y divide-slate-100">
+                          {studentSchedules.length === 0 ? (
+                            <p className="text-xs text-slate-400 py-4 italic text-center">
+                              {lang === 'bn' ? "কোনো নির্ধারিত সেশন নেই।" : "No upcoming sessions scheduled."}
+                            </p>
+                          ) : (
+                            studentSchedules.map((s: DashboardSchedule) => {
+                              const isUpcoming = s.status === "upcoming"
+                              // Find mentor detail for Zoom link if available
+                              const mentorDetail = acceptedMentors.find(m => m.email.toLowerCase() === s.mentorEmail.toLowerCase())
+                              const joinUrl = mentorDetail?.zoomLink || mentorDetail?.meetLink || "https://zoom.us/join"
+                              
+                              return (
+                                <div key={s.id} className="py-4 flex flex-wrap items-center justify-between gap-4 first:pt-0 last:pb-0">
+                                  <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm border ${
+                                      isUpcoming ? "bg-amber-50 border-amber-100 text-amber-600" : "bg-slate-100 border-slate-200 text-slate-500"
+                                    }`}>
+                                      🗓️
+                                    </div>
+                                    <div>
+                                      <h4 className="font-bold text-sm text-slate-900">
+                                        {lang === 'bn' ? "মেন্টর: " : "Mentor: "} {mentorDetail?.name || s.mentorEmail}
+                                      </h4>
+                                      <p className="text-xs text-slate-500 font-medium mt-0.5">{s.date} • {s.time} • {s.category}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md border ${
+                                      isUpcoming ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-slate-100 border-slate-200 text-slate-600"
+                                    }`}>
+                                      {isUpcoming ? (lang === 'bn' ? "আসন্ন" : "Upcoming") : (lang === 'bn' ? "সম্পন্ন" : "Completed")}
+                                    </span>
+                                    {isUpcoming && (
+                                      <a
+                                        href={joinUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs animate-pulse"
+                                      >
+                                        {lang === 'bn' ? "যোগদান করুন" : "Join"}
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Mentor-Specific Progress Bar */}
+                      {studentProgressValue > 0 && (
+                        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-extrabold text-slate-900 text-base">
+                                {lang === 'bn' ? "মেন্টর-নির্দেশিত অগ্রগতি" : "Mentor-Guided Progress"}
+                              </h3>
+                              <p className="text-slate-400 text-xs font-semibold mt-0.5">
+                                {lang === 'bn' ? "আপনার মেন্টর দ্বারা চিহ্নিত অগ্রগতি" : "Growth evaluation score assigned by your mentor"}
+                              </p>
+                            </div>
+                            <span className="font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg text-xs">
+                              {studentProgressValue}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                            <div 
+                              className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
+                              style={{ width: `${studentProgressValue}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Session Notes / Action Items */}
+                      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs space-y-4">
+                        <div>
+                          <h3 className="font-extrabold text-slate-900 text-lg">
+                            {lang === 'bn' ? "মেন্টর মতামত ও নির্দেশনা" : "Mentor Notes & Action Items"}
+                          </h3>
+                          <p className="text-slate-400 text-xs font-semibold mt-0.5">
+                            {lang === 'bn' ? "আপনার মেন্টরদের দেওয়া গুরুত্বপূর্ণ নোট ও লক্ষ্যসমূহ" : "Guidance notes and action tasks shared by your mentors"}
+                          </p>
+                        </div>
+                        <div className="space-y-4">
+                          {studentNotes.length === 0 ? (
+                            <p className="text-xs text-slate-400 py-4 italic text-center">
+                              {lang === 'bn' ? "কোনো নির্দেশনা নোট নেই।" : "No feedback notes shared yet."}
+                            </p>
+                          ) : (
+                            studentNotes.map((note: DashboardNote) => {
+                              const mentorDetail = acceptedMentors.find(m => m.email.toLowerCase() === note.mentorEmail.toLowerCase())
+                              return (
+                                <div key={note.id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-2 hover:bg-slate-100/50 transition">
+                                  <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                                    <span className="text-xs font-bold text-slate-800">
+                                      {mentorDetail?.name || note.mentorEmail}
+                                    </span>
+                                    <span className="text-[10px] font-semibold text-slate-400">
+                                      {note.date} • {note.category}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                                    {note.text}
+                                  </p>
+                                  {note.followUp && (
+                                    <div className="flex items-center gap-1.5 pt-1.5 border-t border-slate-200/40 mt-1">
+                                      <span className="text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-md">
+                                        📌 {lang === 'bn' ? "পরবর্তী পদক্ষেপ: " : "Follow-up: "} {note.followUp}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                 </div>
 

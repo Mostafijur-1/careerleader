@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCollection } from '../../../lib/db'
+import { ObjectId } from 'mongodb'
 import type { CareerCategory } from '../../../lib/mentorProfile'
 import { mentorMatchesCategory } from '../../../lib/mentorProfile'
 
@@ -245,6 +246,77 @@ export async function GET(req: Request) {
     })
   }
 
+  if (action === 'get-session-notes') {
+    const email = (url.searchParams.get('email') || '').trim().toLowerCase()
+    const role = (url.searchParams.get('role') || 'mentor').trim().toLowerCase()
+    if (!email) {
+      return NextResponse.json({ error: 'Missing email' }, { status: 400 })
+    }
+
+    const sessionNotes = await getCollection('mentor_session_notes')
+    const filter = role === 'mentor' ? { mentorEmail: email } : { studentEmail: email }
+    const docs = await sessionNotes.find(filter).sort({ date: -1, createdAt: -1 }).toArray()
+
+    return NextResponse.json({
+      notes: docs.map(d => ({
+        id: String(d._id),
+        studentEmail: d.studentEmail,
+        studentName: d.studentName || '',
+        mentorEmail: d.mentorEmail,
+        date: d.date,
+        category: d.category,
+        text: d.text,
+        followUp: d.followUp || '',
+      })),
+    })
+  }
+
+  if (action === 'get-schedules') {
+    const email = (url.searchParams.get('email') || '').trim().toLowerCase()
+    const role = (url.searchParams.get('role') || 'mentor').trim().toLowerCase()
+    if (!email) {
+      return NextResponse.json({ error: 'Missing email' }, { status: 400 })
+    }
+
+    const schedules = await getCollection('mentor_schedules')
+    const filter = role === 'mentor' ? { mentorEmail: email } : { studentEmail: email }
+    const docs = await schedules.find(filter).sort({ date: 1, time: 1 }).toArray()
+
+    return NextResponse.json({
+      schedules: docs.map(d => ({
+        id: String(d._id),
+        studentEmail: d.studentEmail,
+        studentName: d.studentName || '',
+        mentorEmail: d.mentorEmail,
+        date: d.date,
+        time: d.time,
+        category: d.category,
+        status: d.status || 'upcoming',
+      })),
+    })
+  }
+
+  if (action === 'get-student-progress') {
+    const email = (url.searchParams.get('email') || '').trim().toLowerCase()
+    const role = (url.searchParams.get('role') || 'mentor').trim().toLowerCase()
+    if (!email) {
+      return NextResponse.json({ error: 'Missing email' }, { status: 400 })
+    }
+
+    const progressCollection = await getCollection('mentor_student_progress')
+    const filter = role === 'mentor' ? { mentorEmail: email } : { studentEmail: email }
+    const docs = await progressCollection.find(filter).toArray()
+
+    return NextResponse.json({
+      progress: docs.map(d => ({
+        id: String(d._id),
+        studentEmail: d.studentEmail,
+        mentorEmail: d.mentorEmail,
+        progress: d.progress,
+      })),
+    })
+  }
+
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
 }
 
@@ -296,6 +368,90 @@ export async function POST(req: Request) {
       { $set: { status: decision, updatedAt: new Date() } }
     )
     return NextResponse.json({ success: true, status: decision })
+  }
+
+  if (action === 'save-session-note') {
+    const { id, studentEmail, studentName, mentorEmail, date, category, text, followUp } = body
+    if (!studentEmail || !mentorEmail || !text) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+    const sessionNotes = await getCollection('mentor_session_notes')
+    const doc = {
+      studentEmail: studentEmail.toLowerCase(),
+      studentName,
+      mentorEmail: mentorEmail.toLowerCase(),
+      date,
+      category,
+      text,
+      followUp,
+      updatedAt: new Date()
+    }
+    if (id && ObjectId.isValid(id)) {
+      await sessionNotes.updateOne({ _id: new ObjectId(id) }, { $set: doc })
+      return NextResponse.json({ success: true, id })
+    } else {
+      const result = await sessionNotes.insertOne({ ...doc, createdAt: new Date() })
+      return NextResponse.json({ success: true, id: String(result.insertedId) })
+    }
+  }
+
+  if (action === 'delete-session-note') {
+    const { id } = body
+    if (!id || !ObjectId.isValid(id)) {
+      return NextResponse.json({ error: 'Missing or invalid note ID' }, { status: 400 })
+    }
+    const sessionNotes = await getCollection('mentor_session_notes')
+    await sessionNotes.deleteOne({ _id: new ObjectId(id) })
+    return NextResponse.json({ success: true })
+  }
+
+  if (action === 'save-schedule') {
+    const { id, studentEmail, studentName, mentorEmail, date, time, category, status } = body
+    if (!studentEmail || !mentorEmail || !date || !time) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+    const schedules = await getCollection('mentor_schedules')
+    const doc = {
+      studentEmail: studentEmail.toLowerCase(),
+      studentName,
+      mentorEmail: mentorEmail.toLowerCase(),
+      date,
+      time,
+      category,
+      status: status || 'upcoming',
+      updatedAt: new Date()
+    }
+    if (id && ObjectId.isValid(id)) {
+      await schedules.updateOne({ _id: new ObjectId(id) }, { $set: doc })
+      return NextResponse.json({ success: true, id })
+    } else {
+      const result = await schedules.insertOne({ ...doc, createdAt: new Date() })
+      return NextResponse.json({ success: true, id: String(result.insertedId) })
+    }
+  }
+
+  if (action === 'delete-schedule') {
+    const { id } = body
+    if (!id || !ObjectId.isValid(id)) {
+      return NextResponse.json({ error: 'Missing or invalid schedule ID' }, { status: 400 })
+    }
+    const schedules = await getCollection('mentor_schedules')
+    await schedules.deleteOne({ _id: new ObjectId(id) })
+    return NextResponse.json({ success: true })
+  }
+
+  if (action === 'update-student-progress') {
+    const { studentEmail, mentorEmail, progress } = body
+    if (!studentEmail || !mentorEmail || typeof progress !== 'number') {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+    const progressCollection = await getCollection('mentor_student_progress')
+    await progressCollection.updateOne(
+      { studentEmail: studentEmail.toLowerCase(), mentorEmail: mentorEmail.toLowerCase() },
+      { $set: { progress, updatedAt: new Date() } },
+      { upsert: true }
+    )
+    return NextResponse.json({ success: true })
   }
 
   if (action !== 'send-message') {

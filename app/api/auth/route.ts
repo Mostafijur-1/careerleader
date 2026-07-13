@@ -19,6 +19,8 @@ function mapUserForClient(user: {
   meetLink?: string
   expertise?: string[]
   headline?: string
+  rating?: number
+  reviewCount?: number
 }) {
   return {
     id: user._id ? String(user._id) : '',
@@ -34,6 +36,8 @@ function mapUserForClient(user: {
     meetLink: user.meetLink || '',
     expertise: Array.isArray(user.expertise) ? user.expertise : [],
     headline: user.headline || '',
+    rating: typeof user.rating === 'number' ? user.rating : 4.6,
+    reviews: typeof user.reviewCount === 'number' ? user.reviewCount : 100,
   }
 }
 
@@ -95,7 +99,7 @@ export async function GET(req: Request) {
       const users = await getCollection('users')
       const dbUser = await users.findOne(
         { email: tokenUser.email, type: tokenUser.type },
-        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1, goal: 1, bio: 1, skills: 1, education: 1, zoomLink: 1, meetLink: 1, expertise: 1, headline: 1 } }
+        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1, goal: 1, bio: 1, skills: 1, education: 1, zoomLink: 1, meetLink: 1, expertise: 1, headline: 1, rating: 1, reviewCount: 1 } }
       )
       if (!dbUser) {
         return NextResponse.json({ user: null }, { status: 401 })
