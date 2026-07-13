@@ -485,7 +485,7 @@ export default function Home() {
             {user ? (
               <>
                 <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.home}</Link>
-                <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.dashboard}</Link>
+                <Link href={user.type === "mentor" ? "/mentor" : user.type === "admin" ? "/admin" : "/dashboard"} className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.dashboard}</Link>
                 <Link href="/explore-careers" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.exploreCareers}</Link>
                 <Link href="/mentors" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.mentors}</Link>
               </>
@@ -582,7 +582,7 @@ export default function Home() {
             {user ? (
               <>
                 <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.home}</Link>
-                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.dashboard}</Link>
+                <Link href={user.type === "mentor" ? "/mentor" : user.type === "admin" ? "/admin" : "/dashboard"} onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.dashboard}</Link>
                 <Link href="/explore-careers" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.exploreCareers}</Link>
                 <Link href="/mentors" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.mentors}</Link>
               </>
@@ -757,7 +757,7 @@ export default function Home() {
               <p className="text-gray-600 mb-6">{t.home.cardProgressBody}</p>
               <div className="flex items-center gap-4">
                 {user ? (
-                  <Link href="/dashboard" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
+                  <Link href={user.type === "mentor" ? "/mentor" : user.type === "admin" ? "/admin" : "/dashboard"} className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
                     {t.home.cardProgressView}
                   </Link>
                 ) : (

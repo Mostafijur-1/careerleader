@@ -183,6 +183,17 @@ function DashboardContent() {
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false)
 
+  // Route guard: redirect mentors/admins away from the student dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      if (user.type === "mentor") {
+        router.replace("/mentor")
+      } else if (user.type === "admin") {
+        router.replace("/admin")
+      }
+    }
+  }, [user, loading, router])
+
   useEffect(() => {
     setIsMounted(true)
     if (typeof window !== "undefined") {
