@@ -15,6 +15,7 @@ export interface CvProject {
   name: string
   description: string
   technologies: string[]
+  link?: string
 }
 
 export interface GeneratedCv {
@@ -22,6 +23,10 @@ export interface GeneratedCv {
   headline: string
   summary: string
   email?: string
+  phone?: string
+  location?: string
+  linkedin?: string
+  portfolio?: string
   skills: string[]
   experience: CvExperience[]
   education: CvEducation[]
@@ -47,6 +52,10 @@ export interface CvGenerateRequest {
     skills?: string[]
     education?: CvEducation[]
     mbti?: string
+    phone?: string
+    location?: string
+    linkedin?: string
+    portfolio?: string
   }
   lang?: "en" | "bn"
 }

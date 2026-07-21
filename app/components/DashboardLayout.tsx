@@ -7,7 +7,6 @@ import { useUser } from "../contexts/UserContext"
 import { useLanguage } from "../contexts/LanguageContext"
 import LanguageToggle from "./LanguageToggle"
 import AuthModal from "./AuthModal"
-import PremiumModal from "./PremiumModal"
 
 // ----------------------------------------------------
 // SIDEBAR & HEADER ICONS
@@ -69,22 +68,6 @@ function ResourcesIcon() {
   )
 }
 
-function MessagesIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-    </svg>
-  )
-}
-
-function ProfileIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-  )
-}
-
 function AiAdvisorIcon() {
   return (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -114,7 +97,6 @@ function BellIcon() {
 // ----------------------------------------------------
 interface DashboardLayoutContextType {
   openAuthModal: () => void
-  openPremiumModal: () => void
 }
 
 const DashboardLayoutContext = createContext<DashboardLayoutContextType | undefined>(undefined)
@@ -150,7 +132,6 @@ export default function DashboardLayout({
   const [isMounted, setIsMounted] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isAuthOpen, setIsAuthOpen] = useState(false)
-  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
@@ -178,7 +159,7 @@ export default function DashboardLayout({
           const list = Array.isArray(data?.notifications) ? data.notifications : []
           const seenKey = `notif_seen_at_${email.toLowerCase()}`
           const seenAt = Number(localStorage.getItem(seenKey) || "0")
-          const unread = list.filter((n: any) => new Date(n.createdAt).getTime() > seenAt).length
+          const unread = list.filter((n: { createdAt?: string }) => n.createdAt && new Date(n.createdAt).getTime() > seenAt).length
           setUnreadCount(unread)
         }
       } catch (err) {
@@ -192,7 +173,6 @@ export default function DashboardLayout({
   }, [user])
 
   const openAuthModal = () => setIsAuthOpen(true)
-  const openPremiumModal = () => setIsPremiumModalOpen(true)
 
   const handleLogout = async () => {
     try {
@@ -214,71 +194,74 @@ export default function DashboardLayout({
   const navItems = [
     {
       key: "dashboard",
+      group: "discover",
       href: "/dashboard",
       icon: <DashboardIcon />,
       label: t.nav.dashboard
     },
     {
       key: "assessment",
+      group: "discover",
       href: "/assessment",
       icon: <AssessmentIcon />,
       label: t.nav.assessment
     },
     {
       key: "explore-careers",
+      group: "discover",
       href: "/explore-careers",
       icon: <ExploreIcon />,
       label: t.nav.exploreCareers
     },
     {
       key: "ai-advisor",
+      group: "support",
       href: "/dashboard?view=ai-advisor",
       icon: <AiAdvisorIcon />,
       label: lang === 'bn' ? "এআই পরামর্শক" : "AI Advisor"
     },
     {
       key: "mentors",
+      group: "support",
       href: "/mentors",
       icon: <MentorsIcon />,
       label: t.nav.mentors
     },
     {
       key: "goals",
+      group: "plan",
       href: "/goals",
       icon: <GoalsIcon />,
       label: t.nav.goals
     },
     {
       key: "roadmap",
+      group: "plan",
       href: "/roadmap",
       icon: <RoadmapIcon />,
       label: t.nav.roadmap
     },
     {
       key: "cv",
+      group: "tools",
       href: "/cv",
       icon: <CvIcon />,
       label: lang === 'bn' ? "সিভি জেনারেটর" : "CV Generator"
     },
     {
       key: "resources",
+      group: "tools",
       href: "/dashboard?view=resources",
       icon: <ResourcesIcon />,
       label: t.nav.resources
-    },
-    {
-      key: "messages",
-      href: "/dashboard?view=messages",
-      icon: <MessagesIcon />,
-      label: t.nav.messages,
-      badge: unreadCount > 0 ? unreadCount : undefined
-    },
-    {
-      key: "profile",
-      href: "/dashboard?view=profile",
-      icon: <ProfileIcon />,
-      label: t.nav.profile
     }
+  ]
+
+  const navGroups = [
+    { key: "discover", label: lang === "bn" ? "খুঁজুন" : "Discover" },
+    { key: "plan", label: lang === "bn" ? "পরিকল্পনা" : "Plan" },
+    { key: "support", label: lang === "bn" ? "সহায়তা" : "Support" },
+    { key: "tools", label: lang === "bn" ? "টুলস" : "Tools" },
   ]
 
   // Breadcrumb Title mapping
@@ -313,45 +296,83 @@ export default function DashboardLayout({
 
   // Display user details or guest state
   const displayUserInitial = isMounted && user ? user.name.charAt(0).toUpperCase() : null
+  const nextAction = !user?.mbti
+    ? {
+        href: "/assessment",
+        title: lang === "bn" ? "অ্যাসেসমেন্ট দিন" : "Take the assessment",
+        body: lang === "bn" ? "আপনার জন্য মানানসই পথ খুঁজে শুরু করুন।" : "Start by finding the paths that fit you.",
+      }
+    : !user.journey?.selectedCareer
+      ? {
+          href: "/explore-careers",
+          title: lang === "bn" ? "একটি দিক বেছে নিন" : "Choose a direction",
+          body: lang === "bn" ? "আপনার সুপারিশগুলো তুলনা করুন।" : "Compare your recommended career paths.",
+        }
+      : !user.goal
+        ? {
+            href: "/goals",
+            title: lang === "bn" ? "লক্ষ্য নির্ধারণ করুন" : "Set a career goal",
+            body: lang === "bn" ? "আপনার নির্বাচিত পথকে একটি বাস্তব লক্ষ্যে পরিণত করুন।" : "Turn your chosen direction into a practical goal.",
+          }
+        : (user.journey?.roadmapProgress || 0) < 100
+          ? {
+              href: "/roadmap",
+              title: lang === "bn" ? "পরবর্তী কাজটি করুন" : "Complete your next task",
+              body: lang === "bn" ? "আপনার রোডম্যাপ থেকে এগিয়ে যান।" : "Keep moving through your roadmap.",
+            }
+          : !user.cvDraft
+            ? {
+                href: "/cv",
+                title: lang === "bn" ? "আপনার সিভি তৈরি করুন" : "Build your practical CV",
+                body: lang === "bn" ? "আপনার অগ্রগতিকে আবেদনযোগ্য সিভিতে সাজান।" : "Turn your progress into an application-ready CV.",
+              }
+            : {
+                href: "/cv",
+                title: lang === "bn" ? "সিভি হালনাগাদ রাখুন" : "Keep your CV current",
+                body: lang === "bn" ? "নতুন দক্ষতা ও অর্জন যোগ করুন।" : "Add new skills and evidence as you progress.",
+              }
 
   return (
-    <DashboardLayoutContext.Provider value={{ openAuthModal, openPremiumModal }}>
+    <DashboardLayoutContext.Provider value={{ openAuthModal }}>
       <div className="min-h-screen bg-slate-50 flex text-slate-800 antialiased font-sans">
         
         {/* 1. LEFT SIDEBAR (Desktop) */}
         <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 sticky top-0 h-screen z-20 shrink-0 select-none">
           {/* Brand Header */}
-          <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
+          <Link href="/" className="px-6 py-5 border-b border-slate-100 flex items-center gap-3 transition hover:bg-slate-50" aria-label="Career Leader home">
             <div className="text-2xl">🚀</div>
             <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">CareerLeader</span>
-          </div>
+          </Link>
 
           {/* Navigation Links */}
-          <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.key
-              return (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition duration-150 active:scale-98 text-left ${
-                    isActive
-                      ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600 pl-3 font-semibold shadow-xs"
-                      : "text-slate-500 hover:text-blue-600 hover:bg-blue-50/40"
-                  }`}
-                >
-                  <div className="flex items-center gap-3.5">
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge !== undefined && (
-                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md animate-pulse">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
+          <nav className="flex-1 px-4 py-5 space-y-5 overflow-y-auto" aria-label="Workspace navigation">
+            {navGroups.map(group => (
+              <div key={group.key}>
+                <p className="px-4 mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">{group.label}</p>
+                <div className="space-y-1">
+                  {navItems.filter(item => item.group === group.key).map((item) => {
+                    const isActive = activeTab === item.key
+                    return (
+                      <Link
+                        key={item.key}
+                        href={item.href}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-medium transition duration-150 active:scale-98 text-left ${
+                          isActive
+                            ? "bg-blue-50 text-blue-700 font-bold"
+                            : "text-slate-500 hover:text-blue-700 hover:bg-blue-50/50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {item.icon}
+                          <span className="text-sm">{item.label}</span>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
 
             {/* Logout Button */}
             {isMounted && user && (
@@ -367,16 +388,13 @@ export default function DashboardLayout({
             )}
           </nav>
 
-          {/* Sidebar Premium Banner */}
+          {/* Contextual next step */}
           <div className="p-4 border-t border-slate-100">
-            <div className="p-4 bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-950 text-white rounded-2xl relative overflow-hidden shadow-lg border border-slate-800">
-              <h4 className="font-bold text-xs mb-0.5 tracking-wide uppercase text-blue-300">
-                {lang === 'bn' ? "প্রিমিয়াম সদস্য" : "PRO Plan Active"}
-              </h4>
-              <p className="text-white/80 text-[10px] leading-relaxed">
-                {lang === 'bn' ? "সকল ফিচার আনলক করা হয়েছে।" : "Unlimited access to all features unlocked."}
-              </p>
-            </div>
+            <p className="px-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">{lang === "bn" ? "পরবর্তী সেরা ধাপ" : "Best next step"}</p>
+            <Link href={nextAction.href} className="mt-2 block rounded-2xl border border-blue-100 bg-blue-50 p-4 transition hover:border-blue-200 hover:bg-blue-100/70">
+              <h4 className="text-xs font-extrabold text-blue-900">{nextAction.title}</h4>
+              <p className="mt-1 text-[11px] leading-5 text-blue-700/80">{nextAction.body}</p>
+            </Link>
           </div>
         </aside>
 
@@ -406,59 +424,47 @@ export default function DashboardLayout({
  
               {/* Breadcrumbs for desktop */}
               <div className="hidden lg:flex items-center gap-2 text-sm text-slate-500 font-medium">
-                <span>{lang === 'bn' ? "হোম" : "Home"}</span>
-                <span>/</span>
-                <span className={`font-semibold text-blue-600 capitalize`}>
+                <span className="font-semibold text-slate-900 capitalize">
                   {getBreadcrumbTitle()}
                 </span>
                 {breadcrumbExtra && (
                   <>
                     <span>/</span>
-                    <span className="text-blue-600 font-semibold">{breadcrumbExtra}</span>
+                    <span className="text-blue-600 font-semibold truncate max-w-64">{breadcrumbExtra}</span>
                   </>
                 )}
               </div>
             </div>
  
-            {/* Quick Links & Avatar */}
-            <div className="flex items-center gap-2.5 sm:gap-6">
-              <nav className="hidden md:flex items-center gap-6">
-                <Link href="/dashboard" className={`text-sm font-semibold transition ${activeTab === "dashboard" ? "text-blue-600" : "text-slate-600 hover:text-blue-600"}`}>
-                  {lang === 'bn' ? "ড্যাশবোর্ড" : "Dashboard"}
-                </Link>
-                <Link href="/explore-careers" className={`text-sm font-semibold transition ${activeTab === "explore-careers" ? "text-blue-600" : "text-slate-600 hover:text-blue-600"}`}>
-                  {lang === 'bn' ? "ক্যারিয়ার অন্বেষণ" : "Explore Careers"}
-                </Link>
-                <Link href="/mentors" className={`text-sm font-semibold transition ${activeTab === "mentors" ? "text-blue-600" : "text-slate-600 hover:text-blue-600"}`}>
-                  {lang === 'bn' ? "মেন্টরবৃন্দ" : "Mentors"}
-                </Link>
-              </nav>
- 
-              <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
-              
+            {/* Utilities & Avatar */}
+            <div className="flex items-center gap-2.5 sm:gap-4">
               {/* Language Switcher (Desktop only) */}
               <div className="hidden sm:block">
                 <LanguageToggle variant="light" compact />
               </div>
  
               {/* Dynamic Notification Bell */}
-              <div className="relative">
-                <Link 
-                  href="/dashboard?view=messages"
-                  className="relative p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-xl transition duration-150 active:scale-95 block"
-                >
-                  <BellIcon />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-                  )}
-                </Link>
-              </div>
+              {isMounted && user && (
+                <div className="relative">
+                  <Link
+                    href="/dashboard?view=messages"
+                    aria-label={lang === "bn" ? "বার্তা" : "Messages"}
+                    className="relative p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-xl transition duration-150 active:scale-95 block"
+                  >
+                    <BellIcon />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                    )}
+                  </Link>
+                </div>
+              )}
  
               {/* User Avatar Initials / Login Action */}
               <div className="relative shrink-0">
                 {displayUserInitial ? (
                   <Link 
                     href="/dashboard?view=profile"
+                    aria-label={lang === "bn" ? "প্রোফাইল" : "Profile"}
                     className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold text-sm flex items-center justify-center shadow-md hover:scale-105 transition active:scale-95"
                   >
                     {displayUserInitial}
@@ -466,6 +472,7 @@ export default function DashboardLayout({
                 ) : (
                   <button 
                     onClick={openAuthModal}
+                    aria-label={lang === "bn" ? "লগ ইন" : "Log in"}
                     className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-sm font-semibold flex items-center justify-center hover:bg-slate-200 hover:border-slate-300 transition active:scale-95 cursor-pointer"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -487,30 +494,31 @@ export default function DashboardLayout({
                 <LanguageToggle variant="light" compact className="bg-slate-50" />
               </div>
 
-              {navItems.map((item) => {
-                const isActive = activeTab === item.key
-                return (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`block px-4 py-2.5 font-medium rounded-lg transition-colors ${
-                      isActive
-                        ? "text-blue-600 bg-blue-50 font-semibold"
-                        : "text-slate-700 hover:text-blue-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>{item.label}</span>
-                      {item.badge !== undefined && (
-                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md">
-                          {item.badge}
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                )
-              })}
+              {navGroups.map(group => (
+                <div key={group.key} className="pt-1">
+                  <p className="px-4 pb-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">{group.label}</p>
+                  {navItems.filter(item => item.group === group.key).map((item) => {
+                    const isActive = activeTab === item.key
+                    return (
+                      <Link
+                        key={item.key}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`block px-4 py-2.5 font-medium rounded-lg transition-colors ${
+                          isActive
+                            ? "text-blue-700 bg-blue-50 font-bold"
+                            : "text-slate-700 hover:text-blue-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>{item.label}</span>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              ))}
  
               {/* Mobile Logout option */}
               {isMounted && user && (
@@ -536,7 +544,6 @@ export default function DashboardLayout({
 
         {/* Modals integrated at Layout Level */}
         <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
-        <PremiumModal isOpen={isPremiumModalOpen} onClose={() => setIsPremiumModalOpen(false)} />
       </div>
     </DashboardLayoutContext.Provider>
   )

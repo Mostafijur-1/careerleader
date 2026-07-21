@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { useUser } from "../contexts/UserContext"
 import { useLanguage } from "../contexts/LanguageContext"
 import DashboardLayout from "../components/DashboardLayout"
-import { careerDetails, type CareerDetail } from "./careerDetailsData"
+import { careerDetails } from "./careerDetailsData"
 
 interface Recommendation {
   id: string
@@ -284,14 +284,13 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
 
 export default function ExploreCareersPage() {
 
-  const { user } = useUser()
-  const { lang, t } = useLanguage()
+  const { user, setUser } = useUser()
+  const { lang } = useLanguage()
   const router = useRouter()
   const [isMounted, setIsMounted] = useState(false)
  
   // Recommendations specific states
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
-  const [careerFitPercentage, setCareerFitPercentage] = useState<Record<string, number>>({})
   const [selectedCareer, setSelectedCareer] = useState<Recommendation | null>(null)
   const [filterActive, setFilterActive] = useState(false)
   const [localMbti, setLocalMbti] = useState<string>("")
@@ -300,9 +299,9 @@ export default function ExploreCareersPage() {
   const [detailTab, setDetailTab] = useState<'overview' | 'skills' | 'day_in_the_life' | 'roadmap' | 'resources' | 'similar_careers'>('overview')
   const [savedCareers, setSavedCareers] = useState<string[]>([])
   const [goalsSet, setGoalsSet] = useState<string[]>([])
-  const [showGoalNotification, setShowGoalNotification] = useState(false)
+  const [careerActionLoading, setCareerActionLoading] = useState<string | null>(null)
+  const [careerActionError, setCareerActionError] = useState("")
 
-  const [customChoice, setCustomChoice] = useState("")
   const [aiLoading, setAiLoading] = useState(false)
 
   // Assessment wizard states
@@ -377,12 +376,6 @@ export default function ExploreCareersPage() {
       if (res.ok && data?.recommendations) {
         setRecommendations(data.recommendations)
         
-        const fits: Record<string, number> = {}
-        data.recommendations.forEach((rec: Recommendation, idx: number) => {
-          fits[rec.id] = Math.max(75, 96 - idx * 3)
-        })
-        setCareerFitPercentage(fits)
-        
         // Reset assessment states
         setIsAssessing(false)
         setAssessStep(0)
@@ -411,6 +404,22 @@ export default function ExploreCareersPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (user) {
+      setSavedCareers(user.journey?.savedCareerIds || [])
+      setGoalsSet(user.journey?.selectedCareer?.id ? [user.journey.selectedCareer.id] : [])
+      return
+    }
+    const saved = localStorage.getItem("saved_careers")
+    if (saved) {
+      try {
+        setSavedCareers(JSON.parse(saved))
+      } catch {
+        setSavedCareers([])
+      }
+    }
+  }, [user])
+
   // Load matches dynamically based on profile
   useEffect(() => {
     async function loadMatches() {
@@ -425,12 +434,6 @@ export default function ExploreCareersPage() {
           const data = await res.json()
           if (res.ok && data?.recommendations) {
             setRecommendations(data.recommendations)
-
-            const fits: Record<string, number> = {}
-            data.recommendations.forEach((rec: Recommendation, idx: number) => {
-              fits[rec.id] = Math.max(70, 95 - idx * 3 - (idx % 2))
-            })
-            setCareerFitPercentage(fits)
           }
         } catch (err) {
           console.error("Failed to load recommendations", err)
@@ -477,7 +480,7 @@ export default function ExploreCareersPage() {
         { step: "Step 2", title: "Practice & Build", description: "Apply knowledge to real-world datasets or design mockups." }
       ],
       resources: [
-        { title: "Introductory course", type: "Course", url: "#", provider: "Open Academy" }
+        { title: "Browse learning resources", type: "Resource library", url: "/dashboard?view=resources", provider: "Career Leader" }
       ],
       similarCareers: []
     };
@@ -493,13 +496,95 @@ export default function ExploreCareersPage() {
   const topRecommendations = filteredRecommendations.slice(0, 4)
   const secondaryRecommendations = filteredRecommendations.slice(4)
 
+  function recommendationLabel(careerId: string) {
+    const index = recommendations.findIndex(rec => rec.id === careerId)
+    if (index === 0) return lang === "bn" ? "শীর্ষ সুপারিশ" : "Top recommendation"
+    if (index > 0 && index < 4) return lang === "bn" ? "শক্তিশালী সুপারিশ" : "Strong recommendation"
+    return lang === "bn" ? "আরও বিবেচনা করুন" : "Also worth exploring"
+  }
+
+  async function saveCareerSelection(careerIds: string[]) {
+    if (!user) {
+      localStorage.setItem("saved_careers", JSON.stringify(careerIds))
+      return
+    }
+    const res = await fetch("/api/journey", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save-careers", careerIds }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || "Could not save career")
+    setUser({ ...user, journey: data.journey })
+  }
+
+  async function handleToggleSavedCareer(id: string) {
+    const next = savedCareers.includes(id)
+      ? savedCareers.filter(careerId => careerId !== id)
+      : [...savedCareers, id]
+    setSavedCareers(next)
+    setCareerActionLoading(`save:${id}`)
+    setCareerActionError("")
+    try {
+      await saveCareerSelection(next)
+    } catch (error) {
+      setSavedCareers(savedCareers)
+      setCareerActionError(error instanceof Error ? error.message : "Could not save career")
+    } finally {
+      setCareerActionLoading(null)
+    }
+  }
+
+  async function handleChooseCareer() {
+    if (!currentCareerDetails || !selectedCareer) return
+    setCareerActionLoading(`choose:${currentCareerDetails.id}`)
+    setCareerActionError("")
+    const career = {
+      id: currentCareerDetails.id,
+      title: currentCareerDetails.title,
+      description: currentCareerDetails.about,
+      skills: currentCareerDetails.topSkills.flatMap(group => group.list).slice(0, 10),
+    }
+    try {
+      if (user) {
+        const res = await fetch("/api/journey", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "select-career", career }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || "Could not choose career")
+        setUser({ ...user, journey: data.journey })
+      }
+
+      const target = new Date()
+      target.setFullYear(target.getFullYear() + 1)
+      const goalData = {
+        title: currentCareerDetails.title,
+        targetDate: target.toISOString().split("T")[0],
+        skillLevel: "Beginner",
+        whyImportant: "",
+        focusAreas: career.skills.slice(0, 3),
+        updatedAt: new Date().toISOString(),
+      }
+      localStorage.setItem("career_goal", JSON.stringify(goalData))
+      localStorage.removeItem("roadmap_completed_tasks")
+      setGoalsSet([currentCareerDetails.id])
+      router.push("/goals")
+    } catch (error) {
+      setCareerActionError(error instanceof Error ? error.message : "Could not choose career")
+    } finally {
+      setCareerActionLoading(null)
+    }
+  }
+
   return (
     <DashboardLayout activeTab="explore-careers" breadcrumbExtra={selectedCareer?.title}>
       {selectedCareer && currentCareerDetails ? (
         /* Detailed Career Information Panel */
         <div className="space-y-8 animate-fade-in text-left">
           
-          {/* Back button and Goal notification toast */}
+          {/* Back button */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <button
               onClick={() => { setSelectedCareer(null); setDetailTab('overview'); }}
@@ -508,12 +593,6 @@ export default function ExploreCareersPage() {
               <span>←</span> <span>{lang === 'bn' ? "ক্যারিয়ার তালিকায় ফিরে যান" : "Back to Explore Careers"}</span>
             </button>
 
-            {showGoalNotification && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm animate-pulse flex items-center gap-2">
-                <span>🎉</span>
-                <span>{lang === 'bn' ? "লক্ষ্য সফলভাবে সেট করা হয়েছে! আপনার ড্যাশবোর্ডে এটি যুক্ত করা হয়েছে।" : "Goal set successfully! Track progress on your dashboard."}</span>
-              </div>
-            )}
           </div>
 
           {/* Career Title & Summary Header Panel */}
@@ -528,7 +607,7 @@ export default function ExploreCareersPage() {
                     {lang === 'bn' ? "ক্যারিয়ার বিস্তারিত" : "Career Profile"}
                   </span>
                   <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-extrabold rounded-full">
-                    {careerFitPercentage[currentCareerDetails.id] || 96}% {lang === 'bn' ? "মিলেছে" : "Match"}
+                    {recommendationLabel(currentCareerDetails.id)}
                   </span>
                   <span className="inline-block px-3 py-1 bg-amber-50 text-amber-700 text-xs font-extrabold rounded-full">
                     ★ {currentCareerDetails.demand} {lang === 'bn' ? "চাহিদা" : "Demand"}
@@ -549,10 +628,8 @@ export default function ExploreCareersPage() {
               {/* Primary Action Buttons */}
               <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 w-full md:w-auto shrink-0 pt-2 md:pt-0">
                 <button
-                  onClick={() => {
-                    const id = currentCareerDetails.id;
-                    setSavedCareers(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-                  }}
+                  onClick={() => void handleToggleSavedCareer(currentCareerDetails.id)}
+                  disabled={careerActionLoading === `save:${currentCareerDetails.id}`}
                   className={`flex-1 py-3 px-5 rounded-xl font-bold text-sm shadow-sm transition active:scale-95 text-center flex items-center justify-center gap-2 border cursor-pointer ${
                     savedCareers.includes(currentCareerDetails.id)
                       ? "bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200"
@@ -574,29 +651,8 @@ export default function ExploreCareersPage() {
                 </button>
 
                 <button
-                  onClick={() => {
-                    const id = currentCareerDetails.id;
-                    if (!goalsSet.includes(id)) {
-                      setGoalsSet(prev => [...prev, id]);
-                      
-                      // Save goal to localStorage for goals and roadmap page integration
-                      const goalData = {
-                        title: currentCareerDetails.title,
-                        targetDate: "2027-12-31",
-                        skillLevel: "Beginner",
-                        whyImportant: lang === 'bn' 
-                          ? `ক্যারিয়ার এক্সপ্লোরার থেকে লক্ষ্য নির্ধারণ করা হয়েছে: ${currentCareerDetails.title}`
-                          : `Set career goal from explore careers: ${currentCareerDetails.title}`,
-                        focusAreas: currentCareerDetails.topSkills.flatMap(s => s.list).slice(0, 3),
-                        updatedAt: new Date().toISOString()
-                      };
-                      localStorage.setItem("career_goal", JSON.stringify(goalData));
-                      localStorage.removeItem("roadmap_completed_tasks"); // clear tasks for new goal
-                      
-                      setShowGoalNotification(true);
-                      setTimeout(() => setShowGoalNotification(false), 4000);
-                    }
-                  }}
+                  onClick={() => void handleChooseCareer()}
+                  disabled={careerActionLoading === `choose:${currentCareerDetails.id}`}
                   className={`flex-1 py-3 px-5 font-bold text-sm rounded-xl shadow-sm transition active:scale-95 text-center flex items-center justify-center gap-2 border cursor-pointer ${
                     goalsSet.includes(currentCareerDetails.id)
                       ? "bg-emerald-600 text-white border-emerald-600"
@@ -604,10 +660,16 @@ export default function ExploreCareersPage() {
                   }`}
                 >
                   <span>🎯</span>
-                  <span>{goalsSet.includes(currentCareerDetails.id) ? (lang === 'bn' ? "লক্ষ্য নির্ধারিত" : "Goal Set") : (lang === 'bn' ? "লক্ষ্য নির্ধারণ করুন" : "Set Goal")}</span>
+                  <span>{careerActionLoading === `choose:${currentCareerDetails.id}` ? (lang === 'bn' ? "সংরক্ষণ হচ্ছে..." : "Saving...") : goalsSet.includes(currentCareerDetails.id) ? (lang === 'bn' ? "নির্বাচিত ক্যারিয়ার" : "Chosen Career") : (lang === 'bn' ? "বেছে নিন ও লক্ষ্য ঠিক করুন" : "Choose & Set Goal")}</span>
                 </button>
               </div>
             </div>
+
+            {careerActionError && (
+              <p role="alert" className="relative mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                {careerActionError}
+              </p>
+            )}
 
             {/* Sub Tab Navigation bar */}
             <div className="flex border-b border-slate-200 mt-10 overflow-x-auto whitespace-nowrap scrollbar-none -mx-6 sm:-mx-8 lg:-mx-10 px-6 sm:px-8 lg:px-10">
@@ -897,7 +959,7 @@ export default function ExploreCareersPage() {
                               {item.title}
                             </h4>
                             <span className="text-xs font-bold text-emerald-600 mt-0.5 block">
-                              {careerFitPercentage[cid] || 80}% {lang === 'bn' ? "মিলেছে" : "Match"}
+                              {recommendationLabel(cid)}
                             </span>
                           </div>
                         </div>
@@ -1230,7 +1292,6 @@ export default function ExploreCareersPage() {
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {topRecommendations.map((rec) => {
-                const fit = careerFitPercentage[rec.id] || 90
                 const description = getCareerDescription(rec.title, rec.description)
                 return (
                   <div 
@@ -1240,9 +1301,9 @@ export default function ExploreCareersPage() {
                     <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl group-hover:bg-blue-500/10 transition-colors"></div>
                     
                     <div className="relative flex flex-col items-center flex-grow space-y-4 w-full">
-                      {/* Fit Rate top bar (centered) */}
+                      {/* Recommendation strength from ranking */}
                       <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">
-                        {fit}% {lang === 'bn' ? "মিলেছে" : "Match"}
+                        {recommendationLabel(rec.id)}
                       </span>
 
                       {/* Custom SVG Icon Container (Squircle) */}
@@ -1302,7 +1363,6 @@ export default function ExploreCareersPage() {
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {secondaryRecommendations.map((rec) => {
-                  const fit = careerFitPercentage[rec.id] || 75
                   return (
                     <div 
                       key={rec.id}
@@ -1317,7 +1377,7 @@ export default function ExploreCareersPage() {
                           {rec.title}
                         </h4>
                         <span className="text-xs font-bold text-emerald-600 mt-0.5 block">
-                          {fit}% {lang === 'bn' ? "মিলেছে" : "Match"}
+                          {recommendationLabel(rec.id)}
                         </span>
                       </div>
                     </div>

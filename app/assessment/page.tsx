@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useUser } from '../contexts/UserContext'
 import { useLanguage } from '../contexts/LanguageContext'
 import DashboardLayout from "../components/DashboardLayout"
@@ -230,7 +229,7 @@ function getCareerDescription(title: string, fallback: string = "") {
   return fallback || "Explore guidance, skills, and industry roadmaps."
 }
 export default function AssessmentPage() {
-  const { user, setUser } = useUser()
+  const { user, refreshUser } = useUser()
   const router = useRouter()
   const { lang, t } = useLanguage()
   const ta = t.assessment
@@ -296,10 +295,7 @@ export default function AssessmentPage() {
       const res = await fetch('/api/assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          answers: formattedAnswers,
-          user: user ? { email: user.email, type: user.type } : null,
-        }),
+        body: JSON.stringify({ answers: formattedAnswers }),
       })
       const data = await res.json()
       if (!res.ok || !data?.success) {
@@ -307,77 +303,11 @@ export default function AssessmentPage() {
       }
 
       const scoredMbti = data.result?.personality
-      const interests = data.result?.interests || []
-      
       if (scoredMbti && typeof window !== "undefined") {
         localStorage.setItem("guestMbti", scoredMbti)
-        
-        try {
-          const aiRes = await fetch('/api/recommend/ai', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              personality: scoredMbti,
-              interests: interests,
-            }),
-          })
-          if (!aiRes.ok) throw new Error('AI API failed')
-          const aiData = await aiRes.json()
-          
-          if (aiData && aiData.career_title) {
-            const goalData = {
-              title: aiData.career_title,
-              targetDate: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
-              skillLevel: "Beginner",
-              whyImportant: aiData.reasoning,
-              focusAreas: aiData.skills_to_learn,
-              steps: aiData.roadmap_steps,
-              isAiGenerated: true,
-              updatedAt: new Date().toISOString()
-            }
-            localStorage.setItem("career_goal", JSON.stringify(goalData))
-            localStorage.removeItem("roadmap_completed_tasks")
-          } else {
-            throw new Error('Invalid AI response structure')
-          }
-        } catch (aiErr) {
-          console.warn("AI recommendation failed, falling back to local heuristic recommendations:", aiErr)
-          // Fallback UI State: call local lib/recommendation.ts function
-          const { recommend } = await import('../../lib/recommendation')
-          const localRecs = recommend(scoredMbti, interests, 5)
-          if (localRecs && localRecs.length > 0) {
-            const primaryCareer = localRecs[0]
-            const goalData = {
-              title: primaryCareer.title,
-              targetDate: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
-              skillLevel: "Beginner",
-              whyImportant: primaryCareer.description || "Based on your personality assessment.",
-              focusAreas: primaryCareer.skills,
-              steps: [
-                "Step 1: Acquire core skills and basic tools.",
-                "Step 2: Practice by building beginner-friendly projects.",
-                "Step 3: Complete advanced courses and apply for jobs/internships."
-              ],
-              isAiGenerated: false,
-              updatedAt: new Date().toISOString()
-            }
-            localStorage.setItem("career_goal", JSON.stringify(goalData))
-            localStorage.removeItem("roadmap_completed_tasks")
-          }
-        }
       }
 
-      if (user) {
-        try {
-          const authRes = await fetch("/api/auth?me=true")
-          const authData = await authRes.json()
-          if (authRes.ok && authData?.user) {
-            setUser(authData.user)
-          }
-        } catch (e) {
-          console.error("Failed to refresh user context:", e)
-        }
-      }
+      if (user) await refreshUser()
 
       router.push("/explore-careers")
     } catch (err) {
@@ -437,6 +367,12 @@ export default function AssessmentPage() {
                 <p className="text-slate-500 text-sm sm:text-base mt-1.5">{lang === 'bn' ? "সঠিক ফলাফলের জন্য প্রশ্নগুলোর আন্তরিক উত্তর দিন।" : "Answer honestly to get the most accurate results."}</p>
               </div>
 
+              {error && (
+                <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                  {lang === "bn" ? "অ্যাসেসমেন্ট জমা দেওয়া যায়নি। আবার চেষ্টা করুন।" : "We could not submit your assessment. Please try again."}
+                </div>
+              )}
+
               {/* Progress Panel */}
               <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
                 <div className="flex items-center justify-between text-sm mb-3">
@@ -458,7 +394,7 @@ export default function AssessmentPage() {
                   {/* Question Text */}
                   <div className="px-6 py-8 sm:px-8 border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/50">
                     <h2 className="text-xl sm:text-2xl font-bold text-slate-950 text-center leading-relaxed">
-                      "{qs[currentQuestion].text}"
+                      {`“${qs[currentQuestion].text}”`}
                     </h2>
                   </div>
 

@@ -7,12 +7,10 @@ import { useUser } from "../contexts/UserContext"
 import { useLanguage } from "../contexts/LanguageContext"
 import DashboardLayout from "../components/DashboardLayout"
 
-// Predefined career details
-import { careerDetails } from "../explore-careers/careerDetailsData"
 interface Goal {
   title: string
-  targetDate: string
-  skillLevel: string
+  targetDate?: string
+  skillLevel?: string
   whyImportant?: string
   focusAreas?: string[]
   steps?: string[]
@@ -100,8 +98,8 @@ const taskDescriptions: Record<string, string> = {
 }
 
 export default function RoadmapPage() {
-  const { user } = useUser()
-  const { lang, t } = useLanguage()
+  const { user, setUser } = useUser()
+  const { lang } = useLanguage()
   const router = useRouter()
 
   const [isMounted, setIsMounted] = useState(false)
@@ -115,6 +113,8 @@ export default function RoadmapPage() {
 
   // Load Goal & completed states
   useEffect(() => {
+    // This effect hydrates client-only roadmap data from local storage.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true)
     
     if (user?.goal) {
@@ -130,26 +130,16 @@ export default function RoadmapPage() {
       }
     }
     
-    const savedCompleted = localStorage.getItem("roadmap_completed_tasks")
-    if (savedCompleted) {
+    if (user?.journey?.roadmapCompletedTasks) {
+      setCompletedTasks(user.journey.roadmapCompletedTasks)
+    } else if (!user) {
+      const savedCompleted = localStorage.getItem("roadmap_completed_tasks")
+      if (!savedCompleted) return
       try {
         setCompletedTasks(JSON.parse(savedCompleted))
       } catch (e) {
         console.error("Error loading completed tasks", e)
       }
-    } else {
-      // Default initial mock progress matching image (Phase 1 finished + 2 tasks in Phase 2 finished)
-      // Phase 1 tasks: Learn Programming Basics, Learn Git & GitHub, Build Small Projects
-      // Phase 2 tasks: Data Structures & Algorithms, Learn React, Build Real-world Projects
-      // We complete: Phase 1 items (3) + DSA & React in Phase 2
-      const defaults = [
-        "Learn Programming Basics", 
-        "Learn Git & GitHub", 
-        "Build Small Projects",
-        "Data Structures & Algorithms"
-      ]
-      setCompletedTasks(defaults)
-      localStorage.setItem("roadmap_completed_tasks", JSON.stringify(defaults))
     }
   }, [user])
 
@@ -408,6 +398,26 @@ export default function RoadmapPage() {
   }, [completedCount, totalTasksCount])
 
   // Toggle task completion
+  const persistRoadmapProgress = async (updated: string[]) => {
+    const completed = allTasks.filter(task => updated.includes(task)).length
+    const progress = allTasks.length ? Math.round((completed / allTasks.length) * 100) : 0
+    if (!user) {
+      localStorage.setItem("roadmap_completed_tasks", JSON.stringify(updated))
+      return
+    }
+    try {
+      const res = await fetch("/api/journey", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "roadmap-progress", completedTasks: updated, progress }),
+      })
+      const data = await res.json()
+      if (res.ok) setUser({ ...user, journey: data.journey })
+    } catch (error) {
+      console.error("Failed to persist roadmap progress", error)
+    }
+  }
+
   const handleToggleTask = (task: string) => {
     let updated: string[]
     if (completedTasks.includes(task)) {
@@ -416,7 +426,7 @@ export default function RoadmapPage() {
       updated = [...completedTasks, task]
     }
     setCompletedTasks(updated)
-    localStorage.setItem("roadmap_completed_tasks", JSON.stringify(updated))
+    void persistRoadmapProgress(updated)
   }
 
   // Find the "Up Next" task (the first incomplete task in sequential order)
@@ -740,7 +750,7 @@ export default function RoadmapPage() {
                       onClick={() => {
                         if (confirm(lang === 'bn' ? "আপনি কি রোডম্যাপের অগ্রগতি রিসেট করতে চান?" : "Are you sure you want to reset your roadmap progress?")) {
                           setCompletedTasks([])
-                          localStorage.setItem("roadmap_completed_tasks", JSON.stringify([]))
+                          void persistRoadmapProgress([])
                         }
                       }}
                       className="text-[10px] font-bold text-slate-400 hover:text-red-500 transition cursor-pointer"

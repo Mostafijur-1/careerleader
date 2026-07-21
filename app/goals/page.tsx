@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "../contexts/UserContext"
 import { useLanguage } from "../contexts/LanguageContext"
@@ -71,10 +70,12 @@ export default function GoalsPage() {
 
   // Form states
   const [goalTitle, setGoalTitle] = useState("")
-  const [targetDate, setTargetDate] = useState("2027-12-31")
+  const [targetDate, setTargetDate] = useState("")
   const [skillLevel, setSkillLevel] = useState("Beginner")
   const [whyImportant, setWhyImportant] = useState("")
   const [focusAreas, setFocusAreas] = useState<string[]>([])
+  const [formError, setFormError] = useState("")
+  const [hasSavedGoal, setHasSavedGoal] = useState(false)
   
   // Custom tag input
   const [customTagInput, setCustomTagInput] = useState("")
@@ -94,10 +95,12 @@ export default function GoalsPage() {
 
   // Check query parameter from career details redirect
   useEffect(() => {
+    // This effect hydrates editable form state from the persisted user goal.
     setIsMounted(true)
     
     if (user?.goal) {
       const g = user.goal
+      setHasSavedGoal(true)
       setGoalTitle(g.title || "")
       if (g.targetDate) setTargetDate(g.targetDate)
       if (g.skillLevel) setSkillLevel(g.skillLevel)
@@ -111,6 +114,7 @@ export default function GoalsPage() {
     if (savedGoal) {
       try {
         const parsed = JSON.parse(savedGoal)
+        setHasSavedGoal(true)
         setGoalTitle(parsed.title || "")
         if (parsed.targetDate) setTargetDate(parsed.targetDate)
         if (parsed.skillLevel) setSkillLevel(parsed.skillLevel)
@@ -119,21 +123,33 @@ export default function GoalsPage() {
       } catch (e) {
         console.error("Error parsing saved goal", e)
       }
+    } else if (user?.journey?.selectedCareer) {
+      const suggestedDate = new Date()
+      suggestedDate.setFullYear(suggestedDate.getFullYear() + 1)
+      setGoalTitle(user.journey.selectedCareer.title)
+      setFocusAreas(user.journey.selectedCareer.skills?.slice(0, 5) || [])
+      setTargetDate(suggestedDate.toISOString().split("T")[0])
     } else {
-      // Default initial goal
-      setGoalTitle(lang === 'bn' ? "সফটওয়্যার ইঞ্জিনিয়ার হওয়া" : "Become a Software Engineer")
-      setWhyImportant(lang === 'bn' 
-        ? "আমি নতুন প্রযুক্তি তৈরি করতে চাই, বাস্তব সমস্যার সমাধান করতে চাই এবং টেকনোলজিতে সফল ক্যারিয়ার গড়তে চাই।" 
-        : "I want to build innovative solutions, solve real-world problems and grow a successful career in tech."
-      )
-      setFocusAreas(["Web Development", "System Design", "Problem Solving"])
+      // Start empty so the user's roadmap reflects a real choice, not sample data.
+      const suggestedDate = new Date()
+      suggestedDate.setFullYear(suggestedDate.getFullYear() + 1)
+      setTargetDate(suggestedDate.toISOString().split("T")[0])
     }
   }, [lang, user])
 
   // Save and Submit Goal
   const handleSaveGoal = async () => {
+    if (!goalTitle.trim()) {
+      setFormError(lang === "bn" ? "আপনার ক্যারিয়ার লক্ষ্য লিখুন।" : "Enter the career goal you want to work toward.")
+      return
+    }
+    if (!targetDate) {
+      setFormError(lang === "bn" ? "একটি লক্ষ্য তারিখ বেছে নিন।" : "Choose a realistic target date.")
+      return
+    }
+    setFormError("")
     const goalData = {
-      title: goalTitle.trim() || (lang === 'bn' ? "সফটওয়্যার ইঞ্জিনিয়ার হওয়া" : "Become a Software Engineer"),
+      title: goalTitle.trim(),
       targetDate,
       skillLevel,
       whyImportant: whyImportant.trim(),
@@ -142,6 +158,7 @@ export default function GoalsPage() {
     }
     
     localStorage.setItem("career_goal", JSON.stringify(goalData))
+    setHasSavedGoal(true)
     
     // Also reset completion checklist states so they regenerate matching the new goal
     localStorage.removeItem("roadmap_completed_tasks")
@@ -151,17 +168,19 @@ export default function GoalsPage() {
         const res = await fetch("/api/goals", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: user.email,
-            type: user.type,
-            goal: goalData
-          })
+          body: JSON.stringify({ goal: goalData })
         })
         if (res.ok) {
-          setUser({ ...user, goal: goalData })
+          const data = await res.json()
+          setUser({ ...user, goal: goalData, journey: data.journey || user.journey, cvDraft: data.cvDraft })
+        } else {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || "Could not save goal")
         }
       } catch (err) {
         console.error("Failed to persist goal in DB", err)
+        setFormError(lang === "bn" ? "লক্ষ্য সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।" : "Could not save your goal. Please try again.")
+        return
       }
     }
     
@@ -227,8 +246,12 @@ export default function GoalsPage() {
             <input
               type="text"
               value={goalTitle}
-              onChange={e => setGoalTitle(e.target.value)}
+              onChange={e => {
+                setGoalTitle(e.target.value)
+                if (formError) setFormError("")
+              }}
               placeholder={lang === 'bn' ? "যেমন: সফটওয়্যার ইঞ্জিনিয়ার হওয়া" : "e.g. Become a Software Engineer"}
+              aria-invalid={Boolean(formError && !goalTitle.trim())}
               className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
             />
           </div>
@@ -245,7 +268,11 @@ export default function GoalsPage() {
               <input
                 type="date"
                 value={targetDate}
-                onChange={e => setTargetDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={e => {
+                  setTargetDate(e.target.value)
+                  if (formError) setFormError("")
+                }}
                 className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
               />
             </div>
@@ -365,6 +392,11 @@ export default function GoalsPage() {
           </div>
 
           {/* Form Buttons */}
+          {formError && (
+            <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+              {formError}
+            </div>
+          )}
           <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button
               onClick={() => router.push("/dashboard")}
@@ -376,7 +408,9 @@ export default function GoalsPage() {
               onClick={handleSaveGoal}
               className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition active:scale-95 cursor-pointer"
             >
-              {lang === 'bn' ? "লক্ষ্য তৈরি করুন" : "Create Goal"}
+              {hasSavedGoal
+                ? (lang === "bn" ? "লক্ষ্য আপডেট করুন" : "Update goal & roadmap")
+                : (lang === "bn" ? "লক্ষ্য তৈরি করুন" : "Create goal & roadmap")}
             </button>
           </div>
 
@@ -400,7 +434,7 @@ export default function GoalsPage() {
                 {lang === 'bn' ? "ক্যারিয়ার লক্ষ্য" : "Career Goal"}
               </p>
               <h3 className="text-xl font-black text-slate-900 tracking-tight leading-snug">
-                {goalTitle || (lang === 'bn' ? "সফটওয়্যার ইঞ্জিনিয়ার হওয়া" : "Become a Software Engineer")}
+                {goalTitle || (lang === 'bn' ? "উপরে আপনার লক্ষ্য লিখুন" : "Add your goal above")}
               </h3>
             </div>
 
@@ -413,7 +447,7 @@ export default function GoalsPage() {
                   <p className="text-[9px] font-bold uppercase text-slate-400 leading-none mb-0.5">
                     {lang === 'bn' ? "লক্ষ্য তারিখ" : "Target Date"}
                   </p>
-                  <p className="text-slate-800 font-extrabold">{targetDate}</p>
+                  <p className="text-slate-800 font-extrabold">{targetDate || (lang === "bn" ? "তারিখ দিন" : "Not set")}</p>
                 </div>
               </div>
 
@@ -424,7 +458,7 @@ export default function GoalsPage() {
                   <p className="text-[9px] font-bold uppercase text-slate-400 leading-none mb-0.5">
                     {lang === 'bn' ? "আনুমানিক সময়" : "Estimated Time"}
                   </p>
-                  <p className="text-slate-800 font-extrabold">{getEstimatedDurationText()}</p>
+                  <p className="text-slate-800 font-extrabold">{getEstimatedDurationText() || (lang === "bn" ? "তারিখ দিন" : "Set a date")}</p>
                 </div>
               </div>
 
@@ -456,33 +490,17 @@ export default function GoalsPage() {
               </div>
             </div>
 
-            {/* Match indicator */}
+            {/* Plan status */}
             <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500">
-                {lang === 'bn' ? "ক্যারিয়ার ম্যাচিং স্কোর:" : "Career Match:"}
+                {lang === 'bn' ? "পরিকল্পনার অবস্থা:" : "Plan status:"}
               </span>
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-xs font-extrabold shadow-2xs">
-                95% Match
+              <span className={`px-3 py-1 border rounded-full text-xs font-extrabold shadow-2xs ${goalTitle.trim() ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-slate-50 text-slate-500 border-slate-200"}`}>
+                {goalTitle.trim()
+                  ? (lang === "bn" ? "তৈরি করার জন্য প্রস্তুত" : "Ready to create")
+                  : (lang === "bn" ? "লক্ষ্য প্রয়োজন" : "Goal needed")}
               </span>
             </div>
-
-            {/* CV Generator CTA */}
-            {goalTitle.trim() && (
-              <div className="border-t border-slate-100 pt-4">
-                <Link
-                  href="/cv"
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold rounded-xl shadow-md transition active:scale-98 text-xs"
-                >
-                  <span>📄</span>
-                  <span>{lang === 'bn' ? "লক্ষ্য-ভিত্তিক সিভি তৈরি করুন" : "Generate Goal-Based CV"}</span>
-                </Link>
-                <p className="text-[10px] text-slate-400 text-center mt-2 leading-relaxed">
-                  {lang === 'bn'
-                    ? "আপনার লক্ষ্য ও দক্ষতার উপর ভিত্তি করে AI সিভি তৈরি করুন"
-                    : "Create an AI-tailored CV from your goal and skills"}
-                </p>
-              </div>
-            )}
 
           </div>
         </div>

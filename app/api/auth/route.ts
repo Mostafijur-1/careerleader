@@ -21,6 +21,8 @@ function mapUserForClient(user: {
   headline?: string
   rating?: number
   reviewCount?: number
+  journey?: Record<string, unknown>
+  cvDraft?: Record<string, unknown> | null
 }) {
   return {
     id: user._id ? String(user._id) : '',
@@ -38,6 +40,8 @@ function mapUserForClient(user: {
     headline: user.headline || '',
     rating: typeof user.rating === 'number' ? user.rating : 4.6,
     reviews: typeof user.reviewCount === 'number' ? user.reviewCount : 100,
+    journey: user.journey && typeof user.journey === 'object' ? user.journey : {},
+    cvDraft: user.cvDraft && typeof user.cvDraft === 'object' ? user.cvDraft : null,
   }
 }
 
@@ -61,6 +65,13 @@ function clearAuthCookie(res: NextResponse) {
   })
 }
 
+function databaseUnavailableResponse() {
+  return NextResponse.json(
+    { error: 'Sign-in service is temporarily unavailable. Please try again shortly.' },
+    { status: 503 }
+  )
+}
+
 // GET /api/auth/mentors - fetch all mentors for admin
 export async function GET(req: Request) {
   const url = new URL(req.url)
@@ -68,17 +79,21 @@ export async function GET(req: Request) {
   
   // GET /api/auth?mentors=true - fetch all mentors
   if (url.searchParams.has('mentors')) {
-    const users = await getCollection('users')
-    const mentors = await users.find({ type: 'mentor' }).toArray()
-    return NextResponse.json({ 
-      mentors: mentors.map(m => ({
-        id: m._id,
-        email: m.email,
-        name: m.name,
-        expertise: m.expertise || [],
-        active: m.active || false
-      }))
-    })
+    try {
+      const users = await getCollection('users')
+      const mentors = await users.find({ type: 'mentor' }).toArray()
+      return NextResponse.json({
+        mentors: mentors.map(m => ({
+          id: m._id,
+          email: m.email,
+          name: m.name,
+          expertise: m.expertise || [],
+          active: m.active || false
+        }))
+      })
+    } catch {
+      return databaseUnavailableResponse()
+    }
   }
 
   if (url.searchParams.has('me')) {
@@ -94,19 +109,25 @@ export async function GET(req: Request) {
       return NextResponse.json({ user: null }, { status: 401 })
     }
 
+    let tokenUser
     try {
-      const tokenUser = verifyAuthToken(token)
+      tokenUser = verifyAuthToken(token)
+    } catch {
+      return NextResponse.json({ user: null }, { status: 401 })
+    }
+
+    try {
       const users = await getCollection('users')
       const dbUser = await users.findOne(
         { email: tokenUser.email, type: tokenUser.type },
-        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1, goal: 1, bio: 1, skills: 1, education: 1, zoomLink: 1, meetLink: 1, expertise: 1, headline: 1, rating: 1, reviewCount: 1 } }
+        { projection: { _id: 1, email: 1, type: 1, name: 1, mbti: 1, goal: 1, journey: 1, cvDraft: 1, bio: 1, skills: 1, education: 1, zoomLink: 1, meetLink: 1, expertise: 1, headline: 1, rating: 1, reviewCount: 1 } }
       )
       if (!dbUser) {
         return NextResponse.json({ user: null }, { status: 401 })
       }
       return NextResponse.json({ user: mapUserForClient(dbUser) })
     } catch {
-      return NextResponse.json({ user: null }, { status: 401 })
+      return databaseUnavailableResponse()
     }
   }
 
@@ -135,12 +156,17 @@ export async function POST(req: Request) {
     }
   }
 
-  const users = await getCollection('users')
-
   if (action === 'logout') {
     const res = NextResponse.json({ message: 'Logout successful' })
     clearAuthCookie(res)
     return res
+  }
+
+  let users
+  try {
+    users = await getCollection('users')
+  } catch {
+    return databaseUnavailableResponse()
   }
 
   if (action === 'register') {

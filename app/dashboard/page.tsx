@@ -120,7 +120,7 @@ function DashboardContent() {
   const [isMounted, setIsMounted] = useState(false)
   const [mockInterests, setMockInterests] = useState<string[]>([])
   const [localMbti, setLocalMbti] = useState<string>("")
-  const [hasGeneratedCv, setHasGeneratedCv] = useState(false)
+  const [guestHasGeneratedCv, setGuestHasGeneratedCv] = useState(false)
 
   // Tab switching sync
   useEffect(() => {
@@ -144,7 +144,6 @@ function DashboardContent() {
 
   // States for recommendations matched via assessment
   const [recommendations, setRecommendations] = useState<any[]>([])
-  const [careerFitPercentage, setCareerFitPercentage] = useState<Record<string, number>>({})
 
   // Resources state
   const [resourceSearch, setResourceSearch] = useState("")
@@ -198,7 +197,7 @@ function DashboardContent() {
     setIsMounted(true)
     if (typeof window !== "undefined") {
       setLocalMbti(localStorage.getItem("guestMbti") || "")
-      setHasGeneratedCv(!!localStorage.getItem("generated_cv"))
+      setGuestHasGeneratedCv(!!localStorage.getItem("generated_cv"))
       const stored = localStorage.getItem("enrolled_resources")
       if (stored) {
         try {
@@ -214,7 +213,7 @@ function DashboardContent() {
       setProfileBio(user.bio || "")
       setProfileSkills(user.skills || [])
       setProfileEducation(user.education || [])
-      setProfileGoal(user.goal || "")
+      setProfileGoal(user.goal?.title || "")
     }
   }, [user])
 
@@ -276,12 +275,6 @@ function DashboardContent() {
           const data = await res.json()
           if (res.ok && data?.recommendations) {
             setRecommendations(data.recommendations)
-            
-            const fits: Record<string, number> = {}
-            data.recommendations.forEach((rec: any, idx: number) => {
-              fits[rec.id] = Math.max(70, 95 - idx * 3 - (idx % 2))
-            })
-            setCareerFitPercentage(fits)
           }
         } catch (err) {
           console.error("Failed to load recommendations on dashboard:", err)
@@ -583,19 +576,23 @@ function DashboardContent() {
   }
 
   const hasTakenAssessment = !!(user?.mbti || localMbti)
+  const hasSelectedCareer = user ? Boolean(user.journey?.selectedCareer) : false
+  const hasGoal = Boolean(user?.goal)
+  const hasRoadmapProgress = Boolean(user?.journey?.roadmapCompletedTasks?.length)
+  const hasGeneratedCv = user ? Boolean(user.cvDraft || user.journey?.cvUpdatedAt) : guestHasGeneratedCv
   const topRecommendations = recommendations.slice(0, 4)
   const studentName = isMounted && user ? user.name : (lang === 'bn' ? "অতিথি" : "Guest")
 
   const hasMentorsConnected = acceptedMentors.length > 0
-  const hasEnrolledResources = Object.keys(enrolledResources).length > 0
 
   // Progress summary
   const totalSteps = 5
   const completedSteps = 
-    (hasTakenAssessment ? 2 : 0) + 
-    (hasGeneratedCv ? 1 : 0) + 
-    (hasMentorsConnected ? 1 : 0) + 
-    (hasEnrolledResources ? 1 : 0)
+    (hasTakenAssessment ? 1 : 0) +
+    (hasSelectedCareer ? 1 : 0) +
+    (hasGoal ? 1 : 0) +
+    (hasRoadmapProgress ? 1 : 0) +
+    (hasGeneratedCv ? 1 : 0)
   const totalProgressPercent = Math.round((completedSteps / totalSteps) * 100)
 
   const preparationSteps = [
@@ -608,24 +605,24 @@ function DashboardContent() {
     },
     {
       id: 2,
-      title: lang === 'bn' ? "২. ক্যারিয়ার অপশন অনুসন্ধান" : "2. Explore Career Matches",
-      status: hasTakenAssessment ? "completed" : "pending",
-      desc: lang === 'bn' ? "আপনার উপযুক্ত ৩টি প্রস্তাবিত পথ বিস্তারিত দেখুন।" : "View and analyze your recommended paths.",
-      link: "/assessment"
+      title: lang === 'bn' ? "২. ক্যারিয়ারের দিক নির্বাচন" : "2. Choose a Career Direction",
+      status: hasSelectedCareer ? "completed" : "pending",
+      desc: lang === 'bn' ? "সুপারিশ তুলনা করে একটি প্রধান দিক বেছে নিন।" : "Compare your recommendations and choose one primary direction.",
+      link: "/explore-careers"
     },
     {
       id: 3,
-      title: lang === 'bn' ? "৩. মেন্টরের সাথে সংযোগ স্থাপন" : "3. Connect with Mentors",
-      status: hasMentorsConnected ? "completed" : "pending",
-      desc: lang === 'bn' ? "আপনার ক্যারিয়ার ট্র্যাকের একজন মেন্টরকে অনুরোধ পাঠান।" : "Request mentorship session with industry leaders.",
-      link: "/mentors"
+      title: lang === 'bn' ? "৩. বাস্তব লক্ষ্য নির্ধারণ" : "3. Set a Practical Goal",
+      status: hasGoal ? "completed" : "pending",
+      desc: lang === 'bn' ? "টার্গেট তারিখ, দক্ষতার স্তর ও ফোকাস ঠিক করুন।" : "Define a target date, current level, and focus areas.",
+      link: "/goals"
     },
     {
       id: 4,
-      title: lang === 'bn' ? "৪. দক্ষতা উন্নয়নের কোর্সসমূহ" : "4. Start Skill Development",
-      status: hasEnrolledResources ? "completed" : "pending",
-      desc: lang === 'bn' ? "প্রস্তাবিত রিসোর্স ব্যবহার করে শেখা শুরু করুন।" : "Enrol in recommended video courses & tutorials.",
-      link: "/explore-careers"
+      title: lang === 'bn' ? "৪. রোডম্যাপে কাজ শুরু" : "4. Start Your Roadmap",
+      status: hasRoadmapProgress ? "completed" : "pending",
+      desc: lang === 'bn' ? "প্রথম বাস্তব কাজটি সম্পন্ন করে অগ্রগতি শুরু করুন।" : "Complete the first concrete task in your roadmap.",
+      link: "/roadmap"
     },
     {
       id: 5,

@@ -1,1315 +1,371 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState, useEffect, useRef, useCallback } from "react"
-import AuthButton from "./components/AuthButton"
+import { useEffect, useState } from "react"
 import AuthModal from "./components/AuthModal"
-import ClientOnly from "./components/HydrationBoundary"
-import { useUser } from "./contexts/UserContext"
-import { useLanguage } from "./contexts/LanguageContext"
-import careers from "@/data/careers.json"
 import LanguageToggle from "./components/LanguageToggle"
+import { useLanguage } from "./contexts/LanguageContext"
+import { useUser } from "./contexts/UserContext"
 
-type MentorVM = {
-  id: string
-  demo?: boolean
-  email: string
-  name: string
-  role: string
-  headline: string
-  careerIds: string[]
-  education: Array<{ degree: string; institution: string; year?: string }>
-  currentJob: { title: string; company: string } | null
-  experience: Array<{ title: string; organization: string; period: string; summary?: string }>
-  bio: string
-  rating: number
-  reviews: number
-  recommended: boolean
-  image: string
-  expertise: string[]
-  zoomLink?: string
-  meetLink?: string
+type Copy = {
+  navHow: string
+  navOutcomes: string
+  navMentors: string
+  login: string
+  openWorkspace: string
+  eyebrow: string
+  titleLead: string
+  titleAccent: string
+  subtitle: string
+  primary: string
+  continue: string
+  secondary: string
+  reassurance: string
+  previewLabel: string
+  previewTitle: string
+  previewBody: string
+  previewNext: string
+  howEyebrow: string
+  howTitle: string
+  howBody: string
+  steps: Array<{ title: string; body: string; href: string; action: string }>
+  outcomesEyebrow: string
+  outcomesTitle: string
+  outcomes: Array<{ title: string; body: string }>
+  mentorEyebrow: string
+  mentorTitle: string
+  mentorBody: string
+  mentorAction: string
+  finalTitle: string
+  finalBody: string
+  finalAction: string
+  footer: string
+  staff: string
 }
 
-function careerLabels(ids: string[]) {
-  return ids
-    .map(id => careers.find(c => c.id === id)?.title)
-    .filter(Boolean) as string[]
+const copy: Record<"en" | "bn", Copy> = {
+  en: {
+    navHow: "How it works",
+    navOutcomes: "What you get",
+    navMentors: "Mentors",
+    login: "Log in",
+    openWorkspace: "Open workspace",
+    eyebrow: "Career decisions, made clearer",
+    titleLead: "Turn career uncertainty",
+    titleAccent: "into a practical next step.",
+    subtitle:
+      "Discover careers that fit you, choose a direction, and follow a focused roadmap—with support when you need it.",
+    primary: "Start the free assessment",
+    continue: "Continue your journey",
+    secondary: "Explore careers first",
+    reassurance: "Free to start · About 5 minutes · No account required",
+    previewLabel: "Your journey",
+    previewTitle: "One clear path, not a pile of tools",
+    previewBody:
+      "Career Leader carries your assessment into recommendations, a goal, and an actionable roadmap.",
+    previewNext: "Your next best action stays visible in your workspace.",
+    howEyebrow: "A guided process",
+    howTitle: "From “what should I do?” to a plan you can follow",
+    howBody: "Each step builds on the last, so you always know what to do next.",
+    steps: [
+      { title: "Discover", body: "Answer a short personality and interests assessment.", href: "/assessment", action: "Take assessment" },
+      { title: "Choose", body: "Compare recommended careers and open the details that matter.", href: "/explore-careers", action: "Browse careers" },
+      { title: "Plan", body: "Set one goal and turn it into a focused, trackable roadmap.", href: "/goals", action: "Set a goal" },
+      { title: "Act", body: "Learn the right skills, connect with mentors, and build your CV.", href: "/mentors", action: "Find support" },
+    ],
+    outcomesEyebrow: "Built for action",
+    outcomesTitle: "Useful outputs—not just another personality label",
+    outcomes: [
+      { title: "Career matches with context", body: "See why a path appears and review skills, demand, study routes, and responsibilities." },
+      { title: "A roadmap tied to your goal", body: "Turn a broad ambition into phases and tasks you can complete over time." },
+      { title: "Support in one workspace", body: "Keep resources, mentor conversations, progress, profile details, and CV tools together." },
+    ],
+    mentorEyebrow: "Human guidance",
+    mentorTitle: "Get unstuck with someone who has done it before",
+    mentorBody:
+      "Browse active mentors by career track. Send a connection request, then message them after they accept—without leaving your workspace.",
+    mentorAction: "Browse mentors",
+    finalTitle: "You do not need your whole career figured out today.",
+    finalBody: "Start with one honest assessment and leave with a clearer next move.",
+    finalAction: "Find my direction",
+    footer: "A guided career planning workspace for students.",
+    staff: "Staff access",
+  },
+  bn: {
+    navHow: "কীভাবে কাজ করে",
+    navOutcomes: "আপনি যা পাবেন",
+    navMentors: "মেন্টর",
+    login: "লগ ইন",
+    openWorkspace: "ওয়ার্কস্পেস খুলুন",
+    eyebrow: "ক্যারিয়ার সিদ্ধান্ত এখন আরও পরিষ্কার",
+    titleLead: "ক্যারিয়ার নিয়ে অনিশ্চয়তাকে",
+    titleAccent: "বাস্তব পরবর্তী ধাপে পরিণত করুন।",
+    subtitle: "আপনার সঙ্গে মানানসই ক্যারিয়ার খুঁজুন, একটি দিক বেছে নিন এবং সহায়তাসহ বাস্তব রোডম্যাপ অনুসরণ করুন।",
+    primary: "ফ্রি অ্যাসেসমেন্ট শুরু করুন",
+    continue: "আপনার যাত্রা চালিয়ে যান",
+    secondary: "আগে ক্যারিয়ার দেখুন",
+    reassurance: "শুরু করা ফ্রি · প্রায় ৫ মিনিট · অ্যাকাউন্ট লাগবে না",
+    previewLabel: "আপনার যাত্রা",
+    previewTitle: "অনেক টুল নয়—একটি পরিষ্কার পথ",
+    previewBody: "অ্যাসেসমেন্ট থেকে সুপারিশ, লক্ষ্য এবং করণীয় রোডম্যাপ—সবকিছু একই ধারায় এগিয়ে যায়।",
+    previewNext: "ওয়ার্কস্পেসে সবসময় আপনার পরবর্তী সেরা কাজটি দেখা যাবে।",
+    howEyebrow: "নির্দেশিত প্রক্রিয়া",
+    howTitle: "‘আমি কী করব?’ থেকে অনুসরণযোগ্য পরিকল্পনা",
+    howBody: "প্রতিটি ধাপ আগের ধাপের ওপর তৈরি, তাই পরবর্তী কাজটি সবসময় পরিষ্কার।",
+    steps: [
+      { title: "নিজেকে জানুন", body: "সংক্ষিপ্ত ব্যক্তিত্ব ও আগ্রহের অ্যাসেসমেন্ট দিন।", href: "/assessment", action: "অ্যাসেসমেন্ট দিন" },
+      { title: "দিক বেছে নিন", body: "প্রস্তাবিত ক্যারিয়ার তুলনা করুন এবং বিস্তারিত দেখুন।", href: "/explore-careers", action: "ক্যারিয়ার দেখুন" },
+      { title: "পরিকল্পনা করুন", body: "একটি লক্ষ্য ঠিক করে ট্র্যাকযোগ্য রোডম্যাপ বানান।", href: "/goals", action: "লক্ষ্য ঠিক করুন" },
+      { title: "কাজ শুরু করুন", body: "সঠিক দক্ষতা শিখুন, মেন্টরের সঙ্গে যুক্ত হন এবং সিভি তৈরি করুন।", href: "/mentors", action: "সহায়তা নিন" },
+    ],
+    outcomesEyebrow: "কাজে লাগানোর জন্য তৈরি",
+    outcomesTitle: "শুধু ব্যক্তিত্বের নাম নয়—বাস্তব ফলাফল",
+    outcomes: [
+      { title: "ব্যাখ্যাসহ ক্যারিয়ার সুপারিশ", body: "কেন একটি পথ এসেছে এবং প্রয়োজনীয় দক্ষতা, চাহিদা ও দায়িত্ব দেখুন।" },
+      { title: "লক্ষ্যভিত্তিক রোডম্যাপ", body: "বড় লক্ষ্যকে ধাপ ও সম্পন্নযোগ্য কাজে ভাগ করুন।" },
+      { title: "এক জায়গায় সব সহায়তা", body: "রিসোর্স, মেন্টর বার্তা, অগ্রগতি, প্রোফাইল এবং সিভি টুল একসঙ্গে রাখুন।" },
+    ],
+    mentorEyebrow: "মানবিক দিকনির্দেশনা",
+    mentorTitle: "যিনি পথটি পেরিয়েছেন, তাঁর সহায়তায় আটকে যাওয়া কাটান",
+    mentorBody: "ক্যারিয়ার ট্র্যাক অনুযায়ী সক্রিয় মেন্টর খুঁজুন। অনুরোধ গ্রহণের পর একই ওয়ার্কস্পেসে বার্তা দিন।",
+    mentorAction: "মেন্টর খুঁজুন",
+    finalTitle: "আজই পুরো ক্যারিয়ার ঠিক করে ফেলতে হবে না।",
+    finalBody: "একটি সৎ অ্যাসেসমেন্ট দিয়ে শুরু করুন এবং পরিষ্কার পরবর্তী পদক্ষেপ নিয়ে ফিরুন।",
+    finalAction: "আমার দিক খুঁজে দিন",
+    footer: "শিক্ষার্থীদের জন্য নির্দেশিত ক্যারিয়ার পরিকল্পনার ওয়ার্কস্পেস।",
+    staff: "স্টাফ অ্যাক্সেস",
+  },
 }
 
-type MentorMessage = {
-  id: string
-  senderType: "student" | "mentor"
-  senderEmail: string
-  text: string
-  createdAt: string
+function ArrowIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
+      <path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
 }
 
-type MessageNotification = {
-  id: string
-  mentorEmail: string
-  senderEmail: string
-  text: string
-  createdAt: string
-}
-
-type ConnectionStatus = "none" | "pending" | "accepted" | "rejected"
-type HomeRecommendation = { id: string; title: string; description?: string }
-
-function mapApiMentorRowToVM(m: Record<string, unknown>): MentorVM {
-  const name = String(m?.name || "Mentor")
-  const expertise: string[] = Array.isArray(m?.expertise) ? (m.expertise as string[]) : []
-  const headline =
-    typeof m?.headline === "string" && m.headline.trim()
-      ? String(m.headline)
-      : expertise[0]
-        ? `${expertise[0]} mentor`
-        : "Career mentor"
-  return {
-    id: String(m?.id || name),
-    demo: Boolean(m?.demo),
-    email: String(m?.email || "").toLowerCase(),
-    name,
-    role: headline,
-    headline,
-    careerIds: Array.isArray(m?.careerIds) ? (m.careerIds as string[]) : [],
-    education: Array.isArray(m?.education) ? (m.education as MentorVM["education"]) : [],
-    currentJob:
-      m?.currentJob && typeof m.currentJob === "object" && m.currentJob !== null
-        ? (m.currentJob as MentorVM["currentJob"])
-        : null,
-    experience: Array.isArray(m?.experience) ? (m.experience as MentorVM["experience"]) : [],
-    bio: typeof m?.bio === "string" ? m.bio : "",
-    rating: typeof m?.rating === "number" ? m.rating : 4.6,
-    reviews: typeof m?.reviews === "number" ? m.reviews : 100,
-    recommended: m?.recommended !== false,
-    image: name.charAt(0).toUpperCase(),
-    expertise,
-    zoomLink: typeof m?.zoomLink === "string" ? m.zoomLink : "",
-    meetLink: typeof m?.meetLink === "string" ? m.meetLink : "",
-  }
-}
-
-function minimalMentorFromEmail(email: string): MentorVM {
-  const key = email.toLowerCase().trim()
-  const local = key.split("@")[0] || "mentor"
-  const cap = local.length ? local.charAt(0).toUpperCase() + local.slice(1) : "Mentor"
-  return {
-    id: key,
-    email: key,
-    name: cap,
-    role: "Mentor",
-    headline: "Mentor",
-    careerIds: [],
-    education: [],
-    currentJob: null,
-    experience: [],
-    bio: "",
-    rating: 4.6,
-    reviews: 100,
-    recommended: false,
-    image: cap.charAt(0).toUpperCase(),
-    expertise: [],
-    demo: false,
-  }
-}
-
-type FeaturedContentItem = {
-  id: string
-  title: string
-  description: string
-  badge?: string
-  link?: string
-  linkText?: string
-  active: boolean
-}
-
-type AdItem = {
-  id: string
-  title: string
-  description: string
-  imageUrl?: string
-  link?: string
-  active: boolean
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5" aria-hidden="true">
+      <path d="m4 10 4 4 8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
 }
 
 export default function Home() {
-  const { user, setUser } = useUser()
-  const { lang, t } = useLanguage()
-  const router = useRouter()
-  const [isMounted, setIsMounted] = useState(false)
+  const { user, loading, setUser } = useUser()
+  const { lang } = useLanguage()
+  const c = copy[lang]
   const [isAuthOpen, setIsAuthOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<"job" | "higher_study" | "entrepreneurship">("job")
-  const [selectedMentor, setSelectedMentor] = useState<MentorVM | null>(null)
-  const [modalTab, setModalTab] = useState<"profile" | "chat">("profile")
-  const [mentors, setMentors] = useState<MentorVM[]>([])
+  const [hasGuestAssessment, setHasGuestAssessment] = useState(false)
 
   useEffect(() => {
-    setModalTab("profile")
-  }, [selectedMentor])
-
-  const [interestedCareers, setInterestedCareers] = useState<string[]>([])
-  const handleToggleInterest = (careerTitle: string) => {
-    if (!user) {
-      setIsAuthOpen(true)
-      return
-    }
-    if (interestedCareers.includes(careerTitle)) {
-      setInterestedCareers(prev => prev.filter(t => t !== careerTitle))
-    } else {
-      setInterestedCareers(prev => [...prev, careerTitle])
-    }
-  }
-
-  const [chatMessages, setChatMessages] = useState<MentorMessage[]>([])
-  const [chatInput, setChatInput] = useState("")
-  const [chatLoading, setChatLoading] = useState(false)
-  const [chatSending, setChatSending] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [notifications, setNotifications] = useState<MessageNotification[]>([])
-  const [notificationsLoading, setNotificationsLoading] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [requestStatuses, setRequestStatuses] = useState<Record<string, ConnectionStatus>>({})
-  const [requestLoadingByMentor, setRequestLoadingByMentor] = useState<Record<string, boolean>>({})
-  const [homeRecommendations, setHomeRecommendations] = useState<HomeRecommendation[]>([])
-  const [showHomeRecommendations, setShowHomeRecommendations] = useState(false)
-  const [homeRecommendationsLoading, setHomeRecommendationsLoading] = useState(false)
-  const [featuredList, setFeaturedList] = useState<FeaturedContentItem[]>([])
-  const [adsList, setAdsList] = useState<AdItem[]>([])
-  const notificationsDesktopRef = useRef<HTMLDivElement>(null)
-  const notificationsMobileRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    setIsMounted(true)
-    fetch('/api/admin/featured')
-      .then(res => res.json())
-      .then(data => setFeaturedList(data.featured || []))
-      .catch(() => undefined)
-    fetch('/api/admin/ads')
-      .then(res => res.json())
-      .then(data => setAdsList(data.ads || []))
-      .catch(() => undefined)
+    setHasGuestAssessment(Boolean(localStorage.getItem("guestMbti")))
   }, [])
 
-  useEffect(() => {
-    if (!notificationsOpen) return
-    function handlePointerDown(e: MouseEvent | TouchEvent) {
-      const target = e.target as Node
-      if (
-        notificationsDesktopRef.current?.contains(target) ||
-        notificationsMobileRef.current?.contains(target)
-      ) {
-        return
-      }
-      setNotificationsOpen(false)
-    }
-    document.addEventListener("mousedown", handlePointerDown)
-    document.addEventListener("touchstart", handlePointerDown)
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown)
-      document.removeEventListener("touchstart", handlePointerDown)
-    }
-  }, [notificationsOpen])
+  const workspaceHref = user?.type === "mentor" ? "/mentor" : user?.type === "admin" ? "/admin" : "/dashboard"
+  const primaryHref = user
+    ? user.type === "student" && !user.mbti
+      ? "/assessment"
+      : workspaceHref
+    : hasGuestAssessment
+      ? "/explore-careers"
+      : "/assessment"
 
-  const openChatFromNotification = useCallback(
-    async (mentorEmail: string) => {
-      const key = mentorEmail.trim().toLowerCase()
-      if (!key) return
-      let mentor = mentors.find(m => m.email.toLowerCase() === key)
-      if (!mentor) {
-        try {
-          const res = await fetch(`/api/mentorship?action=mentors`)
-          const data = await res.json()
-          const list = Array.isArray(data?.mentors) ? data.mentors : []
-          const mapped = (list as Record<string, unknown>[]).map(mapApiMentorRowToVM)
-          mentor = mapped.find(m => m.email.toLowerCase() === key)
-        } catch {
-          /* ignore */
-        }
-      }
-      if (!mentor) mentor = minimalMentorFromEmail(key)
-      setSelectedMentor(mentor)
-      setNotificationsOpen(false)
-      setMobileMenuOpen(false)
-    },
-    [mentors]
-  )
-
-  useEffect(() => {
-    async function fetchMentors() {
-      try {
-        const params = new URLSearchParams({
-          action: "mentors",
-          category: activeTab,
-        })
-        const res = await fetch(`/api/mentorship?${params.toString()}`)
-        const data = await res.json()
-        const list = Array.isArray(data?.mentors) ? data.mentors : []
-        const mapped: MentorVM[] = (list as Record<string, unknown>[]).map(mapApiMentorRowToVM)
-        setMentors(mapped)
-      } catch (e) {
-        console.error("Failed to load mentors", e)
-        setMentors([])
-      }
-    }
-    fetchMentors()
-  }, [activeTab])
-
-  useEffect(() => {
-    async function fetchMessages() {
-      if (!user?.email || !selectedMentor?.email) {
-        setChatMessages([])
-        return
-      }
-      const status = requestStatuses[selectedMentor.email.toLowerCase()] || "none"
-      if (status !== "accepted") {
-        setChatMessages([])
-        return
-      }
-      setChatLoading(true)
-      try {
-        const params = new URLSearchParams({
-          action: "messages",
-          studentEmail: user.email,
-          mentorEmail: selectedMentor.email,
-        })
-        const res = await fetch(`/api/mentorship?${params.toString()}`)
-        const data = await res.json()
-        setChatMessages(Array.isArray(data?.messages) ? data.messages : [])
-      } catch (error) {
-        console.error("Failed to load chat", error)
-        setChatMessages([])
-      } finally {
-        setChatLoading(false)
-      }
-    }
-    fetchMessages()
-  }, [selectedMentor, user?.email, requestStatuses])
-
-  useEffect(() => {
-    async function fetchNotifications() {
-      if (!user?.email || user.type !== "student") {
-        setNotifications([])
-        setUnreadCount(0)
-        return
-      }
-      setNotificationsLoading(true)
-      try {
-        const params = new URLSearchParams({
-          action: "student-notifications",
-          studentEmail: user.email,
-        })
-        const res = await fetch(`/api/mentorship?${params.toString()}`)
-        const data = await res.json()
-        const list = Array.isArray(data?.notifications) ? data.notifications : []
-        setNotifications(list)
-
-        const seenKey = `notif_seen_at_${user.email.toLowerCase()}`
-        const seenAt = Number(localStorage.getItem(seenKey) || "0")
-        const unread = list.filter((n: MessageNotification) => new Date(n.createdAt).getTime() > seenAt).length
-        setUnreadCount(unread)
-      } catch (error) {
-        console.error("Failed to load notifications", error)
-      } finally {
-        setNotificationsLoading(false)
-      }
-    }
-    fetchNotifications()
-  }, [user?.email, user?.type, chatMessages.length])
-
-  useEffect(() => {
-    async function fetchRequestStatuses() {
-      if (!user?.email || user.type !== "student") {
-        setRequestStatuses({})
-        return
-      }
-      try {
-        const params = new URLSearchParams({
-          action: "request-statuses",
-          studentEmail: user.email,
-        })
-        const res = await fetch(`/api/mentorship?${params.toString()}`)
-        const data = await res.json()
-        const statuses: Record<string, ConnectionStatus> = {}
-        for (const item of data?.statuses || []) {
-          const key = String(item?.mentorEmail || "").toLowerCase()
-          if (!key) continue
-          const val = String(item?.status || "none").toLowerCase()
-          statuses[key] = val === "accepted" || val === "pending" || val === "rejected" ? (val as ConnectionStatus) : "none"
-        }
-        setRequestStatuses(statuses)
-      } catch (error) {
-        console.error("Failed to load mentorship request statuses", error)
-      }
-    }
-    fetchRequestStatuses()
-  }, [user?.email, user?.type, mentors.length])
-
-  function toggleNotifications() {
-    const nextOpen = !notificationsOpen
-    setNotificationsOpen(nextOpen)
-    if (nextOpen && user?.email) {
-      const seenKey = `notif_seen_at_${user.email.toLowerCase()}`
-      localStorage.setItem(seenKey, String(Date.now()))
-      setUnreadCount(0)
-    }
-  }
-
-  async function sendMessage() {
-    if (!user?.email || !selectedMentor?.email || !chatInput.trim()) return
-    setChatSending(true)
-    try {
-      const res = await fetch("/api/mentorship", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "send-message",
-          studentEmail: user.email,
-          mentorEmail: selectedMentor.email,
-          senderEmail: user.email,
-          senderType: user.type === "mentor" ? "mentor" : "student",
-          text: chatInput.trim(),
-        }),
-      })
-      const data = await res.json()
-      if (res.ok && data?.message) {
-        setChatMessages(prev => [...prev, data.message])
-        setChatInput("")
-      }
-    } catch (error) {
-      console.error("Failed to send message", error)
-    } finally {
-      setChatSending(false)
-    }
-  }
-
-  async function sendConnectionRequest(mentorEmail: string) {
-    if (!user?.email || user.type !== "student") return
-    if (!mentorEmail.trim()) return
-    const key = mentorEmail.toLowerCase()
-    setRequestLoadingByMentor(prev => ({ ...prev, [key]: true }))
-    try {
-      const res = await fetch("/api/mentorship", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "send-request",
-          studentEmail: user.email,
-          mentorEmail: key,
-        }),
-      })
-      const data = await res.json()
-      if (res.ok && data?.status) {
-        setRequestStatuses(prev => ({ ...prev, [key]: data.status as ConnectionStatus }))
-      }
-    } catch (error) {
-      console.error("Failed to send mentorship request", error)
-    } finally {
-      setRequestLoadingByMentor(prev => ({ ...prev, [key]: false }))
-    }
-  }
-
-  async function toggleHomeRecommendations() {
-    if (!user?.mbti) return
-    if (!showHomeRecommendations && homeRecommendations.length === 0) {
-      setHomeRecommendationsLoading(true)
-      try {
-        const res = await fetch("/api/recommend", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ personality: user.mbti }),
-        })
-        const data = await res.json()
-        setHomeRecommendations(Array.isArray(data?.recommendations) ? data.recommendations : [])
-      } catch (error) {
-        console.error("Failed to load home recommendations", error)
-        setHomeRecommendations([])
-      } finally {
-        setHomeRecommendationsLoading(false)
-      }
-    }
-    setShowHomeRecommendations(prev => !prev)
-  }
-
-  const handleLogout = async () => {
+  async function logout() {
     try {
       await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "logout" }),
       })
-    } catch {
-      // Clear local user state even if network call fails.
     } finally {
       setUser(null)
-      setMobileMenuOpen(false)
     }
   }
 
-  const displayName = isMounted ? (user ? user.name : t.common.guest) : t.common.guest
-
-  const careerPreviews: Record<
-    "job" | "higher_study" | "entrepreneurship",
-    Array<{ id: number; title: string; subtitle: string; icon: string; fit: number }>
-  > = {
-    job: t.home.careerPreview.job.map((c, i) => ({ ...c, id: i + 1 })),
-    higher_study: t.home.careerPreview.higher.map((c, i) => ({ ...c, id: i + 3 })),
-    entrepreneurship: t.home.careerPreview.ent.map((c, i) => ({ ...c, id: i + 5 })),
-  }
-  const activeCareerItems = careerPreviews[activeTab]
-
-  const mentorTrackLabel =
-    activeTab === "job"
-      ? t.home.mentorTrackJob
-      : activeTab === "higher_study"
-        ? t.home.mentorTrackHigher
-        : t.home.mentorTrackEnt
-
-  const resources = t.home.resources
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 sm:gap-3 text-xl sm:text-2xl font-bold">
-            <div className="relative">
-              <div className="relative bg-white px-1 py-2 text-blue-600">🚀</div>
-            </div>
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">CareerLeader</span>
-          </div>
-          <nav className="hidden md:flex gap-4 lg:gap-6 items-center flex-wrap">
-            <LanguageToggle variant="light" compact />
-            {user ? (
-              <>
-                <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.home}</Link>
-                <Link href={user.type === "mentor" ? "/mentor" : user.type === "admin" ? "/admin" : "/dashboard"} className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.dashboard}</Link>
-                <Link href="/explore-careers" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.exploreCareers}</Link>
-                <Link href="/mentors" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.mentors}</Link>
-              </>
-            ) : (
-              <>
-                <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.home}</Link>
-                <Link href="#careers" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.exploreCareers}</Link>
-                <Link href="#mentors" className="text-gray-700 hover:text-blue-600 font-medium transition">{t.nav.mentors}</Link>
-              </>
-            )}
-            <div className="relative" ref={notificationsDesktopRef}>
-              <button type="button" onClick={toggleNotifications} className="relative text-gray-700 hover:text-blue-600 transition">
-                🔔
-                {unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
-              </button>
-              {notificationsOpen && (
-                <div className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto bg-white rounded-xl border border-gray-200 shadow-2xl p-3 z-50">
-                  <h4 className="font-bold text-gray-900 mb-2">{t.nav.msgNotifications}</h4>
-                  {notificationsLoading ? (
-                    <p className="text-sm text-gray-500 py-2">{t.common.loading}</p>
-                  ) : notifications.length === 0 ? (
-                    <p className="text-sm text-gray-500 py-2">{t.nav.noNewNotifications}</p>
-                  ) : (
-                    notifications.map(n => (
-                      <button
-                        key={n.id}
-                        type="button"
-                        onClick={() => openChatFromNotification(n.mentorEmail)}
-                        className="w-full text-left py-2 border-b border-gray-100 last:border-b-0 rounded-md px-1 -mx-1 hover:bg-blue-50 transition cursor-pointer"
-                      >
-                        <p className="text-xs text-gray-500">{n.senderEmail}</p>
-                        <p className="text-sm text-gray-900 truncate">{n.text}</p>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-            <AuthButton onOpenAuth={() => setIsAuthOpen(true)} onLogout={handleLogout} />
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-900">
+      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Career Leader home">
+            <span className="text-xl sm:text-2xl" aria-hidden="true">🚀</span>
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-sm font-bold text-transparent sm:text-xl">CareerLeader</span>
+          </Link>
+
+          <nav className="hidden items-center gap-7 text-sm font-semibold text-slate-600 md:flex" aria-label="Main navigation">
+            <Link href="#how-it-works" className="transition hover:text-blue-700">{c.navHow}</Link>
+            <Link href="#outcomes" className="transition hover:text-blue-700">{c.navOutcomes}</Link>
+            <Link href="/mentors" className="transition hover:text-blue-700">{c.navMentors}</Link>
           </nav>
 
-          <div className="md:hidden flex items-center gap-3">
-            <div className="relative" ref={notificationsMobileRef}>
-              <button type="button" onClick={toggleNotifications} className="relative text-gray-700 hover:text-blue-600 transition text-lg">
-                🔔
-                {unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageToggle variant="light" compact />
+            {!loading && user ? (
+              <div className="flex items-center gap-3">
+                <Link href={workspaceHref} className="whitespace-nowrap rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2.5 text-sm font-bold text-white shadow-sm transition hover:from-blue-700 hover:to-indigo-700 sm:px-4">
+                  <span className="sm:hidden">{lang === "bn" ? "খুলুন" : "Open"}</span>
+                  <span className="hidden sm:inline">{c.openWorkspace}</span>
+                </Link>
+                <button onClick={logout} className="hidden text-sm font-semibold text-slate-500 transition hover:text-red-600 sm:inline">
+                  {lang === "bn" ? "লগ আউট" : "Log out"}
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setIsAuthOpen(true)} className="whitespace-nowrap rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2.5 text-sm font-bold text-white shadow-sm transition hover:from-blue-700 hover:to-indigo-700 sm:px-4">
+                {c.login}
               </button>
-              {notificationsOpen && (
-                <div className="absolute right-0 top-full mt-2 w-72 max-h-80 overflow-y-auto bg-white rounded-xl border border-gray-200 shadow-2xl p-3 z-50">
-                  <h4 className="font-bold text-gray-900 mb-2">{t.nav.msgNotifications}</h4>
-                  {notificationsLoading ? (
-                    <p className="text-sm text-gray-500 py-2">{t.common.loading}</p>
-                  ) : notifications.length === 0 ? (
-                    <p className="text-sm text-gray-500 py-2">{t.nav.noNewNotifications}</p>
-                  ) : (
-                    notifications.map(n => (
-                      <button
-                        key={n.id}
-                        type="button"
-                        onClick={() => openChatFromNotification(n.mentorEmail)}
-                        className="w-full text-left py-2 border-b border-gray-100 last:border-b-0 rounded-md px-1 -mx-1 hover:bg-blue-50 transition cursor-pointer"
-                      >
-                        <p className="text-xs text-gray-500">{n.senderEmail}</p>
-                        <p className="text-sm text-gray-900 truncate">{n.text}</p>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-gray-700 hover:text-blue-600 transition"
-              aria-label={t.nav.toggleMenu}
-            >
-              {mobileMenuOpen ? "✕" : "☰"}
-            </button>
+            )}
           </div>
         </div>
-
-        {mobileMenuOpen && (
-          <nav className="md:hidden border-t border-gray-200 bg-white px-4 py-4 flex flex-col gap-3">
-            <div className="pb-2">
-              <LanguageToggle variant="light" />
-            </div>
-            {user ? (
-              <>
-                <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.home}</Link>
-                <Link href={user.type === "mentor" ? "/mentor" : user.type === "admin" ? "/admin" : "/dashboard"} onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.dashboard}</Link>
-                <Link href="/explore-careers" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.exploreCareers}</Link>
-                <Link href="/mentors" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.mentors}</Link>
-              </>
-            ) : (
-              <>
-                <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.home}</Link>
-                <Link href="#careers" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.exploreCareers}</Link>
-                <Link href="#mentors" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">{t.nav.mentors}</Link>
-              </>
-            )}
-            <div className="pt-2 border-t border-gray-100">
-              <AuthButton onOpenAuth={() => { setIsAuthOpen(true); setMobileMenuOpen(false) }} onLogout={handleLogout} />
-            </div>
-          </nav>
-        )}
       </header>
 
-      {/* Hero Section */}
-      <section className="relative py-12 sm:py-20 overflow-hidden">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-8 right-0 w-96 h-96 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center relative z-10">
-          <div>
-            <div className="inline-block mb-4 px-4 py-2 bg-blue-100 text-blue-600 rounded-full text-sm font-semibold">{t.home.welcomeBadge}</div>
-            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              {t.home.heroTitleBefore}{" "}
-              <span className="bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">{t.home.heroTitleHighlight}</span>{" "}
-              {t.home.heroTitleAfter}
-            </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-8 leading-relaxed">{t.home.heroSub}</p>
-            <Link
-              href="/assessment"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-10 rounded-full shadow-lg hover:shadow-xl transition transform hover:scale-105"
-            >
-              {t.home.ctaAssessment}
-            </Link>
-          </div>
-          <div className="text-center relative">
-            <div className="inline-block relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-600 rounded-3xl blur-2xl opacity-30"></div>
-              <div className="relative text-6xl sm:text-8xl lg:text-9xl bg-gradient-to-br from-blue-100 to-indigo-100 p-8 sm:p-10 lg:p-12 rounded-3xl">👨‍💼</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Announcements */}
-      {isMounted && featuredList.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
-          <div className="mb-6">
-            <h2 className="text-2xl sm:text-3.5xl font-extrabold text-[#112954]">
-              {lang === 'bn' ? 'বিশেষ ঘোষণা ও আপডেট' : 'Featured Announcements'}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {lang === 'bn' ? 'ক্যারিয়ার লিডার থেকে সর্বশেষ গুরুত্বপূর্ণ আপডেটসমূহ' : 'Latest updates and opportunities from Career Leader'}
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            {featuredList.map(item => (
-              <div key={item.id} className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden flex flex-col justify-between hover:shadow-lg transition">
-                <div className="absolute right-[-20px] bottom-[-20px] w-40 h-40 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
-                <div>
-                  {item.badge && (
-                    <span className="inline-block mb-3 px-3 py-1 bg-white/20 text-white rounded-full text-xs font-bold uppercase tracking-wider">{item.badge}</span>
-                  )}
-                  <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                  <p className="text-white/80 text-sm leading-relaxed mb-6">{item.description}</p>
-                </div>
-                {item.link && (
-                  <div>
-                    <a href={item.link} className="inline-flex items-center gap-2 bg-white text-blue-600 font-bold px-6 py-2.5 rounded-full text-sm hover:bg-gray-100 transition transform hover:scale-[1.01]">
-                      {item.linkText || (lang === 'bn' ? 'বিস্তারিত দেখুন' : 'Learn More')} →
-                    </a>
-                  </div>
-                )}
+      <main>
+        <section className="relative overflow-hidden border-b border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+          <div className="absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_top_left,_rgba(96,165,250,0.22),_transparent_44%),radial-gradient(circle_at_top_right,_rgba(167,139,250,0.18),_transparent_38%)]" />
+          <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.08fr_.92fr] lg:items-center lg:px-8 lg:py-24">
+            <div className="max-w-3xl">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.14em] text-blue-700">
+                <span className="h-2 w-2 rounded-full bg-blue-600" />
+                {c.eyebrow}
               </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Greeting & Feature Cards */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
-        <div className="mb-12">
-          <h2 className="text-2xl sm:text-4xl font-bold text-gray-900">{t.home.hello(displayName)}</h2>
-          <p className="text-base sm:text-lg text-gray-600 mt-2">{t.home.readyFuture}</p>
-        </div>
-
-        {isMounted && user?.type === "student" && (
-          <div className="mb-8 sm:mb-10 bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-5 text-white">
-              <h3 className="text-xl sm:text-2xl font-bold">{t.home.mbtiSectionTitle}</h3>
-              <p className="text-white/85 text-sm sm:text-base mt-1">{t.home.mbtiSectionSub}</p>
+              <h1 className="text-balance text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+                <span className="text-[#112954]">{c.titleLead}</span>{" "}
+                <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  {c.titleAccent}
+                </span>
+              </h1>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{c.subtitle}</p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link href={primaryHref} className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-blue-200 transition hover:from-blue-700 hover:to-indigo-700">
+                  {user || hasGuestAssessment ? c.continue : c.primary}
+                  <ArrowIcon />
+                </Link>
+                <Link href="/explore-careers" className="inline-flex items-center justify-center rounded-lg border border-blue-200 bg-white px-6 py-3.5 text-sm font-extrabold text-gray-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+                  {c.secondary}
+                </Link>
+              </div>
+              <p className="mt-4 text-sm font-medium text-slate-500">{c.reassurance}</p>
             </div>
-            <div className="p-5 sm:p-6">
-              {user.mbti ? (
-                <>
-                  <div className="inline-flex items-center gap-3 rounded-xl bg-purple-50 border border-purple-200 px-4 py-3">
-                    <span className="text-sm font-semibold text-purple-800">{t.assessment.mbtiLabel}</span>
-                    <span className="text-2xl font-bold text-purple-900">{user.mbti}</span>
+
+            <div className="relative mx-auto w-full max-w-xl">
+              <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-blue-200/70 via-indigo-200/60 to-purple-200/60 blur-2xl" />
+              <div className="relative overflow-hidden rounded-2xl border border-white/80 bg-white p-6 shadow-xl shadow-indigo-200/50 sm:p-8">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-5">
+                  <div>
+                    <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-blue-700">{c.previewLabel}</p>
+                    <h2 className="mt-1 text-xl font-black text-[#112954]">{c.previewTitle}</h2>
                   </div>
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={toggleHomeRecommendations}
-                      className="rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 px-5 py-2.5 text-white font-bold transition"
-                    >
-                      {showHomeRecommendations ? t.home.hideHomeRecommendations : t.home.viewHomeRecommendations}
-                    </button>
-                  </div>
-                  {showHomeRecommendations && (
-                    <div className="mt-4 space-y-3">
-                      {homeRecommendationsLoading ? (
-                        <p className="text-sm text-gray-600">{t.home.loadingRecommendations}</p>
-                      ) : homeRecommendations.length === 0 ? (
-                        <p className="text-sm text-gray-600">{t.home.noRecommendations}</p>
-                      ) : (
-                        homeRecommendations.map((item, idx) => (
-                          <div key={item.id} className="rounded-lg border border-green-100 bg-green-50 p-4">
-                            <p className="text-xs font-bold text-green-700">#{idx + 1}</p>
-                            <h4 className="text-lg font-bold text-gray-900">{item.title}</h4>
-                            {item.description ? <p className="text-sm text-gray-700 mt-1">{item.description}</p> : null}
-                          </div>
-                        ))
-                      )}
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">1 → 4</span>
+                </div>
+                <p className="mt-5 text-sm leading-6 text-slate-600">{c.previewBody}</p>
+                <div className="mt-6 grid grid-cols-4 gap-2">
+                  {c.steps.map((step, index) => (
+                    <div key={step.title} className="text-center">
+                      <div className={`mx-auto grid h-11 w-11 place-items-center rounded-xl text-sm font-black ${index === 0 ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-200" : "bg-blue-50 text-blue-600"}`}>{index + 1}</div>
+                      <p className="mt-2 text-[11px] font-extrabold text-slate-700">{step.title}</p>
                     </div>
-                  )}
-                </>
-              ) : (
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                  <p className="text-sm sm:text-base text-gray-700">{t.home.mbtiMissing}</p>
-                  <Link
-                    href="/assessment"
-                    className="inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white font-semibold transition"
-                  >
-                    {t.home.takeAssessment}
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          <div className="group relative bg-white rounded-2xl p-8 shadow-md hover:shadow-2xl border border-gray-100 transition-all duration-300 hover:-translate-y-1">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 to-red-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition"></div>
-            <div className="relative">
-              <div className="text-5xl mb-4">📋</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t.home.cardAssessmentTitle}</h3>
-              <p className="text-gray-600 mb-6">{t.home.cardAssessmentBody}</p>
-              <Link href="/assessment" className="inline-block bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
-                {t.home.cardAssessmentCta}
-              </Link>
-            </div>
-          </div>
-          <div className="group relative bg-white rounded-2xl p-8 shadow-md hover:shadow-2xl border border-gray-100 transition-all duration-300 hover:-translate-y-1">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-indigo-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition"></div>
-            <div className="relative">
-              <div className="text-5xl mb-4">🎯</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t.home.cardRecommendedTitle}</h3>
-              <p className="text-gray-600 mb-6">{t.home.cardRecommendedBody}</p>
-              <Link href={user ? "/explore-careers" : "#careers"} className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
-                {t.home.cardRecommendedCta}
-              </Link>
-            </div>
-          </div>
-          <div className="group relative bg-white rounded-2xl p-8 shadow-md hover:shadow-2xl border border-gray-100 transition-all duration-300 hover:-translate-y-1">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-emerald-600/10 rounded-2xl opacity-0 group-hover:opacity-100 transition"></div>
-            <div className="relative">
-              <div className="text-5xl mb-4">📊</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t.home.cardProgressTitle}</h3>
-              <p className="text-gray-600 mb-6">{t.home.cardProgressBody}</p>
-              <div className="flex items-center gap-4">
-                {user ? (
-                  <Link href={user.type === "mentor" ? "/mentor" : user.type === "admin" ? "/admin" : "/dashboard"} className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition">
-                    {t.home.cardProgressView}
-                  </Link>
-                ) : (
-                  <button 
-                    onClick={() => setIsAuthOpen(true)}
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer"
-                  >
-                    {t.home.cardProgressView}
-                  </button>
-                )}
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                    <span className="text-2xl font-bold text-green-600">0%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Career Recommendations */}
-      <section id="careers" className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16">
-        <div className="mb-8">
-          <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4">{t.home.careerPathTitle}</h2>
-          <p className="text-gray-600">{t.home.careerPathSub}</p>
-        </div>
-        <div className="flex flex-wrap gap-2 sm:gap-3 mb-8">
-          {(["job", "higher_study", "entrepreneurship"] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-3 rounded-lg font-bold transition ${
-                activeTab === tab
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              {tab === "job" ? t.home.tabJob : tab === "higher_study" ? t.home.tabHigher : t.home.tabEnt}
-            </button>
-          ))}
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4 sm:gap-8">
-          {activeCareerItems.map(career => (
-            <div key={career.id} className="group relative bg-white rounded-2xl p-8 shadow-md hover:shadow-2xl border border-gray-100 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 to-indigo-600/5 opacity-0 group-hover:opacity-100 transition"></div>
-              <div className="relative">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <div className="text-4xl sm:text-6xl mb-3">{career.icon}</div>
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900">{career.title}</h3>
-                    <p className="text-sm text-gray-500 mt-2">{career.subtitle}</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 font-bold px-4 py-2 rounded-xl text-lg">{career.fit}%</div>
-                </div>
-                <div className="mb-4 flex items-center gap-2">
-                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all" style={{ width: `${career.fit}%` } as React.CSSProperties}></div>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleToggleInterest(career.title)}
-                    className={`flex-1 py-2 rounded-lg font-bold shadow-md transition cursor-pointer select-none ${
-                      interestedCareers.includes(career.title)
-                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                        : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-                    }`}
-                  >
-                    {interestedCareers.includes(career.title) ? (lang === 'bn' ? "✓ আগ্রহী" : "✓ Interested") : t.home.previewInterested}
-                  </button>
-                  <Link
-                    href="/explore-careers"
-                    className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 rounded-lg font-bold transition text-center"
-                  >
-                    {t.home.previewGuidance}
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Learning Resources & Mentors */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-16 grid lg:grid-cols-3 gap-8 lg:gap-12" id="mentors">
-        {/* Learning Resources */}
-        <div className="lg:col-span-1">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.home.learningResources}</h2>
-            {user ? (
-              <Link href="/dashboard?view=resources" className="text-blue-600 hover:text-blue-700 font-bold text-sm">{t.home.seeAll}</Link>
-            ) : (
-              <button onClick={() => setIsAuthOpen(true)} className="text-blue-600 hover:text-blue-700 font-bold text-sm cursor-pointer">{t.home.seeAll}</button>
-            )}
-          </div>
-          <div className="space-y-4">
-            {resources.map(resource => (
-              <div 
-                key={resource.id} 
-                onClick={() => {
-                  if (user) {
-                    router.push("/dashboard?view=resources");
-                  } else {
-                    setIsAuthOpen(true);
-                  }
-                }}
-                className="group bg-white rounded-xl p-5 shadow-md hover:shadow-xl border border-gray-100 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer text-left select-none"
-              >
-                <div className="text-4xl mb-3 group-hover:scale-110 transition">{resource.icon}</div>
-                <h3 className="font-bold text-gray-900 text-lg">{resource.title}</h3>
-                <div className="flex gap-2 mt-3 text-xs font-medium text-gray-600">
-                  {resource.type.map(tag => (
-                    <span key={`${resource.id}-${tag}`} className="bg-gray-100 px-2 py-1 rounded">• {tag}</span>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">{t.home.learnersLabel(resource.learners)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mentors — scoped to the same career track as Career Path Preview (job / higher study / entrepreneurship) */}
-        <div className="lg:col-span-2">
-          <div className="mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.home.mentorsTrackTitle}</h2>
-            <p className="text-gray-600 mt-2 text-sm sm:text-base">
-              {t.home.mentorsTrackSub(mentorTrackLabel)}
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {mentors.map(mentor => (
-              <div
-                key={mentor.id}
-                className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-2xl border border-gray-100 transition-all duration-300 hover:-translate-y-1 text-center overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-indigo-600/10 opacity-0 group-hover:opacity-100 transition"></div>
-                <div className="relative">
-                  {mentor.demo && (
-                    <span className="absolute top-0 right-0 text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 px-2 py-0.5 rounded-bl-lg rounded-tr-xl">
-                      {t.home.sample}
-                    </span>
-                  )}
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600 mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:scale-110 transition">
-                    {mentor.image}
-                  </div>
-                  <h3 className="font-bold text-gray-900 text-lg">{mentor.name}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{mentor.headline}</p>
-                  {careerLabels(mentor.careerIds).length > 0 && (
-                    <div className="flex flex-wrap justify-center gap-1.5 mb-3">
-                      {careerLabels(mentor.careerIds).map(label => (
-                        <span
-                          key={`${mentor.id}-${label}`}
-                          className="text-[11px] font-semibold bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded-full border border-indigo-100"
-                        >
-                          {label}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex justify-center items-center gap-1 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i} className="text-yellow-400 text-lg">★</span>
-                    ))}
-                    <span className="text-xs text-gray-600 ml-2">{mentor.rating} • {mentor.reviews}</span>
-                  </div>
-                  {mentor.recommended && (
-                    <div className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-full inline-block mb-4">
-                      {t.home.highlyRecommended}
-                    </div>
-                  )}
-                  <button
-                    onClick={() => setSelectedMentor(mentor)}
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition mb-2"
-                  >
-                    {t.home.viewProfile}
-                  </button>
-                  {(() => {
-                    const status = requestStatuses[mentor.email.toLowerCase()] || "none"
-                    const isLoadingReq = !!requestLoadingByMentor[mentor.email.toLowerCase()]
-                    if (mentor.demo || !mentor.email) {
-                      return (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {t.home.sampleProfileHint}
-                        </p>
-                      )
-                    }
-                    if (!user || user.type !== "student") {
-                      return (
-                        <button
-                          onClick={() => setIsAuthOpen(true)}
-                          className="w-full bg-gray-100 text-gray-700 font-bold py-2 rounded-lg border border-gray-300 hover:bg-gray-200 transition text-center"
-                        >
-                          {t.home.loginToConnect}
-                        </button>
-                      )
-                    }
-
-                    let btnText = ""
-                    let btnClass = ""
-                    let btnDisabled = false
-                    let onClickHandler = () => {}
-                    let showIcon: 'chat' | 'pending' | 'none' = 'none'
-
-                    if (status === "accepted") {
-                      btnText = t.home.chatNow
-                      btnClass = "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-                      onClickHandler = () => setSelectedMentor(mentor)
-                      showIcon = 'chat'
-                    } else if (status === "pending") {
-                      btnText = t.home.requestPending
-                      btnClass = "bg-yellow-50 text-yellow-700 border border-yellow-200 cursor-not-allowed"
-                      btnDisabled = true
-                      showIcon = 'pending'
-                    } else if (status === "rejected") {
-                      btnText = isLoadingReq ? t.home.sending : t.home.requestAgain
-                      btnClass = "bg-orange-100 text-orange-800 border border-orange-300 hover:bg-orange-200 disabled:opacity-60"
-                      btnDisabled = isLoadingReq
-                      onClickHandler = () => sendConnectionRequest(mentor.email)
-                    } else {
-                      btnText = isLoadingReq ? t.home.sending : t.home.requestToConnect
-                      btnClass = "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white disabled:opacity-60"
-                      btnDisabled = isLoadingReq
-                      onClickHandler = () => sendConnectionRequest(mentor.email)
-                    }
-
-                    return (
-                      <button
-                        onClick={onClickHandler}
-                        disabled={btnDisabled}
-                        className={`w-full font-bold py-2 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-1.5 ${btnClass}`}
-                      >
-                        {isLoadingReq && (
-                          <svg className="animate-spin h-3.5 w-3.5 text-current" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                        )}
-                        {!isLoadingReq && showIcon === 'chat' && <span>💬</span>}
-                        {!isLoadingReq && showIcon === 'pending' && <span>⏳</span>}
-                        <span>{btnText}</span>
-                      </button>
-                    )
-                  })()}
+                <div className="mt-6 flex gap-3 rounded-xl border border-blue-100 bg-blue-50/70 p-4 text-sm font-semibold leading-6 text-slate-600">
+                  <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700"><CheckIcon /></span>
+                  {c.previewNext}
                 </div>
               </div>
-            ))}
-            {mentors.length === 0 && (
-              <div className="sm:col-span-2 lg:col-span-3 p-8 text-center text-gray-500 bg-white rounded-2xl border border-gray-100 shadow-md">
-                {t.home.noMentors}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Sponsored Ads placement */}
-      {isMounted && adsList.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-6 border-t border-gray-100 mt-8">
-          <div className="grid md:grid-cols-2 gap-4">
-            {adsList.map(ad => (
-              <a
-                key={ad.id}
-                href={ad.link || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block relative bg-white border border-gray-100 rounded-3xl p-5 hover:shadow-md transition overflow-hidden text-left"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <span className="px-1.5 py-0.5 border border-gray-300 text-gray-400 rounded text-[9px] font-extrabold uppercase shrink-0">Ad</span>
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-gray-900 text-sm sm:text-base truncate">{ad.title}</h4>
-                      <p className="text-gray-500 text-xs sm:text-sm mt-0.5 truncate">{ad.description}</p>
-                    </div>
-                  </div>
-                  {ad.imageUrl && (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={ad.imageUrl} alt={ad.title} className="h-10 w-24 object-contain bg-slate-50 border border-gray-100 rounded-lg shrink-0" />
-                  )}
-                </div>
-              </a>
-            ))}
+            </div>
           </div>
         </section>
-      )}
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-10 sm:py-12 text-center text-gray-600 mt-12 sm:mt-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex justify-center items-center gap-2 mb-4">
-            <span className="text-2xl">🚀</span>
-            <span className="font-bold text-gray-900">Career Leader</span>
+        <section id="how-it-works" className="scroll-mt-24 py-20 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-blue-700">{c.howEyebrow}</p>
+              <h2 className="mt-3 text-3xl font-black tracking-tight text-[#112954] sm:text-4xl">{c.howTitle}</h2>
+              <p className="mt-4 text-base leading-7 text-slate-600">{c.howBody}</p>
+            </div>
+            <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {c.steps.map((step, index) => (
+                <article key={step.title} className="group flex min-h-64 flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-md transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-sm font-black text-blue-700">0{index + 1}</span>
+                  <h3 className="mt-6 text-xl font-black text-[#112954]">{step.title}</h3>
+                  <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{step.body}</p>
+                  <Link href={step.href} className="mt-6 inline-flex items-center gap-2 text-sm font-extrabold text-blue-700">
+                    {step.action}<ArrowIcon />
+                  </Link>
+                </article>
+              ))}
+            </div>
           </div>
-          <p className="text-sm mb-4">{t.home.footerTagline}</p>
-          <p className="text-xs text-gray-500">{t.home.footerRights}</p>
+        </section>
+
+        <section id="outcomes" className="scroll-mt-24 border-y border-indigo-100 bg-gradient-to-br from-blue-50/70 via-white to-purple-50/70 py-20 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-indigo-700">{c.outcomesEyebrow}</p>
+              <h2 className="mt-3 text-3xl font-black tracking-tight text-[#112954] sm:text-4xl">{c.outcomesTitle}</h2>
+            </div>
+            <div className="mt-10 grid gap-6 lg:grid-cols-3">
+              {c.outcomes.map((outcome) => (
+                <article key={outcome.title} className="rounded-2xl border border-gray-100 bg-white p-7 shadow-md">
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-indigo-700"><CheckIcon /></span>
+                  <h3 className="mt-5 text-lg font-black text-[#112954]">{outcome.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{outcome.body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-20 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-xl shadow-indigo-200/60 lg:grid-cols-[.85fr_1.15fr]">
+              <div className="min-h-72 bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,.24),_transparent_32%),radial-gradient(circle_at_70%_65%,_rgba(216,180,254,.32),_transparent_34%)] p-8">
+                <div className="grid h-full place-items-center">
+                  <div className="grid grid-cols-3 gap-3" aria-hidden="true">
+                    {["A", "M", "R", "S", "N", "K"].map((letter, index) => (
+                      <span key={letter} className={`grid h-16 w-16 place-items-center rounded-xl border border-white/30 text-xl font-black text-white shadow-lg ${index % 2 ? "bg-white/10" : "bg-white/20"}`}>{letter}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="p-8 text-white sm:p-12">
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-blue-100">{c.mentorEyebrow}</p>
+                <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">{c.mentorTitle}</h2>
+                <p className="mt-5 max-w-xl text-base leading-7 text-blue-50">{c.mentorBody}</p>
+                <Link href="/mentors" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-extrabold text-indigo-700 shadow-md transition hover:bg-blue-50">
+                  {c.mentorAction}<ArrowIcon />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-indigo-100 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 py-20 text-center">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6">
+            <h2 className="text-3xl font-black tracking-tight text-[#112954] sm:text-5xl">{c.finalTitle}</h2>
+            <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-600">{c.finalBody}</p>
+            <Link href={primaryHref} className="mt-8 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-blue-200 transition hover:from-blue-700 hover:to-indigo-700">
+              {c.finalAction}<ArrowIcon />
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div>
+            <p className="flex items-center gap-2 font-extrabold"><span aria-hidden="true">🚀</span><span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">CareerLeader</span></p>
+            <p className="mt-1">{c.footer}</p>
+          </div>
+          <div className="flex items-center gap-5">
+            <Link href="/staff-login" className="font-semibold transition hover:text-blue-700">{c.staff}</Link>
+            <span>© {new Date().getFullYear()}</span>
+          </div>
         </div>
       </footer>
 
-      {/* Auth Modal - Rendered at page level for full-page blur */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
-
-      {/* Mentor Profile Modal */}
-      {selectedMentor && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-8 my-auto relative max-h-[90vh] overflow-y-auto">
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedMentor(null)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-            >
-              ✕
-            </button>
-
-            {/* Mentor Avatar */}
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600 mx-auto mb-6 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-              {selectedMentor.image}
-            </div>
-
-            {/* Mentor Info */}
-            <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">{selectedMentor.name}</h2>
-            <p className="text-gray-600 text-center mb-2">{selectedMentor.headline}</p>
-            {careerLabels(selectedMentor.careerIds).length > 0 && (
-              <div className="flex flex-wrap justify-center gap-1.5 mb-3">
-                {careerLabels(selectedMentor.careerIds).map(label => (
-                  <span
-                    key={label}
-                    className="text-[11px] font-semibold bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded-full border border-indigo-100"
-                  >
-                    {label}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Rating */}
-            <div className="flex justify-center items-center gap-1 mb-4">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-yellow-400 text-lg">★</span>
-              ))}
-              <span className="text-sm text-gray-600 ml-2">{selectedMentor.rating} {t.home.mentorModal.reviews(selectedMentor.reviews)}</span>
-            </div>
-
-            {/* Badge */}
-            {selectedMentor.recommended && (
-              <div className="text-center mb-4">
-                <span className="inline-block bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-600 text-xs font-bold px-4 py-2 rounded-full">
-                  {t.home.highlyRecommended}
-                </span>
-              </div>
-            )}
-
-            {selectedMentor.demo && (
-              <p className="text-center text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg py-2 px-3 mb-4">
-                {t.home.mentorModal.sampleBanner}
-              </p>
-            )}
-
-            {/* Tab Switched Content */}
-            {selectedMentor.email && (requestStatuses[selectedMentor.email.toLowerCase()] || "none") === "accepted" && (
-              <div className="flex border-b border-gray-200 mb-6 font-sans shrink-0">
-                <button
-                  onClick={() => setModalTab("profile")}
-                  className={`flex-1 py-2.5 text-center font-bold text-sm border-b-2 transition cursor-pointer ${
-                    modalTab === "profile"
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  {t.home.mentorModal.about}
-                </button>
-                <button
-                  onClick={() => setModalTab("chat")}
-                  className={`flex-1 py-2.5 text-center font-bold text-sm border-b-2 transition cursor-pointer ${
-                    modalTab === "chat"
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  {lang === 'bn' ? "চ্যাট ও মিটিং" : "Chat & Meetings"}
-                </button>
-              </div>
-            )}
-
-            {/* Profile Tab Details */}
-            {(!selectedMentor.email || (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted" || modalTab === "profile") && (
-              <div className="space-y-4 mb-6 text-left">
-                {selectedMentor.education.length > 0 && (
-                  <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.education}</h3>
-                    <ul className="space-y-2">
-                      {selectedMentor.education.map((ed, i) => (
-                        <li key={`${ed.degree}-${i}`} className="text-sm text-gray-700">
-                          <span className="font-semibold text-gray-900">{ed.degree}</span>
-                          <span className="text-gray-600"> — {ed.institution}</span>
-                          {ed.year ? <span className="text-gray-500"> ({ed.year})</span> : null}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {selectedMentor.currentJob && (
-                  <div className="border border-gray-100 rounded-xl p-4 bg-white">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.currentRole}</h3>
-                    <p className="text-sm text-gray-900 font-semibold">{selectedMentor.currentJob.title}</p>
-                    <p className="text-sm text-gray-600">{selectedMentor.currentJob.company}</p>
-                  </div>
-                )}
-
-                {selectedMentor.experience.length > 0 && (
-                  <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/80">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.experience}</h3>
-                    <ul className="space-y-3">
-                      {selectedMentor.experience.map((ex, i) => (
-                        <li key={`${ex.title}-${i}`} className="text-sm border-l-2 border-indigo-200 pl-3">
-                          <p className="font-semibold text-gray-900">{ex.title}</p>
-                          <p className="text-gray-600">{ex.organization} · {ex.period}</p>
-                          {ex.summary ? <p className="text-gray-600 mt-1">{ex.summary}</p> : null}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {selectedMentor.bio ? (
-                  <div className="border border-gray-100 rounded-xl p-4 bg-white">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.about}</h3>
-                    <p className="text-sm text-gray-700 leading-relaxed">{selectedMentor.bio}</p>
-                  </div>
-                ) : null}
-
-                {selectedMentor.expertise.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">{t.home.mentorModal.expertise}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedMentor.expertise.map(skill => (
-                        <span key={skill} className="text-xs font-medium bg-blue-50 text-blue-800 px-2.5 py-1 rounded-lg">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Chat & Meetings Tab Details */}
-            {(!selectedMentor.email || (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted" || modalTab === "chat") && (
-              <>
-                {/* Contact Buttons */}
-                {(selectedMentor.zoomLink || selectedMentor.meetLink) ? (
-                  <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                    {selectedMentor.zoomLink ? (
-                      <a
-                        href={selectedMentor.zoomLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md hover:shadow-lg transition text-center"
-                      >
-                        Zoom
-                      </a>
-                    ) : null}
-                    {selectedMentor.meetLink ? (
-                      <a
-                        href={selectedMentor.meetLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md hover:shadow-lg transition text-center"
-                      >
-                        Meet
-                      </a>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                {/* Chat */}
-                <div className="rounded-lg border border-gray-200 p-3">
-                  <div className={`overflow-y-auto bg-gray-50 rounded-md p-3 space-y-2 mb-3 ${
-                    selectedMentor.email && (requestStatuses[selectedMentor.email.toLowerCase()] || "none") === "accepted"
-                      ? "h-64 sm:h-72"
-                      : "min-h-[10rem] max-h-[40vh] sm:h-48"
-                  }`}>
-                    {selectedMentor.demo || !selectedMentor.email ? (
-                      <p className="text-sm text-gray-600">{t.home.mentorModal.chatRegistered}</p>
-                    ) : !user ? (
-                      <p className="text-sm text-gray-600">{t.home.mentorModal.loginStudentChat}</p>
-                    ) : (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted" ? (
-                      <p className="text-sm text-gray-600">
-                        {t.home.mentorModal.chatAfterAccept}
-                      </p>
-                    ) : chatLoading ? (
-                      <p className="text-sm text-gray-500">{t.home.mentorModal.loadingMessages}</p>
-                    ) : chatMessages.length === 0 ? (
-                      <p className="text-sm text-gray-500">{t.home.mentorModal.noMessages}</p>
-                    ) : (
-                      chatMessages.map(msg => (
-                        <div
-                          key={msg.id}
-                          className={`text-sm p-2 rounded-md ${
-                            msg.senderType === "student"
-                              ? "bg-blue-100 text-blue-900 ml-8"
-                              : "bg-white border border-gray-200 mr-8"
-                          }`}
-                        >
-                          <p className="font-semibold">{msg.senderType === "student" ? t.home.mentorModal.you : selectedMentor.name}</p>
-                          <p>{msg.text}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <input
-                      value={chatInput}
-                      onChange={e => setChatInput(e.target.value)}
-                      placeholder={user ? t.home.mentorModal.placeholderChat : t.home.mentorModal.placeholderLogin}
-                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
-                      disabled={
-                        !user ||
-                        chatSending ||
-                        selectedMentor.demo ||
-                        !selectedMentor.email ||
-                        (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"
-                      }
-                    />
-                    <button
-                      onClick={sendMessage}
-                      disabled={
-                        !user ||
-                        chatSending ||
-                        !chatInput.trim() ||
-                        selectedMentor.demo ||
-                        !selectedMentor.email ||
-                        (requestStatuses[selectedMentor.email.toLowerCase()] || "none") !== "accepted"
-                      }
-                      className="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      {chatSending ? t.home.mentorModal.sending : t.home.mentorModal.send}
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <ClientOnly>
-              <div />
-            </ClientOnly>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
-

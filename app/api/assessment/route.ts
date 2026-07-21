@@ -4,15 +4,7 @@ import path from 'path'
 import { scoreAssessment } from '../../../lib/assessment'
 import { recommend } from '../../../lib/recommendation'
 import { getCollection } from '../../../lib/db'
-
-/** Response shape for assessment recommendations (local careers or Gemini). */
-type AssessmentRecommendation = {
-  id: string
-  title: string
-  category?: string
-  description?: string
-  skills?: string[]
-}
+import { getAuthCookieName, verifyAuthToken } from '../../../lib/auth'
 
 type RawQuestion = Record<string, unknown> & {
   id: string
@@ -53,21 +45,40 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const payload = await req.json().catch(() => ({}))
   const answers = Array.isArray(payload?.answers) ? payload.answers : []
-  const user = payload?.user
 
   try {
     const result = scoreAssessment(answers)
     const recs = recommend(result.personality, result.interests || [], 5)
 
-    // Persist MBTI only when an authenticated user submits assessment
-    if (user?.email && user?.type) {
+    // Persist the result and the next journey state for the authenticated user.
+    const token = req.headers.get('cookie')
+      ?.split(';')
+      .map(part => part.trim())
+      .find(part => part.startsWith(`${getAuthCookieName()}=`))
+      ?.split('=')
+      .slice(1)
+      .join('=')
+    let authenticatedUser: ReturnType<typeof verifyAuthToken> | null = null
+    if (token) {
+      try {
+        authenticatedUser = verifyAuthToken(token)
+      } catch {
+        authenticatedUser = null
+      }
+    }
+    if (authenticatedUser) {
       const users = await getCollection('users')
+      const now = new Date()
       await users.updateOne(
-        { email: user.email, type: user.type },
+        { email: authenticatedUser.email, type: authenticatedUser.type },
         {
           $set: {
             mbti: result.personality,
-            mbtiUpdatedAt: new Date(),
+            mbtiUpdatedAt: now,
+            'journey.assessmentCompletedAt': now,
+            'journey.recommendedCareerIds': recs.map(rec => rec.id),
+            'journey.lastAction': 'assessment_completed',
+            'journey.lastActionAt': now,
           },
         }
       )

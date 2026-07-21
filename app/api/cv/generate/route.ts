@@ -13,22 +13,20 @@ function buildFallbackCv(body: CvGenerateRequest): GeneratedCv {
 
   return {
     fullName: name,
-    headline: `${targetRole} — ${goal.skillLevel || 'Aspiring'} Professional`,
+    headline: `${goal.skillLevel || 'Aspiring'} ${targetRole}`,
     summary:
       profile.bio?.trim() ||
       goal.whyImportant?.trim() ||
       `Motivated ${goal.skillLevel?.toLowerCase() || 'aspiring'} professional targeting a career as ${targetRole}. Focused on ${(goal.focusAreas || []).join(', ') || 'core industry skills'}.`,
     email: profile.email,
+    phone: profile.phone,
+    location: profile.location,
+    linkedin: profile.linkedin,
+    portfolio: profile.portfolio,
     skills,
     experience: [],
-    education: profile.education?.length
-      ? profile.education
-      : [{ degree: 'Degree / Program', institution: 'Institution', year: 'Year' }],
-    projects: (goal.focusAreas || []).slice(0, 2).map((area) => ({
-      name: `${area} Portfolio Project`,
-      description: `Hands-on project demonstrating ${area.toLowerCase()} skills aligned with ${targetRole} career goals.`,
-      technologies: [area],
-    })),
+    education: profile.education?.length ? profile.education : [],
+    projects: [],
     certifications: [],
     targetRole,
   }
@@ -68,12 +66,11 @@ Candidate Profile:
 Language: ${lang === 'bn' ? 'Write all text content in Bangla (বাংলা), but keep JSON keys in English.' : 'Write all text content in English.'}
 
 Rules:
-- Tailor the headline, summary, skills, projects, and experience suggestions specifically to the career goal.
-- For ${goal.skillLevel || 'Beginner'} level, suggest realistic entry-level or internship-style experience and projects — do NOT invent senior job titles.
+- Tailor the headline, summary, and skills specifically to the career goal using only supplied facts.
+- Never invent employment, internships, projects, certifications, qualifications, metrics, or achievements.
+- Return empty experience, projects, and certifications arrays because none were supplied in this request.
 - Include 4-8 relevant skills mixing profile skills and goal focus areas.
-- Include 1-3 suggested projects aligned with the goal (even if hypothetical/portfolio-style).
-- Include 0-2 experience entries only if plausible for the skill level (internships, freelance, academic projects framed as experience).
-- Use provided education when available; otherwise suggest a placeholder entry.
+- Use provided education when available; otherwise return an empty education array.
 - Keep summary to 2-3 sentences.
 
 Respond with ONLY a valid JSON object (no markdown fences):
@@ -82,6 +79,10 @@ Respond with ONLY a valid JSON object (no markdown fences):
   "headline": string,
   "summary": string,
   "email": string,
+  "phone": string,
+  "location": string,
+  "linkedin": string,
+  "portfolio": string,
   "skills": string[],
   "experience": [{ "role": string, "organization": string, "period": string, "highlights": string[] }],
   "education": [{ "degree": string, "institution": string, "year": string }],
@@ -108,6 +109,10 @@ Respond with ONLY a valid JSON object (no markdown fences):
         headline: parsed.headline || fallback.headline,
         summary: parsed.summary || fallback.summary,
         email: parsed.email || profile.email || fallback.email,
+        phone: parsed.phone || profile.phone || fallback.phone,
+        location: parsed.location || profile.location || fallback.location,
+        linkedin: parsed.linkedin || profile.linkedin || fallback.linkedin,
+        portfolio: parsed.portfolio || profile.portfolio || fallback.portfolio,
         skills: Array.isArray(parsed.skills) && parsed.skills.length ? parsed.skills : fallback.skills,
         experience: Array.isArray(parsed.experience) ? parsed.experience : [],
         education: Array.isArray(parsed.education) && parsed.education.length ? parsed.education : fallback.education,

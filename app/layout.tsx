@@ -1,21 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppProviders from "./components/AppProviders";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Career Leader - Find Your Ideal Career",
-  description: "Get personalized career recommendations based on your personality and interests using our 16-type assessment.",
+  title: {
+    default: "Career Leader | Discover, plan, and act on your career",
+    template: "%s | Career Leader",
+  },
+  description: "Discover fitting career paths, choose a goal, follow a practical roadmap, and connect with mentors in one guided workspace.",
 };
 
 export const viewport = {
@@ -31,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
