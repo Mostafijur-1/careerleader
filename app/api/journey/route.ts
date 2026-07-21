@@ -45,6 +45,14 @@ function cleanCareer(value: unknown): JourneyCareer | null {
   }
 }
 
+function cleanCareers(value: unknown, limit = 5): JourneyCareer[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map(cleanCareer)
+    .filter((career): career is JourneyCareer => career !== null)
+    .slice(0, limit)
+}
+
 function cleanCv(value: unknown): GeneratedCv | null {
   if (!value || typeof value !== "object") return null
   const cv = value as GeneratedCv
@@ -90,6 +98,15 @@ export async function PATCH(req: Request) {
   } else if (action === "save-careers") {
     setFields["journey.savedCareerIds"] = cleanStringList(body?.careerIds, 100)
     setFields["journey.lastAction"] = "career_saved"
+  } else if (action === "save-career-assessment") {
+    const recommendations = cleanCareers(body?.recommendations)
+    if (!recommendations.length) {
+      return NextResponse.json({ error: "Valid recommendations are required" }, { status: 400 })
+    }
+    setFields["journey.careerAssessmentRecommendations"] = recommendations
+    setFields["journey.careerAssessmentSector"] = String(body?.sector || "").trim().slice(0, 40)
+    setFields["journey.careerAssessmentCompletedAt"] = now
+    setFields["journey.lastAction"] = "career_assessment_completed"
   } else if (action === "roadmap-progress") {
     const completedTasks = cleanStringList(body?.completedTasks, 500)
     const progress = Number(body?.progress)

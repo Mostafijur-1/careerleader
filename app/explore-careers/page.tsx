@@ -17,6 +17,7 @@ interface Recommendation {
 }
 
 const ASSESSMENT_RECOMMENDATIONS_KEY = "assessment_recommended_career_ids"
+const CAREER_ASSESSMENT_RECOMMENDATIONS_KEY = "career_assessment_recommendations"
 const recommendationsById = new Map(
   (careerCatalog as Recommendation[]).map(career => [career.id, career])
 )
@@ -25,6 +26,28 @@ function recommendationsFromIds(ids: string[]): Recommendation[] {
   return ids
     .map(id => recommendationsById.get(id))
     .filter((career): career is Recommendation => Boolean(career))
+}
+
+function cleanRecommendations(value: unknown): Recommendation[] {
+  if (!Array.isArray(value)) return []
+  const cleaned: Recommendation[] = []
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue
+    const raw = item as Record<string, unknown>
+    const id = typeof raw.id === "string" ? raw.id.trim() : ""
+    const title = typeof raw.title === "string" ? raw.title.trim() : ""
+    if (!id || !title) continue
+    cleaned.push({
+      id,
+      title,
+      description: typeof raw.description === "string" ? raw.description : "",
+      skills: Array.isArray(raw.skills)
+        ? raw.skills.filter((skill): skill is string => typeof skill === "string")
+        : [],
+    })
+    if (cleaned.length >= 5) break
+  }
+  return cleaned
 }
 
 type QuestionOption = {
@@ -307,6 +330,7 @@ export default function ExploreCareersPage() {
   const [filterActive, setFilterActive] = useState(false)
   const [localMbti, setLocalMbti] = useState<string>("")
   const [localRecommendationIds, setLocalRecommendationIds] = useState<string[]>([])
+  const [localCareerAssessmentRecommendations, setLocalCareerAssessmentRecommendations] = useState<Recommendation[]>([])
   
   // Detailed Career screen states
   const [detailTab, setDetailTab] = useState<'overview' | 'skills' | 'day_in_the_life' | 'roadmap' | 'resources' | 'similar_careers'>('overview')
@@ -389,7 +413,30 @@ export default function ExploreCareersPage() {
       })
       const data = await res.json()
       if (res.ok && data?.recommendations) {
-        setRecommendations(data.recommendations)
+        const nextRecommendations = cleanRecommendations(data.recommendations)
+        setRecommendations(nextRecommendations)
+
+        if (user) {
+          const journeyRes = await fetch("/api/journey", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "save-career-assessment",
+              sector: confirmedSector,
+              recommendations: nextRecommendations,
+            }),
+          })
+          const journeyData = await journeyRes.json()
+          if (journeyRes.ok) {
+            setUser({ ...user, journey: journeyData.journey })
+          }
+        } else {
+          localStorage.setItem(
+            CAREER_ASSESSMENT_RECOMMENDATIONS_KEY,
+            JSON.stringify(nextRecommendations)
+          )
+          setLocalCareerAssessmentRecommendations(nextRecommendations)
+        }
         
         // Reset assessment states
         setIsAssessing(false)
@@ -429,6 +476,18 @@ export default function ExploreCareersPage() {
           setLocalRecommendationIds([])
         }
       }
+      const storedCareerAssessmentRecommendations = localStorage.getItem(
+        CAREER_ASSESSMENT_RECOMMENDATIONS_KEY
+      )
+      if (storedCareerAssessmentRecommendations) {
+        try {
+          setLocalCareerAssessmentRecommendations(
+            cleanRecommendations(JSON.parse(storedCareerAssessmentRecommendations))
+          )
+        } catch {
+          setLocalCareerAssessmentRecommendations([])
+        }
+      }
     }
   }, [])
 
@@ -452,10 +511,23 @@ export default function ExploreCareersPage() {
   const assessmentRecommendationKey = (
     user ? (user.journey?.recommendedCareerIds || []) : localRecommendationIds
   ).join("|")
+  const careerAssessmentRecommendationKey = JSON.stringify(
+    user
+      ? (user.journey?.careerAssessmentRecommendations || [])
+      : localCareerAssessmentRecommendations
+  )
 
   // Load matches dynamically based on profile
   useEffect(() => {
     async function loadMatches() {
+      const careerAssessmentMatches = cleanRecommendations(
+        JSON.parse(careerAssessmentRecommendationKey)
+      )
+      if (careerAssessmentMatches.length > 0) {
+        setRecommendations(careerAssessmentMatches)
+        return
+      }
+
       const assessmentIds = assessmentRecommendationKey
         ? assessmentRecommendationKey.split("|")
         : []
@@ -481,10 +553,10 @@ export default function ExploreCareersPage() {
         }
       }
     }
-    if (isMounted && (activeMbti || assessmentRecommendationKey)) {
+    if (isMounted && (activeMbti || assessmentRecommendationKey || careerAssessmentRecommendationKey !== "[]")) {
       loadMatches()
     }
-  }, [isMounted, activeMbti, assessmentRecommendationKey])
+  }, [isMounted, activeMbti, assessmentRecommendationKey, careerAssessmentRecommendationKey])
 
   const currentCareerDetails = useMemo(() => {
     if (!selectedCareer) return null;

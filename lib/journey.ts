@@ -2,6 +2,7 @@ import type { GeneratedCv } from "./cvTypes"
 
 export type JourneyAction =
   | "assessment_completed"
+  | "career_assessment_completed"
   | "career_selected"
   | "career_saved"
   | "goal_set"
@@ -18,6 +19,9 @@ export interface JourneyCareer {
 export interface JourneyState {
   assessmentCompletedAt?: string
   recommendedCareerIds?: string[]
+  careerAssessmentCompletedAt?: string
+  careerAssessmentSector?: string
+  careerAssessmentRecommendations?: JourneyCareer[]
   selectedCareer?: JourneyCareer
   savedCareerIds?: string[]
   goalSetAt?: string
