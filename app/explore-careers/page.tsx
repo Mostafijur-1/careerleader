@@ -359,7 +359,8 @@ export default function ExploreCareersPage() {
       const option = q.options.find(o => o.value === selectedVal)
       return {
         question: q.questionText.en,
-        answer: option ? option.text.en : selectedVal
+        answer: option ? option.text.en : selectedVal,
+        value: selectedVal,
       }
     })
 
@@ -369,7 +370,8 @@ export default function ExploreCareersPage() {
       const option = q.options.find(o => o.value === selectedVal)
       return {
         question: q.questionText.en,
-        answer: option ? option.text.en : selectedVal
+        answer: option ? option.text.en : selectedVal,
+        value: selectedVal,
       }
     })
 

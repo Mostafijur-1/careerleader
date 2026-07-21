@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { recommendByPersonality } from '../../../lib/recommendation'
 import { getAiRecommendations, getSectorRecommendations } from '../../../lib/aiRecommendation'
+import { recommendFromCareerAssessment } from '../../../lib/careerAssessmentRecommendations'
 
 export async function POST(req: Request) {
   const { personality, choice, assessment } = await req.json().catch(() => ({}))
@@ -17,6 +18,9 @@ export async function POST(req: Request) {
     } catch (err) {
       console.error("Gemini AI sector recommendation failed:", err)
     }
+    return NextResponse.json({
+      recommendations: recommendFromCareerAssessment(assessment),
+    })
   } else if (studentChoice) {
     try {
       const aiRecs = await getAiRecommendations(mbti, [studentChoice], 5)
@@ -32,4 +36,3 @@ export async function POST(req: Request) {
   const recs = recommendByPersonality(mbti)
   return NextResponse.json({ recommendations: recs })
 }
-

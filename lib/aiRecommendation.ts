@@ -124,8 +124,8 @@ Suggest up to ${limit} career recommendations for MBTI type "${personality}" and
       const parsed = JSON.parse(jsonStr) as { recommendations?: unknown[] }
       const items = Array.isArray(parsed.recommendations) ? parsed.recommendations : []
       return items.map(toRecommendation).filter((x): x is Recommendation => x !== null).slice(0, limit)
-    } catch (err: any) {
-      console.warn(`${keyLabel} failed:`, err?.message || err)
+    } catch (err: unknown) {
+      console.warn(`${keyLabel} failed:`, err instanceof Error ? err.message : err)
       lastErr = err
       // Continue to next key
     }
@@ -136,8 +136,8 @@ Suggest up to ${limit} career recommendations for MBTI type "${personality}" and
 
 export interface SectorAssessmentPayload {
   sector: string
-  generalAnswers: Array<{ question: string; answer: string }>
-  sectorAnswers: Array<{ question: string; answer: string }>
+  generalAnswers: Array<{ question: string; answer: string; value?: string }>
+  sectorAnswers: Array<{ question: string; answer: string; value?: string }>
 }
 
 export async function getSectorRecommendations(
@@ -214,8 +214,8 @@ Provide practical, highly specific career recommendations matching their profile
       const parsed = JSON.parse(jsonStr) as { recommendations?: unknown[] }
       const items = Array.isArray(parsed.recommendations) ? parsed.recommendations : []
       return items.map(toRecommendation).filter((x): x is Recommendation => x !== null).slice(0, limit)
-    } catch (err: any) {
-      console.warn(`${keyLabel} failed:`, err?.message || err)
+    } catch (err: unknown) {
+      console.warn(`${keyLabel} failed:`, err instanceof Error ? err.message : err)
       lastErr = err
       // Continue to next key
     }
