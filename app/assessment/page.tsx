@@ -307,6 +307,17 @@ export default function AssessmentPage() {
         localStorage.setItem("guestMbti", scoredMbti)
       }
 
+      const recommendationIds = Array.isArray(data.recommendations)
+        ? data.recommendations
+            .map((recommendation: Recommendation) => recommendation?.id)
+            .filter((id: unknown): id is string => typeof id === "string" && id.length > 0)
+        : []
+      if (recommendationIds.length > 0 && typeof window !== "undefined") {
+        // Keep the assessment's exact ranking available during the redirect. For
+        // signed-in users the server also persists this list in their journey.
+        localStorage.setItem("assessment_recommended_career_ids", JSON.stringify(recommendationIds))
+      }
+
       if (user) await refreshUser()
 
       router.push("/explore-careers")

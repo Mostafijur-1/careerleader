@@ -7,12 +7,24 @@ import { useUser } from "../contexts/UserContext"
 import { useLanguage } from "../contexts/LanguageContext"
 import DashboardLayout from "../components/DashboardLayout"
 import { careerDetails } from "./careerDetailsData"
+import careerCatalog from "../../data/careers.json"
 
 interface Recommendation {
   id: string
   title: string
   description: string
   skills?: string[]
+}
+
+const ASSESSMENT_RECOMMENDATIONS_KEY = "assessment_recommended_career_ids"
+const recommendationsById = new Map(
+  (careerCatalog as Recommendation[]).map(career => [career.id, career])
+)
+
+function recommendationsFromIds(ids: string[]): Recommendation[] {
+  return ids
+    .map(id => recommendationsById.get(id))
+    .filter((career): career is Recommendation => Boolean(career))
 }
 
 type QuestionOption = {
@@ -294,6 +306,7 @@ export default function ExploreCareersPage() {
   const [selectedCareer, setSelectedCareer] = useState<Recommendation | null>(null)
   const [filterActive, setFilterActive] = useState(false)
   const [localMbti, setLocalMbti] = useState<string>("")
+  const [localRecommendationIds, setLocalRecommendationIds] = useState<string[]>([])
   
   // Detailed Career screen states
   const [detailTab, setDetailTab] = useState<'overview' | 'skills' | 'day_in_the_life' | 'roadmap' | 'resources' | 'similar_careers'>('overview')
@@ -401,6 +414,19 @@ export default function ExploreCareersPage() {
     setIsMounted(true)
     if (typeof window !== "undefined") {
       setLocalMbti(localStorage.getItem("guestMbti") || "")
+      const storedRecommendationIds = localStorage.getItem(ASSESSMENT_RECOMMENDATIONS_KEY)
+      if (storedRecommendationIds) {
+        try {
+          const parsed = JSON.parse(storedRecommendationIds)
+          setLocalRecommendationIds(
+            Array.isArray(parsed)
+              ? parsed.filter((id): id is string => typeof id === "string")
+              : []
+          )
+        } catch {
+          setLocalRecommendationIds([])
+        }
+      }
     }
   }, [])
 
@@ -420,10 +446,23 @@ export default function ExploreCareersPage() {
     }
   }, [user])
 
+  const activeMbti = user?.mbti || localMbti
+  const assessmentRecommendationKey = (
+    user ? (user.journey?.recommendedCareerIds || []) : localRecommendationIds
+  ).join("|")
+
   // Load matches dynamically based on profile
   useEffect(() => {
     async function loadMatches() {
-      const activeMbti = user?.mbti || localMbti
+      const assessmentIds = assessmentRecommendationKey
+        ? assessmentRecommendationKey.split("|")
+        : []
+      const assessmentMatches = recommendationsFromIds(assessmentIds)
+      if (assessmentMatches.length > 0) {
+        setRecommendations(assessmentMatches)
+        return
+      }
+
       if (activeMbti) {
         try {
           const res = await fetch("/api/recommend", {
@@ -440,11 +479,10 @@ export default function ExploreCareersPage() {
         }
       }
     }
-    const activeMbti = user?.mbti || localMbti
-    if (isMounted && activeMbti) {
+    if (isMounted && (activeMbti || assessmentRecommendationKey)) {
       loadMatches()
     }
-  }, [isMounted, user?.mbti, localMbti])
+  }, [isMounted, activeMbti, assessmentRecommendationKey])
 
   const currentCareerDetails = useMemo(() => {
     if (!selectedCareer) return null;
