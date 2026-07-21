@@ -15,7 +15,275 @@ interface Recommendation {
   skills?: string[]
 }
 
+type QuestionOption = {
+  text: { en: string; bn: string }
+  value: string
+  sector?: 'higher_studies' | 'job' | 'entrepreneurship'
+}
+
+type Question = {
+  id: string
+  questionText: { en: string; bn: string }
+  options: QuestionOption[]
+}
+
+const GENERAL_QUESTIONS: Question[] = [
+  {
+    id: "g1",
+    questionText: {
+      en: "What type of daily environment sounds most appealing to you?",
+      bn: "কোন ধরণের দৈনন্দিন কাজের পরিবেশ আপনার কাছে সবচেয়ে বেশি আকর্ষণীয় মনে হয়?"
+    },
+    options: [
+      {
+        text: {
+          en: "A university campus, laboratory, or library, diving deep into research.",
+          bn: "একটি বিশ্ববিদ্যালয় ক্যাম্পাস, গবেষণাগার বা লাইব্রেরি, যেখানে গভীর গবেষণা করা যায়।"
+        },
+        value: "higher_studies",
+        sector: "higher_studies"
+      },
+      {
+        text: {
+          en: "A structured company office or collaborative team environment working on real-world projects.",
+          bn: "একটি সুসংগঠিত প্রাতিষ্ঠানিক অফিস বা সহযোগিতামূলক দলগত পরিবেশ যেখানে বাস্তব প্রজেক্টে কাজ করা যায়।"
+        },
+        value: "job",
+        sector: "job"
+      },
+      {
+        text: {
+          en: "An independent space, leading my own projects, building a team, or freelancing.",
+          bn: "একটি স্বাধীন পরিবেশ, যেখানে নিজের প্রজেক্ট পরিচালনা, টিম তৈরি বা ফ্রিল্যান্সিং করা যায়।"
+        },
+        value: "entrepreneurship",
+        sector: "entrepreneurship"
+      }
+    ]
+  },
+  {
+    id: "g2",
+    questionText: {
+      en: "What is your primary career motivation?",
+      bn: "আপনার ক্যারিয়ারের মূল প্রেরণা কোনটি?"
+    },
+    options: [
+      {
+        text: {
+          en: "To master a specific subject, conduct original research, and publish papers or teach.",
+          bn: "একটি নির্দিষ্ট বিষয়ে দক্ষতা অর্জন করা, মৌলিক গবেষণা পরিচালনা করা এবং প্রবন্ধ প্রকাশ বা শিক্ষকতা করা।"
+        },
+        value: "higher_studies",
+        sector: "higher_studies"
+      },
+      {
+        text: {
+          en: "To gain a stable income, develop corporate skills, and climb a structured ladder.",
+          bn: "একটি স্থিতিশীল আয় অর্জন করা, প্রাতিষ্ঠানিক দক্ষতা বৃদ্ধি করা এবং নির্দিষ্ট ধাপ অতিক্রম করে এগিয়ে যাওয়া।"
+        },
+        value: "job",
+        sector: "job"
+      },
+      {
+        text: {
+          en: "To build a business from scratch, solve a market need, and have full ownership.",
+          bn: "একেবারে শুরু থেকে একটি ব্যবসা গড়ে তোলা, বাজারের চাহিদা পূরণ করা এবং সম্পূর্ণ মালিকানা নিজের কাছে রাখা।"
+        },
+        value: "entrepreneurship",
+        sector: "entrepreneurship"
+      }
+    ]
+  },
+  {
+    id: "g3",
+    questionText: {
+      en: "How do you prefer to handle professional risk and reward?",
+      bn: "আপনি পেশাগত ঝুঁকি ও সাফল্যকে কীভাবে মূল্যায়ন করেন?"
+    },
+    options: [
+      {
+        text: {
+          en: "Willing to invest years in education/low-paying stipends for deep expertise.",
+          bn: "গভীর জ্ঞান অর্জনের জন্য দীর্ঘ সময় পড়াশোনা বা কম বেতনের স্টাইপেন্ডে কাটানোর মানসিকতা রয়েছে।"
+        },
+        value: "higher_studies",
+        sector: "higher_studies"
+      },
+      {
+        text: {
+          en: "Prefer a predictable, steady salary with standard benefits and set working hours.",
+          bn: "সুনির্দিষ্ট কাজের সময় এবং নিয়মিত সুযোগ-সুবিধাসহ একটি স্থিতিশীল ও সুনিশ্চিত বেতন পছন্দ করি।"
+        },
+        value: "job",
+        sector: "job"
+      },
+      {
+        text: {
+          en: "Willing to take high financial risk for high reward and business autonomy.",
+          bn: "ব্যবসায়িক স্বাধীনতা এবং বড় সফলতার জন্য উচ্চ অর্থনৈতিক ঝুঁকি নিতে রাজি।"
+        },
+        value: "entrepreneurship",
+        sector: "entrepreneurship"
+      }
+    ]
+  }
+]
+
+const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Question[]> = {
+  higher_studies: [
+    {
+      id: "h1",
+      questionText: {
+        en: "What level of education are you aiming to achieve?",
+        bn: "আপনি শিক্ষার কোন স্তরে পৌঁছাতে চান?"
+      },
+      options: [
+        { text: { en: "Master's Degree (Specialized knowledge)", bn: "মাস্টার্স ডিগ্রি (বিশেষায়িত জ্ঞান)" }, value: "Master's Degree" },
+        { text: { en: "PhD / Doctorate (Research & academia)", bn: "পিএইচডি / ডক্টরেট (গবেষণা ও শিক্ষাবিদ্যা)" }, value: "PhD / Doctorate" },
+        { text: { en: "Professional Certification / Diploma", bn: "পেশাদার সার্টিফিকেট / ডিপ্লোমা" }, value: "Professional Certification / Diploma" }
+      ]
+    },
+    {
+      id: "h2",
+      questionText: {
+        en: "What is your preferred area of research or study?",
+        bn: "আপনার গবেষণা বা পড়াশোনার পছন্দের ক্ষেত্র কোনটি?"
+      },
+      options: [
+        { text: { en: "STEM (Science, Tech, Engineering, Math)", bn: "স্টেম (বিজ্ঞান, প্রযুক্তি, প্রকৌশল, গণিত)" }, value: "STEM" },
+        { text: { en: "Social Sciences & Business Management", bn: "সামাজিক বিজ্ঞান ও ব্যবসায়িক ব্যবস্থাপনা" }, value: "Social Sciences & Business Management" },
+        { text: { en: "Arts, Literature & Humanities", bn: "কলা, সাহিত্য ও মানবিক শাখা" }, value: "Arts & Humanities" }
+      ]
+    },
+    {
+      id: "h3",
+      questionText: {
+        en: "Where would you prefer to pursue your higher studies?",
+        bn: "আপনি কোথায় উচ্চশিক্ষা গ্রহণ করতে চান?"
+      },
+      options: [
+        { text: { en: "In my home country (established universities)", bn: "নিজের দেশে (প্রতিষ্ঠিত বিশ্ববিদ্যালয়ে)" }, value: "Home Country" },
+        { text: { en: "Abroad (North America, Europe, Asia-Pacific for global exposure)", bn: "বিদেশে (উত্তর আমেরিকা, ইউরোপ বা এশিয়া-প্যাসিফিক অঞ্চল)" }, value: "Abroad" },
+        { text: { en: "Online / Hybrid programs while working", bn: "কাজের পাশাপাশি অনলাইন / হাইব্রিড প্রোগ্রাম" }, value: "Online/Hybrid" }
+      ]
+    },
+    {
+      id: "h4",
+      questionText: {
+        en: "What is your ultimate goal after studying?",
+        bn: "পড়াশোনা শেষ করার পর আপনার মূল লক্ষ্য কী?"
+      },
+      options: [
+        { text: { en: "Become a university professor or academic researcher", bn: "বিশ্ববিদ্যালয়ের অধ্যাপক বা একাডেমিক গবেষক হওয়া" }, value: "Professor/Researcher" },
+        { text: { en: "Enter R&D departments in corporate industries", bn: "কর্পোরেট শিল্পে গবেষণা ও উন্নয়ন (R&D) বিভাগে যোগ দেওয়া" }, value: "Corporate R&D" },
+        { text: { en: "Advise governments, NGOs, or public institutions", bn: "সরকারি প্রতিষ্ঠান, এনজিও বা জনকল্যাণ সংস্থায় পরামর্শদাতা হওয়া" }, value: "Policy Advisor/Consultant" }
+      ]
+    }
+  ],
+  job: [
+    {
+      id: "j1",
+      questionText: {
+        en: "What type of organization would you prefer to work for?",
+        bn: "আপনি কোন ধরনের প্রতিষ্ঠানে কাজ করতে চান?"
+      },
+      options: [
+        { text: { en: "A large multinational corporation (stability, corporate structure)", bn: "একটি বড় বহুজাতিক কর্পোরেশন (স্থিতিশীলতা ও সুনির্দিষ্ট কাঠামো)" }, value: "Multinational Corporation" },
+        { text: { en: "A fast-growing startup / medium company (rapid learning, flexibility)", bn: "একটি দ্রুত বর্ধনশীল স্টার্টআপ / মাঝারি মানের প্রতিষ্ঠান (দ্রুত শেখা ও নমনীয়তা)" }, value: "Startup/Medium Company" },
+        { text: { en: "Government / Public Sector (high job security, public service)", bn: "সরকারি / পাবলিক সেক্টর (উচ্চ নিরাপত্তা ও জনসেবা)" }, value: "Government/Public Sector" }
+      ]
+    },
+    {
+      id: "j2",
+      questionText: {
+        en: "Which category of job roles interests you the most?",
+        bn: "কোন ধরনের কাজের ক্ষেত্রে আপনার আগ্রহ সবচেয়ে বেশি?"
+      },
+      options: [
+        { text: { en: "Technical & Analytical (Software, engineering, analytics)", bn: "প্রযুক্তিগত ও বিশ্লেষণধর্মী (সফটওয়্যার, প্রকৌশল, অ্যানালিটিক্স)" }, value: "Technical & Analytical" },
+        { text: { en: "Creative & Design (UI/UX, copywriting, marketing, design)", bn: "সৃজনশীল ও ডিজাইন সংক্রান্ত (ইউআই/ইউএক্স, কপিরাইটিং, মার্কেটিং, ডিজাইন)" }, value: "Creative & Design" },
+        { text: { en: "Management & Operations (Product management, project lead, strategy)", bn: "ব্যবস্থাপনা ও পরিচালনা সংক্রান্ত (প্রোডাক্ট বা প্রজেক্ট ম্যানেজমেন্ট, স্ট্র্যাটেজি)" }, value: "Management & Operations" }
+      ]
+    },
+    {
+      id: "j3",
+      questionText: {
+        en: "What is your ideal work arrangement?",
+        bn: "আপনার পছন্দের কাজের ধরণ কোনটি?"
+      },
+      options: [
+        { text: { en: "Fully Remote (work from anywhere, high flexibility)", bn: "সম্পূর্ণ রিমোট (যেকোনো স্থান থেকে কাজ, উচ্চ নমনীয়তা)" }, value: "Fully Remote" },
+        { text: { en: "Hybrid (split time between home and office)", bn: "হাইব্রিড (বাসা এবং অফিস উভয় স্থান মিলিয়ে কাজ)" }, value: "Hybrid" },
+        { text: { en: "On-site (dedicated office space, direct collaboration)", bn: "অন-সাইট (সুনির্দিষ্ট অফিস এবং সরাসরি দলগত সহযোগিতা)" }, value: "On-site" }
+      ]
+    },
+    {
+      id: "j4",
+      questionText: {
+        en: "What work-life dynamic do you prefer?",
+        bn: "আপনি কাজের ক্ষেত্রে কেমন ব্যালেন্স চান?"
+      },
+      options: [
+        { text: { en: "Strict 9-to-5 boundaries with weekends free", bn: "সুনির্দিষ্ট ৯টা-৫টার সীমানা এবং ছুটির দিন সম্পূর্ণ ফ্রি রাখা" }, value: "Strict 9-to-5" },
+        { text: { en: "High intensity, high growth, and willing to work extra hours for promotion", bn: "উচ্চ প্রবৃদ্ধি এবং প্রমোশন বা বোনাসের জন্য অতিরিক্ত পরিশ্রম করতে রাজি" }, value: "High Growth / High Intensity" },
+        { text: { en: "Flexible/freelance hours with focus on completed tasks", bn: "কাজের সফলতার ওপর গুরুত্ব দিয়ে নিজস্ব ফ্লেক্সিবল সময় নির্ধারণ" }, value: "Flexible Hours" }
+      ]
+    }
+  ],
+  entrepreneurship: [
+    {
+      id: "e1",
+      questionText: {
+        en: "What type of business venture excites you most?",
+        bn: "কোন ধরনের ব্যবসা আপনাকে সবচেয়ে বেশি অনুপ্রাণিত করে?"
+      },
+      options: [
+        { text: { en: "Tech startup (SaaS, AI, apps) aiming for venture capital and scale", bn: "প্রযুক্তিগত স্টার্টআপ (SaaS, AI, অ্যাপস) যার লক্ষ্য বড় আকারের বিনিয়োগ ও বিস্তার" }, value: "Tech Startup" },
+        { text: { en: "Service-based agency/consultancy (design, agency, freelancing)", bn: "সেবামূলক এজেন্সি/কনসালটেন্সি (ডিজাইন, সফটওয়্যার এজেন্সি, ফ্রিল্যান্সিং)" }, value: "Service Agency" },
+        { text: { en: "E-commerce or physical products (selling goods online/offline)", bn: "ই-কমার্স বা ভৌত পণ্য (অনলাইন বা অফলাইনে পণ্য বিক্রি)" }, value: "E-commerce/Physical Products" }
+      ]
+    },
+    {
+      id: "e2",
+      questionText: {
+        en: "What is your primary strength as a founder?",
+        bn: "প্রতিষ্ঠাতা হিসেবে আপনার মূল শক্তি কোনটি?"
+      },
+      options: [
+        { text: { en: "Product development & Technical execution (the builder)", bn: "পণ্য উন্নয়ন ও কারিগরি বাস্তবায়ন (দ্য বিল্ডার)" }, value: "Product & Tech Builder" },
+        { text: { en: "Sales, Marketing, & Networking (the growth engine)", bn: "বিক্রয়, বিপণন এবং নেটওয়ার্কিং (দ্য গ্রোথ ইঞ্জিন)" }, value: "Sales & Marketing" },
+        { text: { en: "Operations, Finance, & Strategy (the manager)", bn: "পরিচালনা, অর্থসংস্থান এবং কৌশল নির্ধারণ (দ্য ম্যানেজার)" }, value: "Operations & Finance" }
+      ]
+    },
+    {
+      id: "e3",
+      questionText: {
+        en: "How do you plan to fund your business initially?",
+        bn: "শুরুতে আপনি কীভাবে অর্থায়নের ব্যবস্থা করবেন?"
+      },
+      options: [
+        { text: { en: "Bootstrapping (using my own savings and reinvesting revenue)", bn: "বুটস্ট্র্যাপিং (নিজের সঞ্চয় এবং অর্জিত রাজস্ব পুনরায় বিনিয়োগ করা)" }, value: "Bootstrapping" },
+        { text: { en: "Raising external funding (angel investors, VC, loans)", bn: "বাইরের বিনিয়োগ সংগ্রহ (অ্যাঞ্জেল ইনভেস্টর, ভিসি বা লোন)" }, value: "External Funding" },
+        { text: { en: "Crowdfunding or pre-selling products to customers", bn: "ক্রাউডফান্ডিং বা কাস্টমারদের কাছে অগ্রিম পণ্য বিক্রি করা" }, value: "Crowdfunding/Pre-sales" }
+      ]
+    },
+    {
+      id: "e4",
+      questionText: {
+        en: "What is your main reason for choosing entrepreneurship?",
+        bn: "উদ্যোক্তা হওয়ার পেছনে আপনার প্রধান কারণ কোনটি?"
+      },
+      options: [
+        { text: { en: "Complete creative control and intellectual independence", bn: "সম্পূর্ণ সৃজনশীল নিয়ন্ত্রণ এবং বুদ্ধিবৃত্তিক স্বাধীনতা" }, value: "Creative/Intellectual Control" },
+        { text: { en: "Unlimited financial potential and wealth creation", bn: "অসীম আর্থিক সম্ভাবনা এবং সম্পদ তৈরি" }, value: "Wealth Creation" },
+        { text: { en: "Flexibility of lifestyle and being my own boss", bn: "জীবনযাত্রার নমনীয়তা এবং নিজের বস নিজে হওয়া" }, value: "Lifestyle & Autonomy" }
+      ]
+    }
+  ]
+}
+
 export default function ExploreCareersPage() {
+
   const { user } = useUser()
   const { lang, t } = useLanguage()
   const router = useRouter()
@@ -37,15 +305,73 @@ export default function ExploreCareersPage() {
   const [customChoice, setCustomChoice] = useState("")
   const [aiLoading, setAiLoading] = useState(false)
 
-  async function handleGetAiRecommendations() {
+  // Assessment wizard states
+  const [isAssessing, setIsAssessing] = useState(false)
+  const [assessStep, setAssessStep] = useState(0) // 0 to 2: General, 3: Confirmation, 4 to 7: Sector Specific
+  const [generalSelected, setGeneralSelected] = useState<Record<number, string>>({})
+  const [confirmedSector, setConfirmedSector] = useState<'higher_studies' | 'job' | 'entrepreneurship' | null>(null)
+  const [sectorSelected, setSectorSelected] = useState<Record<number, string>>({})
+
+  const detectedSector = useMemo(() => {
+    const counts: Record<string, number> = { higher_studies: 0, job: 0, entrepreneurship: 0 }
+    Object.values(generalSelected).forEach(val => {
+      if (val in counts) {
+        counts[val]++
+      }
+    })
+    let maxSector: 'higher_studies' | 'job' | 'entrepreneurship' = 'job'
+    let maxVal = -1
+    for (const sec of ['higher_studies', 'job', 'entrepreneurship'] as const) {
+      if (counts[sec] > maxVal) {
+        maxVal = counts[sec]
+        maxSector = sec
+      }
+    }
+    return maxSector
+  }, [generalSelected])
+
+  useEffect(() => {
+    if (assessStep === 3 && !confirmedSector) {
+      setConfirmedSector(detectedSector)
+    }
+  }, [assessStep, detectedSector, confirmedSector])
+
+  async function handleSubmitAssessment() {
     const activeMbti = user?.mbti || localMbti
-    if (!activeMbti || !customChoice.trim()) return
+    if (!activeMbti || !confirmedSector) return
     setAiLoading(true)
+    
+    // Compile answers
+    const generalAnswersList = GENERAL_QUESTIONS.map((q, idx) => {
+      const selectedVal = generalSelected[idx]
+      const option = q.options.find(o => o.value === selectedVal)
+      return {
+        question: q.questionText.en,
+        answer: option ? option.text.en : selectedVal
+      }
+    })
+
+    const sectorQuestionsList = SECTOR_QUESTIONS[confirmedSector]
+    const sectorAnswersList = sectorQuestionsList.map((q, idx) => {
+      const selectedVal = sectorSelected[idx]
+      const option = q.options.find(o => o.value === selectedVal)
+      return {
+        question: q.questionText.en,
+        answer: option ? option.text.en : selectedVal
+      }
+    })
+
+    const assessmentPayload = {
+      sector: confirmedSector,
+      generalAnswers: generalAnswersList,
+      sectorAnswers: sectorAnswersList
+    }
+
     try {
       const res = await fetch("/api/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ personality: activeMbti, choice: customChoice.trim() })
+        body: JSON.stringify({ personality: activeMbti, assessment: assessmentPayload })
       })
       const data = await res.json()
       if (res.ok && data?.recommendations) {
@@ -56,13 +382,27 @@ export default function ExploreCareersPage() {
           fits[rec.id] = Math.max(75, 96 - idx * 3)
         })
         setCareerFitPercentage(fits)
+        
+        // Reset assessment states
+        setIsAssessing(false)
+        setAssessStep(0)
+        setGeneralSelected({})
+        setSectorSelected({})
+        setConfirmedSector(null)
+
+        // Scroll to recommendations list
+        setTimeout(() => {
+          const el = document.getElementById("recommendations-list")
+          if (el) el.scrollIntoView({ behavior: "smooth" })
+        }, 100)
       }
     } catch (err) {
-      console.error("Failed to load custom AI recommendations:", err)
+      console.error("Failed to load sector career recommendations:", err)
     } finally {
       setAiLoading(false)
     }
   }
+
 
   useEffect(() => {
     setIsMounted(true)
@@ -602,51 +942,288 @@ export default function ExploreCareersPage() {
             </div>
           </div>
 
-          {/* AI Custom Career Recommendations Input Box */}
-          <div className="bg-slate-900 text-white rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center gap-4 text-left relative overflow-hidden select-none">
+          {/* AI Custom Career Recommendations (Interactive Assessment Wizard) */}
+          <div className="bg-slate-900 text-white rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-xl relative overflow-hidden select-none">
             {/* background gradient flare */}
             <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
+            <div className="absolute -left-8 -bottom-8 w-44 h-44 bg-indigo-500/10 rounded-full blur-3xl"></div>
 
-            <div className="flex-grow space-y-1 z-10">
-              <span className="inline-block px-2.5 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-md text-[10px] font-bold uppercase tracking-wider mb-1">
-                ✨ AI Custom Recommendations
-              </span>
-              <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">
-                {lang === 'bn' ? "পছন্দ অনুযায়ী এআই ক্যারিয়ার খুঁজুন" : "Customize Recommendations with AI"}
-              </h3>
-              <p className="text-slate-400 text-xs leading-relaxed max-w-lg">
-                {lang === 'bn' 
-                  ? "আপনার নির্দিষ্ট পছন্দ বা শখ লিখুন (যেমন: গেমিং, ড্রইং, বা ডেটা এনালাইসিস) এবং এআই আপনার ব্যক্তিত্ব অনুসারে ক্যারিয়ারের পরামর্শ দেবে।" 
-                  : "Describe your specific hobbies, preferences, or goals, and Gemini AI will recommend tailored paths aligning with your MBTI profile."
-                }
-              </p>
-            </div>
+            {!isAssessing ? (
+              <div className="flex flex-col md:flex-row items-center gap-6 text-left relative z-10 w-full justify-between">
+                <div className="space-y-2 max-w-lg">
+                  <span className="inline-block px-2.5 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                    ✨ AI Interactive Career Assessor
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">
+                    {lang === 'bn' ? "পছন্দ অনুযায়ী এআই ক্যারিয়ার মূল্যায়ন" : "Interactive Sector-Based AI Assessment"}
+                  </h3>
+                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                    {lang === 'bn' 
+                      ? "পদ্ধতিগত প্রশ্নের মাধ্যমে উচ্চশিক্ষা, চাকরি, বা উদ্যোক্তা হওয়ার মধ্যকার আগ্রহ যাচাই করুন এবং আপনার জন্য উপযুক্ত ক্যারিয়ারের পরামর্শ নিন।" 
+                      : "Answer a few questions to find your fit among Higher Studies, Job, or Entrepreneurship, followed by a sector-specific deep dive for tailored recommendations."
+                    }
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAssessing(true)
+                    setAssessStep(0)
+                    setGeneralSelected({})
+                    setSectorSelected({})
+                    setConfirmedSector(null)
+                  }}
+                  className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-sm rounded-2xl shadow-lg transition transform hover:scale-105 active:scale-97 cursor-pointer shrink-0"
+                >
+                  {lang === 'bn' ? "মূল্যায়ন শুরু করুন" : "Begin Assessment"}
+                </button>
+              </div>
+            ) : aiLoading ? (
+              /* Loading Screen */
+              <div className="py-12 flex flex-col items-center justify-center space-y-4 text-center z-10 relative">
+                <div className="w-12 h-12 border-4 border-blue-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+                <div className="space-y-1">
+                  <h4 className="text-base font-bold text-white">
+                    {lang === 'bn' ? "ক্যারিয়ার সুপারিশ তৈরি হচ্ছে..." : "Generating Custom Careers..."}
+                  </h4>
+                  <p className="text-xs text-slate-400 max-w-xs">
+                    {lang === 'bn' 
+                      ? "জেমিআই এআই আপনার ব্যক্তিত্ব এবং উত্তরগুলো বিশ্লেষণ করে উপযুক্ত ক্যারিয়ারের পরামর্শ সাজাচ্ছে।" 
+                      : "Gemini AI is analyzing your responses against your MBTI profile to select matching roles."
+                    }
+                  </p>
+                </div>
+              </div>
+            ) : (
+              /* Assessment Steps */
+              <div className="space-y-6 relative z-10 text-left">
+                {/* Wizard Header Progress */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+                  <div>
+                    <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded uppercase tracking-wider">
+                      {assessStep < 3 
+                        ? (lang === 'bn' ? `ধাপ ১: সাধারণ আগ্রহ (${assessStep + 1}/৩)` : `Phase 1: Sector Fit (${assessStep + 1}/3)`)
+                        : assessStep === 3
+                        ? (lang === 'bn' ? "ধাপ ২: সেক্টর নিশ্চিতকরণ" : "Phase 2: Sector Confirmation")
+                        : (lang === 'bn' ? `ধাপ ৩: বিস্তারিত মূল্যায়ন (${assessStep - 3}/৪)` : `Phase 3: Sector Deep Dive (${assessStep - 3}/4)`)
+                      }
+                    </span>
+                    <h4 className="text-sm font-bold text-slate-300 mt-1">
+                      {assessStep === 3 
+                        ? (lang === 'bn' ? "আপনার উপযুক্ত কাজের ক্ষেত্র নির্ধারণ করুন" : "Review your primary interest sector") 
+                        : (lang === 'bn' ? "নিচের প্রশ্নটির উত্তর দিন:" : "Please select the option that best represents you:")
+                      }
+                    </h4>
+                  </div>
 
-            <div className="w-full md:w-auto flex flex-col sm:flex-row gap-2 shrink-0 z-10">
-              <input
-                type="text"
-                value={customChoice}
-                onChange={e => setCustomChoice(e.target.value)}
-                placeholder={lang === 'bn' ? "যেমন: গেম ডেভেলপমেন্ট, ডিজাইন..." : "e.g. Game development, writing..."}
-                className="w-full sm:w-72 bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-300"
-                style={{ color: "#f1f5f9", WebkitTextFillColor: "#f1f5f9" }}
-              />
-              <button
-                type="button"
-                onClick={handleGetAiRecommendations}
-                disabled={aiLoading || !customChoice.trim()}
-                className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-md transition active:scale-97 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shrink-0"
-              >
-                {aiLoading && (
-                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  {/* Progress bar container */}
+                  <div className="w-full sm:w-48 space-y-1.5 shrink-0">
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                      <span>{lang === 'bn' ? "অগ্রগতি" : "Progress"}</span>
+                      <span>{Math.round(((assessStep + (assessStep >= 3 ? 1 : 0)) / 8) * 100)}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-300"
+                        style={{ width: `${((assessStep + (assessStep >= 3 ? 1 : 0)) / 8) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Render Phase 1 Questions (General Sector Fit) */}
+                {assessStep < 3 && (
+                  <div className="space-y-4">
+                    <p className="text-base sm:text-lg font-bold text-white leading-snug">
+                      {lang === 'bn' ? GENERAL_QUESTIONS[assessStep].questionText.bn : GENERAL_QUESTIONS[assessStep].questionText.en}
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {GENERAL_QUESTIONS[assessStep].options.map((opt, oIdx) => {
+                        const isSelected = generalSelected[assessStep] === opt.value
+                        return (
+                          <div
+                            key={oIdx}
+                            onClick={() => {
+                              setGeneralSelected(prev => ({ ...prev, [assessStep]: opt.value }))
+                            }}
+                            className={`p-4 rounded-2xl border text-xs sm:text-sm font-medium leading-relaxed text-slate-300 cursor-pointer transition duration-200 select-none ${
+                              isSelected
+                                ? 'bg-blue-600/10 border-blue-500 text-white shadow-md shadow-blue-500/5'
+                                : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/50'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <span className={`w-4 h-4 rounded-full border shrink-0 flex items-center justify-center mt-0.5 text-[8px] font-bold ${
+                                isSelected ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-600'
+                              }`}>
+                                {isSelected && "✓"}
+                              </span>
+                              <span>{lang === 'bn' ? opt.text.bn : opt.text.en}</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
                 )}
-                <span>{lang === 'bn' ? "এআই পরামর্শ নিন" : "Ask AI"}</span>
-              </button>
-            </div>
+
+                {/* Render Phase 2: Confirmation / Selection */}
+                {assessStep === 3 && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl">
+                      <p className="text-xs sm:text-sm text-slate-300 font-medium">
+                        {lang === 'bn' 
+                          ? `আপনার প্রদত্ত উত্তরের ভিত্তিতে মনে হচ্ছে আপনি ` 
+                          : `Based on your choices, we detected high interest in `
+                        }
+                        <strong className="text-blue-400 font-extrabold text-sm sm:text-base capitalize">
+                          {confirmedSector === 'higher_studies' 
+                            ? (lang === 'bn' ? "উচ্চশিক্ষা" : "Higher Studies")
+                            : confirmedSector === 'job'
+                            ? (lang === 'bn' ? "চাকরি" : "Job")
+                            : (lang === 'bn' ? "উদ্যোক্তা" : "Entrepreneurship")
+                          }
+                        </strong>
+                        {lang === 'bn' ? ` লাইনে বেশি আগ্রহী। আপনি কি এটিতেই এগোতে চান, নাকি অন্যটি বেছে নেবেন?` : ` options. Please confirm or select another sector to evaluate:`}
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {(['higher_studies', 'job', 'entrepreneurship'] as const).map((sec, sIdx) => {
+                        const isSelected = confirmedSector === sec
+                        const icon = sec === 'higher_studies' ? '📚' : sec === 'job' ? '💼' : '🚀'
+                        const title = sec === 'higher_studies' 
+                          ? (lang === 'bn' ? "উচ্চশিক্ষা" : "Higher Studies")
+                          : sec === 'job'
+                          ? (lang === 'bn' ? "চাকরি / ক্যারিয়ার" : "Job / Employment")
+                          : (lang === 'bn' ? "উদ্যোক্তা / ব্যবসা" : "Entrepreneurship / Business")
+                        
+                        const desc = sec === 'higher_studies'
+                          ? (lang === 'bn' ? "স্নাতকোত্তর, পিএইচডি ও গবেষণা" : "Masters, PhD & Academic Research")
+                          : sec === 'job'
+                          ? (lang === 'bn' ? "প্রতিষ্ঠানে চাকরি ও কর্মসংস্থান" : "Corporate growth, office roles & steady work")
+                          : (lang === 'bn' ? "নতুন স্টার্টআপ ও নিজস্ব উদ্যোগ" : "Startup founding, freelancing & services")
+
+                        return (
+                          <div
+                            key={sIdx}
+                            onClick={() => setConfirmedSector(sec)}
+                            className={`p-4 rounded-2xl border text-left cursor-pointer transition duration-200 select-none ${
+                              isSelected
+                                ? 'bg-indigo-600/10 border-indigo-500 text-white shadow-md shadow-indigo-500/5'
+                                : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{icon}</span>
+                              <div className="min-w-0">
+                                <h5 className="font-extrabold text-sm text-slate-100">{title}</h5>
+                                <p className="text-[10px] text-slate-400 mt-0.5 truncate">{desc}</p>
+                              </div>
+                              <span className={`w-4 h-4 rounded-full border shrink-0 flex items-center justify-center ml-auto text-[8px] font-bold ${
+                                isSelected ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-slate-600'
+                              }`}>
+                                {isSelected && "✓"}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Render Phase 3: Sector Specific Questions */}
+                {assessStep >= 4 && assessStep <= 7 && confirmedSector && (
+                  <div className="space-y-4">
+                    <p className="text-base sm:text-lg font-bold text-white leading-snug">
+                      {lang === 'bn' 
+                        ? SECTOR_QUESTIONS[confirmedSector][assessStep - 4].questionText.bn 
+                        : SECTOR_QUESTIONS[confirmedSector][assessStep - 4].questionText.en
+                      }
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {SECTOR_QUESTIONS[confirmedSector][assessStep - 4].options.map((opt, oIdx) => {
+                        const isSelected = sectorSelected[assessStep - 4] === opt.value
+                        return (
+                          <div
+                            key={oIdx}
+                            onClick={() => {
+                              setSectorSelected(prev => ({ ...prev, [assessStep - 4]: opt.value }))
+                            }}
+                            className={`p-4 rounded-2xl border text-xs sm:text-sm font-medium leading-relaxed text-slate-300 cursor-pointer transition duration-200 select-none ${
+                              isSelected
+                                ? 'bg-blue-600/10 border-blue-500 text-white shadow-md shadow-blue-500/5'
+                                : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/50'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <span className={`w-4 h-4 rounded-full border shrink-0 flex items-center justify-center mt-0.5 text-[8px] font-bold ${
+                                isSelected ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-600'
+                              }`}>
+                                {isSelected && "✓"}
+                              </span>
+                              <span>{lang === 'bn' ? opt.text.bn : opt.text.en}</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Wizard Footer Navigation Controls */}
+                <div className="flex items-center justify-between border-t border-slate-800 pt-4">
+                  {/* Cancel/Back button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (assessStep === 0) {
+                        setIsAssessing(false)
+                      } else {
+                        setAssessStep(prev => prev - 1)
+                      }
+                    }}
+                    className="px-4 py-2 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white font-bold text-xs rounded-xl transition cursor-pointer"
+                  >
+                    {assessStep === 0 ? (lang === 'bn' ? "বাতিল করুন" : "Cancel") : (lang === 'bn' ? "পেছনে যান" : "Back")}
+                  </button>
+
+                  {/* Next / Submit button */}
+                  {assessStep < 7 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAssessStep(prev => prev + 1)
+                      }}
+                      disabled={
+                        (assessStep < 3 && !generalSelected[assessStep]) ||
+                        (assessStep === 3 && !confirmedSector) ||
+                        (assessStep >= 4 && !sectorSelected[assessStep - 4])
+                      }
+                      className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-md transition active:scale-97 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {lang === 'bn' ? "পরবর্তী প্রশ্ন" : "Next Question"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSubmitAssessment}
+                      disabled={!sectorSelected[3]}
+                      className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-md transition active:scale-97 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    >
+                      <span>{lang === 'bn' ? "সুপারিশ তৈরি করুন" : "Analyze & Generate"}</span>
+                      <span>✨</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
+
           {/* 1. TOP MATCH CARDS (Vertical cards grid) */}
-          <div className="space-y-4">
+          <div id="recommendations-list" className="space-y-4">
             <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl flex items-center gap-2 text-left">
               <span>🎯</span> {lang === 'bn' ? "আপনার জন্য সেরা ক্যারিয়ারসমূহ" : "Recommended Careers For You"}
             </h3>

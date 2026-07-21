@@ -133,3 +133,94 @@ Suggest up to ${limit} career recommendations for MBTI type "${personality}" and
 
   throw new Error(`All Gemini API keys failed. Last error: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`)
 }
+
+export interface SectorAssessmentPayload {
+  sector: string
+  generalAnswers: Array<{ question: string; answer: string }>
+  sectorAnswers: Array<{ question: string; answer: string }>
+}
+
+export async function getSectorRecommendations(
+  personality: string,
+  assessment: SectorAssessmentPayload,
+  limit = 5
+): Promise<Recommendation[]> {
+  const apiKeyRaw = process.env.GEMINI_API_KEY
+  if (!apiKeyRaw) {
+    throw new Error("GEMINI_API_KEY is not configured")
+  }
+
+  const apiKeys = apiKeyRaw.split(',').map(k => k.trim()).filter(Boolean)
+  if (apiKeys.length === 0) {
+    throw new Error("GEMINI_API_KEY is configured but has no valid keys")
+  }
+
+  const generalText = (assessment.generalAnswers || [])
+    .map(a => `- Question: "${a.question}"\n  Answer: "${a.answer}"`)
+    .join("\n")
+
+  const sectorText = (assessment.sectorAnswers || [])
+    .map(a => `- Question: "${a.question}"\n  Answer: "${a.answer}"`)
+    .join("\n")
+
+  const prompt = `You are a career guidance assistant. Return only valid JSON with this exact shape (no markdown, no extra keys at root):
+{"recommendations": [{"title": string, "description": string, "skills": string[]}]}
+
+Suggest up to ${limit} career recommendations for a student with MBTI personality type "${personality}" in the target sector "${assessment.sector.toUpperCase()}".
+
+Here are their answers regarding general career interests:
+${generalText}
+
+Here are their answers specific to their target sector:
+${sectorText}
+
+Provide practical, highly specific career recommendations matching their profile and answers. Limit each recommendation's description to 2 concise sentences.`
+
+  let lastErr: unknown
+  for (let idx = 0; idx < apiKeys.length; idx++) {
+    const apiKey = apiKeys[idx]
+    const keyLabel = apiKeys.length > 1 ? `Gemini Key ${idx + 1}` : 'Gemini'
+    try {
+      console.log(`Attempting sector-based career recommendations using: ${keyLabel}`)
+      const genAI = new GoogleGenerativeAI(apiKey)
+      const model = genAI.getGenerativeModel({
+        model: MODEL,
+        generationConfig: {
+          temperature: 0.7,
+          responseMimeType: "application/json",
+        },
+      })
+
+      const maxAttempts = 3
+      let result: Awaited<ReturnType<typeof model.generateContent>> | null = null
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          result = await model.generateContent(prompt)
+          break
+        } catch (err) {
+          lastErr = err
+          if (!isRateLimitedError(err) || attempt === maxAttempts) {
+            throw err
+          }
+          await sleep(retryDelayMsFromError(err))
+        }
+      }
+      if (!result) throw lastErr
+
+      const text = result.response.text()
+      if (!text) return []
+
+      const jsonStr = extractJsonObject(text)
+      const parsed = JSON.parse(jsonStr) as { recommendations?: unknown[] }
+      const items = Array.isArray(parsed.recommendations) ? parsed.recommendations : []
+      return items.map(toRecommendation).filter((x): x is Recommendation => x !== null).slice(0, limit)
+    } catch (err: any) {
+      console.warn(`${keyLabel} failed:`, err?.message || err)
+      lastErr = err
+      // Continue to next key
+    }
+  }
+
+  throw new Error(`All Gemini API keys failed. Last error: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`)
+}
+
