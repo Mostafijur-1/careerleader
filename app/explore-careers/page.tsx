@@ -657,28 +657,43 @@ export default function ExploreCareersPage() {
       description: currentCareerDetails.about,
       skills: currentCareerDetails.topSkills.flatMap(group => group.list).slice(0, 10),
     }
+    const target = new Date()
+    target.setFullYear(target.getFullYear() + 1)
+    const goalData = {
+      title: currentCareerDetails.title,
+      targetDate: target.toISOString().split("T")[0],
+      skillLevel: "Beginner",
+      whyImportant: "",
+      focusAreas: career.skills.slice(0, 3),
+      updatedAt: new Date().toISOString(),
+    }
+
     try {
       if (user) {
-        const res = await fetch("/api/journey", {
+        const journeyRes = await fetch("/api/journey", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "select-career", career }),
         })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || "Could not choose career")
-        setUser({ ...user, journey: data.journey })
+        const journeyData = await journeyRes.json()
+        if (!journeyRes.ok) throw new Error(journeyData.error || "Could not choose career")
+
+        const goalRes = await fetch("/api/goals", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ goal: goalData }),
+        })
+        const goalResponse = await goalRes.json()
+        if (!goalRes.ok) throw new Error(goalResponse.error || "Could not set career goal")
+
+        setUser({
+          ...user,
+          goal: goalResponse.goal || goalData,
+          journey: goalResponse.journey || journeyData.journey,
+          cvDraft: goalResponse.cvDraft,
+        })
       }
 
-      const target = new Date()
-      target.setFullYear(target.getFullYear() + 1)
-      const goalData = {
-        title: currentCareerDetails.title,
-        targetDate: target.toISOString().split("T")[0],
-        skillLevel: "Beginner",
-        whyImportant: "",
-        focusAreas: career.skills.slice(0, 3),
-        updatedAt: new Date().toISOString(),
-      }
       localStorage.setItem("career_goal", JSON.stringify(goalData))
       localStorage.removeItem("roadmap_completed_tasks")
       setGoalsSet([currentCareerDetails.id])
