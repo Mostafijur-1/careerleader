@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "../contexts/UserContext"
@@ -18,6 +18,7 @@ interface Recommendation {
 
 const ASSESSMENT_RECOMMENDATIONS_KEY = "assessment_recommended_career_ids"
 const CAREER_ASSESSMENT_RECOMMENDATIONS_KEY = "career_assessment_recommendations"
+const SECTOR_QUEST_DRAFT_KEY = "careerleader_sector_quest_draft_v1"
 const recommendationsById = new Map(
   (careerCatalog as Recommendation[]).map(career => [career.id, career])
 )
@@ -61,6 +62,109 @@ type Question = {
   questionText: { en: string; bn: string }
   options: QuestionOption[]
 }
+
+type SectorQuestPreferences = {
+  autoAdvance: boolean
+  motion: boolean
+  compact: boolean
+  largeText: boolean
+}
+
+type SectorQuestDraft = {
+  isAssessing?: boolean
+  assessStep?: number
+  generalSelected?: Record<number, string>
+  confirmedSector?: 'higher_studies' | 'job' | 'entrepreneurship' | null
+  sectorSelected?: Record<number, string>
+  preferences?: Partial<SectorQuestPreferences>
+}
+
+const DEFAULT_SECTOR_QUEST_PREFERENCES: SectorQuestPreferences = {
+  autoAdvance: true,
+  motion: true,
+  compact: false,
+  largeText: false,
+}
+
+const SECTOR_QUEST_PHASES = [
+  {
+    icon: "🧭",
+    en: { name: "Find your direction", hint: "Explore the kind of future that motivates you." },
+    bn: { name: "আপনার দিক খুঁজুন", hint: "কোন ধরনের ভবিষ্যৎ আপনাকে অনুপ্রাণিত করে তা জানুন।" },
+    total: 3,
+  },
+  {
+    icon: "🛤️",
+    en: { name: "Choose your lane", hint: "Confirm the broad path you want to explore." },
+    bn: { name: "আপনার পথ বেছে নিন", hint: "আপনি যে মূল পথটি অন্বেষণ করতে চান তা নিশ্চিত করুন।" },
+    total: 1,
+  },
+  {
+    icon: "🔎",
+    en: { name: "Shape your match", hint: "Add the details that make recommendations personal." },
+    bn: { name: "আপনার মিল গড়ে তুলুন", hint: "ব্যক্তিগত সুপারিশের জন্য প্রয়োজনীয় বিস্তারিত তথ্য দিন।" },
+    total: 4,
+  },
+] as const
+
+const SECTOR_QUEST_COPY = {
+  en: {
+    eyebrow: "Career Path Quest",
+    title: "Turn your interests into a clearer direction",
+    intro: "Complete three short missions to identify your best next lane and receive tailored career matches.",
+    honest: "Choose what fits your real priorities—not what sounds most impressive.",
+    start: "Start path quest",
+    resume: "Continue path quest",
+    settings: "Quest settings",
+    autoAdvance: "Auto-advance",
+    motion: "Motion effects",
+    compact: "Compact layout",
+    largeText: "Larger text",
+    progress: "Quest progress",
+    complete: "complete",
+    choiceHint: "Choose the option that feels closest to you.",
+    back: "Back",
+    cancel: "Exit quest",
+    next: "Next step",
+    analyze: "Build my matches",
+    analyzing: "Building your career matches...",
+    milestone: "Mission complete",
+    saved: "Progress saved on this device",
+    recommended: "Your answers point toward",
+    confirm: "Confirm this path or choose another one before the deep dive.",
+    questions: "7 guided questions",
+    time: "About 3 minutes",
+    missions: "3 short missions",
+  },
+  bn: {
+    eyebrow: "ক্যারিয়ার পথ অভিযান",
+    title: "আপনার আগ্রহকে স্পষ্ট ক্যারিয়ার পথে রূপ দিন",
+    intro: "তিনটি ছোট মিশন শেষ করে আপনার উপযুক্ত পরবর্তী পথ ও ব্যক্তিগত ক্যারিয়ার মিল খুঁজুন।",
+    honest: "যেটি সবচেয়ে আকর্ষণীয় শোনায় সেটি নয়—আপনার বাস্তব অগ্রাধিকারের সঙ্গে যেটি মেলে সেটি বেছে নিন।",
+    start: "পথের অভিযান শুরু করুন",
+    resume: "পথের অভিযান চালিয়ে যান",
+    settings: "অভিযান নিয়ন্ত্রণ",
+    autoAdvance: "স্বয়ংক্রিয়ভাবে এগিয়ে যান",
+    motion: "অ্যানিমেশন",
+    compact: "কমপ্যাক্ট লেআউট",
+    largeText: "বড় লেখা",
+    progress: "অভিযানের অগ্রগতি",
+    complete: "সম্পন্ন",
+    choiceHint: "আপনার সঙ্গে সবচেয়ে বেশি মেলে এমন বিকল্পটি বেছে নিন।",
+    back: "পেছনে",
+    cancel: "অভিযান থেকে বের হন",
+    next: "পরের ধাপ",
+    analyze: "আমার মিল তৈরি করুন",
+    analyzing: "আপনার ক্যারিয়ার মিল তৈরি হচ্ছে...",
+    milestone: "মিশন সম্পন্ন",
+    saved: "এই ডিভাইসে অগ্রগতি সংরক্ষিত",
+    recommended: "আপনার উত্তর যে পথ নির্দেশ করছে",
+    confirm: "বিস্তারিত অংশে যাওয়ার আগে এই পথ নিশ্চিত করুন অথবা অন্যটি বেছে নিন।",
+    questions: "৭টি নির্দেশিত প্রশ্ন",
+    time: "প্রায় ৩ মিনিট",
+    missions: "৩টি ছোট মিশন",
+  },
+} as const
 
 const GENERAL_QUESTIONS: Question[] = [
   {
@@ -347,6 +451,27 @@ export default function ExploreCareersPage() {
   const [generalSelected, setGeneralSelected] = useState<Record<number, string>>({})
   const [confirmedSector, setConfirmedSector] = useState<'higher_studies' | 'job' | 'entrepreneurship' | null>(null)
   const [sectorSelected, setSectorSelected] = useState<Record<number, string>>({})
+  const [sectorQuestPreferences, setSectorQuestPreferences] = useState<SectorQuestPreferences>(
+    DEFAULT_SECTOR_QUEST_PREFERENCES
+  )
+  const [showSectorQuestSettings, setShowSectorQuestSettings] = useState(false)
+  const [sectorQuestMilestone, setSectorQuestMilestone] = useState<number | null>(null)
+  const sectorAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const sectorQuestAnswerCount =
+    Object.keys(generalSelected).length +
+    Object.keys(sectorSelected).length +
+    (confirmedSector ? 1 : 0)
+  const sectorQuestProgress = Math.round((sectorQuestAnswerCount / 8) * 100)
+  const hasSectorQuestDraft =
+    Object.keys(generalSelected).length > 0 ||
+    Object.keys(sectorSelected).length > 0 ||
+    assessStep > 0
+  const sectorQuestPhase = assessStep < 3 ? 0 : assessStep === 3 ? 1 : 2
+  const sectorQuestCopy = SECTOR_QUEST_COPY[lang]
+  const sectorQuestTransition = sectorQuestPreferences.motion
+    ? "transition-all duration-300 ease-out"
+    : "transition-none"
 
   const detectedSector = useMemo(() => {
     const counts: Record<string, number> = { higher_studies: 0, job: 0, entrepreneurship: 0 }
@@ -371,6 +496,84 @@ export default function ExploreCareersPage() {
       setConfirmedSector(detectedSector)
     }
   }, [assessStep, detectedSector, confirmedSector])
+
+  useEffect(() => {
+    return () => {
+      if (sectorAdvanceTimer.current) clearTimeout(sectorAdvanceTimer.current)
+    }
+  }, [])
+
+  function moveSectorQuest(step: number) {
+    if (sectorAdvanceTimer.current) clearTimeout(sectorAdvanceTimer.current)
+    setSectorQuestMilestone(null)
+    setAssessStep(Math.max(0, Math.min(7, step)))
+  }
+
+  function scheduleSectorQuestAdvance(nextStep: number, completedPhase?: number) {
+    if (!sectorQuestPreferences.autoAdvance) return
+    if (sectorAdvanceTimer.current) clearTimeout(sectorAdvanceTimer.current)
+    if (completedPhase !== undefined) setSectorQuestMilestone(completedPhase)
+    const delay = sectorQuestPreferences.motion
+      ? completedPhase !== undefined ? 900 : 360
+      : completedPhase !== undefined ? 450 : 120
+    sectorAdvanceTimer.current = setTimeout(() => {
+      setSectorQuestMilestone(null)
+      setAssessStep(nextStep)
+    }, delay)
+  }
+
+  function selectGeneralSectorAnswer(value: string) {
+    setGeneralSelected(previous => ({ ...previous, [assessStep]: value }))
+    scheduleSectorQuestAdvance(assessStep + 1, assessStep === 2 ? 0 : undefined)
+  }
+
+  function selectConfirmedSector(
+    sector: 'higher_studies' | 'job' | 'entrepreneurship'
+  ) {
+    setConfirmedSector(previous => {
+      if (previous && previous !== sector) setSectorSelected({})
+      return sector
+    })
+    scheduleSectorQuestAdvance(4, 1)
+  }
+
+  function selectSectorDetailAnswer(value: string) {
+    const sectorQuestionIndex = assessStep - 4
+    setSectorSelected(previous => ({ ...previous, [sectorQuestionIndex]: value }))
+    if (assessStep < 7) {
+      scheduleSectorQuestAdvance(assessStep + 1)
+    }
+  }
+
+  function updateSectorQuestPreference<K extends keyof SectorQuestPreferences>(
+    key: K,
+    value: SectorQuestPreferences[K]
+  ) {
+    setSectorQuestPreferences(previous => {
+      const next = { ...previous, [key]: value }
+      try {
+        const saved = localStorage.getItem(SECTOR_QUEST_DRAFT_KEY)
+        const draft = saved ? (JSON.parse(saved) as SectorQuestDraft) : {}
+        localStorage.setItem(
+          SECTOR_QUEST_DRAFT_KEY,
+          JSON.stringify({ ...draft, preferences: next })
+        )
+      } catch {
+        // Keep the in-session controls functional when storage is unavailable.
+      }
+      return next
+    })
+  }
+
+  function beginSectorQuest() {
+    if (!hasSectorQuestDraft) {
+      setAssessStep(0)
+      setGeneralSelected({})
+      setSectorSelected({})
+      setConfirmedSector(null)
+    }
+    setIsAssessing(true)
+  }
 
   async function handleSubmitAssessment() {
     const activeMbti = user?.mbti || localMbti
@@ -439,6 +642,7 @@ export default function ExploreCareersPage() {
         }
         
         // Reset assessment states
+        localStorage.removeItem(SECTOR_QUEST_DRAFT_KEY)
         setIsAssessing(false)
         setAssessStep(0)
         setGeneralSelected({})
@@ -490,6 +694,59 @@ export default function ExploreCareersPage() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SECTOR_QUEST_DRAFT_KEY)
+      if (!saved) return
+      const draft = JSON.parse(saved) as SectorQuestDraft
+      if (draft.generalSelected) setGeneralSelected(draft.generalSelected)
+      if (draft.sectorSelected) setSectorSelected(draft.sectorSelected)
+      if (
+        draft.confirmedSector === "higher_studies" ||
+        draft.confirmedSector === "job" ||
+        draft.confirmedSector === "entrepreneurship"
+      ) {
+        setConfirmedSector(draft.confirmedSector)
+      }
+      if (typeof draft.assessStep === "number") {
+        setAssessStep(Math.max(0, Math.min(7, draft.assessStep)))
+      }
+      if (draft.preferences) {
+        setSectorQuestPreferences(previous => ({ ...previous, ...draft.preferences }))
+      }
+      if (
+        draft.isAssessing ||
+        Object.keys(draft.generalSelected || {}).length > 0 ||
+        Object.keys(draft.sectorSelected || {}).length > 0
+      ) {
+        setIsAssessing(true)
+      }
+    } catch {
+      localStorage.removeItem(SECTOR_QUEST_DRAFT_KEY)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isAssessing && !hasSectorQuestDraft) return
+    const draft: SectorQuestDraft = {
+      isAssessing,
+      assessStep,
+      generalSelected,
+      confirmedSector,
+      sectorSelected,
+      preferences: sectorQuestPreferences,
+    }
+    localStorage.setItem(SECTOR_QUEST_DRAFT_KEY, JSON.stringify(draft))
+  }, [
+    assessStep,
+    confirmedSector,
+    generalSelected,
+    hasSectorQuestDraft,
+    isAssessing,
+    sectorQuestPreferences,
+    sectorSelected,
+  ])
 
   useEffect(() => {
     if (user) {
@@ -1132,48 +1389,123 @@ export default function ExploreCareersPage() {
           </div>
 
           {/* AI Custom Career Recommendations (Interactive Assessment Wizard) */}
-          <div className="bg-slate-900 text-white rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-xl relative overflow-hidden select-none">
+          <div className={`bg-slate-900 text-white rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden select-none ${sectorQuestTransition} ${
+            sectorQuestPreferences.compact ? "p-4 sm:p-5" : "p-6 sm:p-8"
+          } ${sectorQuestPreferences.largeText ? "text-[1.04rem]" : ""}`}>
             {/* background gradient flare */}
-            <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
-            <div className="absolute -left-8 -bottom-8 w-44 h-44 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute right-0 top-0 w-48 h-48 bg-cyan-400/10 rounded-full blur-3xl"></div>
+            <div className="absolute -left-8 -bottom-8 w-56 h-56 bg-violet-500/10 rounded-full blur-3xl"></div>
+
+            {sectorQuestMilestone !== null && (
+              <div
+                role="status"
+                aria-live="polite"
+                className={`absolute left-1/2 top-4 z-30 w-[min(88%,360px)] -translate-x-1/2 rounded-2xl border border-emerald-400/30 bg-slate-950/95 p-4 text-center shadow-2xl ${sectorQuestTransition}`}
+              >
+                <div className="text-2xl" aria-hidden="true">
+                  {SECTOR_QUEST_PHASES[sectorQuestMilestone].icon}
+                </div>
+                <p className="mt-1 text-sm font-black text-emerald-300">{sectorQuestCopy.milestone}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {SECTOR_QUEST_PHASES[sectorQuestMilestone][lang].name}
+                </p>
+              </div>
+            )}
 
             {!isAssessing ? (
-              <div className="flex flex-col md:flex-row items-center gap-6 text-left relative z-10 w-full justify-between">
-                <div className="space-y-2 max-w-lg">
-                  <span className="inline-block px-2.5 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                    ✨ AI Interactive Career Assessor
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">
-                    {lang === 'bn' ? "পছন্দ অনুযায়ী এআই ক্যারিয়ার মূল্যায়ন" : "Interactive Sector-Based AI Assessment"}
+              <div className="relative z-10 grid w-full gap-8 lg:grid-cols-[1.15fr_.85fr] lg:items-center">
+                <div className="max-w-2xl">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300">
+                      <span aria-hidden="true">✦</span> {sectorQuestCopy.eyebrow}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowSectorQuestSettings(previous => !previous)}
+                      className="rounded-full border border-slate-700 bg-slate-800/80 px-3 py-2 text-xs font-extrabold text-slate-200 hover:border-indigo-400 hover:text-white"
+                    >
+                      <span aria-hidden="true">⚙</span> {sectorQuestCopy.settings}
+                    </button>
+                  </div>
+                  <h3 className="mt-6 text-2xl font-black leading-tight text-white sm:text-3xl">
+                    {sectorQuestCopy.title}
                   </h3>
-                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-                    {lang === 'bn' 
-                      ? "পদ্ধতিগত প্রশ্নের মাধ্যমে উচ্চশিক্ষা, চাকরি, বা উদ্যোক্তা হওয়ার মধ্যকার আগ্রহ যাচাই করুন এবং আপনার জন্য উপযুক্ত ক্যারিয়ারের পরামর্শ নিন।" 
-                      : "Answer a few questions to find your fit among Higher Studies, Job, or Entrepreneurship, followed by a sector-specific deep dive for tailored recommendations."
-                    }
+                  <p className="mt-3 text-sm leading-relaxed text-slate-300 sm:text-base">
+                    {sectorQuestCopy.intro}
                   </p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {[sectorQuestCopy.time, sectorQuestCopy.missions, sectorQuestCopy.questions].map(item => (
+                      <span key={item} className="rounded-full border border-slate-700 bg-slate-800/70 px-3 py-1.5 text-[11px] font-bold text-slate-300">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-5 rounded-2xl border border-indigo-400/20 bg-indigo-400/10 p-4 text-xs leading-relaxed text-indigo-100">
+                    <span className="mr-2" aria-hidden="true">💡</span>{sectorQuestCopy.honest}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={beginSectorQuest}
+                    className="mt-6 inline-flex min-h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-cyan-300 to-indigo-300 px-7 py-3 font-black text-slate-950 shadow-lg shadow-slate-950/20 hover:from-cyan-200 hover:to-indigo-200"
+                  >
+                    {hasSectorQuestDraft ? sectorQuestCopy.resume : sectorQuestCopy.start}
+                    <span className="ml-3" aria-hidden="true">→</span>
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAssessing(true)
-                    setAssessStep(0)
-                    setGeneralSelected({})
-                    setSectorSelected({})
-                    setConfirmedSector(null)
-                  }}
-                  className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-sm rounded-2xl shadow-lg transition transform hover:scale-105 active:scale-97 cursor-pointer shrink-0"
-                >
-                  {lang === 'bn' ? "মূল্যায়ন শুরু করুন" : "Begin Assessment"}
-                </button>
+
+                <div className="grid gap-3">
+                  {SECTOR_QUEST_PHASES.map((phase, phaseIndex) => (
+                    <div
+                      key={phase.en.name}
+                      className="flex items-center gap-4 rounded-2xl border border-slate-700/80 bg-slate-950/35 p-4"
+                    >
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10 text-xl" aria-hidden="true">
+                        {phase.icon}
+                      </span>
+                      <div>
+                        <p className="text-sm font-black text-white">{phase[lang].name}</p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{phase[lang].hint}</p>
+                      </div>
+                      <span className="ml-auto text-xs font-black text-slate-600">0{phaseIndex + 1}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {showSectorQuestSettings && (
+                  <div className="lg:col-span-2 rounded-2xl border border-indigo-400/20 bg-slate-950/60 p-4">
+                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                      {([
+                        ["autoAdvance", sectorQuestCopy.autoAdvance],
+                        ["motion", sectorQuestCopy.motion],
+                        ["compact", sectorQuestCopy.compact],
+                        ["largeText", sectorQuestCopy.largeText],
+                      ] as const).map(([key, label]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          aria-pressed={sectorQuestPreferences[key]}
+                          onClick={() => updateSectorQuestPreference(key, !sectorQuestPreferences[key])}
+                          className={`flex items-center justify-between gap-3 rounded-xl border p-3 text-left text-xs font-extrabold ${sectorQuestTransition} ${
+                            sectorQuestPreferences[key]
+                              ? "border-indigo-400 bg-indigo-400/15 text-white"
+                              : "border-slate-700 bg-slate-900 text-slate-400"
+                          }`}
+                        >
+                          <span>{label}</span>
+                          <span className={`h-2.5 w-2.5 rounded-full ${sectorQuestPreferences[key] ? "bg-emerald-400" : "bg-slate-600"}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : aiLoading ? (
               /* Loading Screen */
               <div className="py-12 flex flex-col items-center justify-center space-y-4 text-center z-10 relative">
-                <div className="w-12 h-12 border-4 border-blue-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+                <div className={`w-14 h-14 border-4 border-cyan-400/20 border-t-cyan-300 rounded-full ${sectorQuestPreferences.motion ? "animate-spin" : ""}`}></div>
                 <div className="space-y-1">
                   <h4 className="text-base font-bold text-white">
-                    {lang === 'bn' ? "ক্যারিয়ার সুপারিশ তৈরি হচ্ছে..." : "Generating Custom Careers..."}
+                    {sectorQuestCopy.analyzing}
                   </h4>
                   <p className="text-xs text-slate-400 max-w-xs">
                     {lang === 'bn' 
@@ -1186,70 +1518,155 @@ export default function ExploreCareersPage() {
             ) : (
               /* Assessment Steps */
               <div className="space-y-6 relative z-10 text-left">
-                {/* Wizard Header Progress */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
-                  <div>
-                    <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded uppercase tracking-wider">
-                      {assessStep < 3 
-                        ? (lang === 'bn' ? `ধাপ ১: সাধারণ আগ্রহ (${assessStep + 1}/৩)` : `Phase 1: Sector Fit (${assessStep + 1}/3)`)
-                        : assessStep === 3
-                        ? (lang === 'bn' ? "ধাপ ২: সেক্টর নিশ্চিতকরণ" : "Phase 2: Sector Confirmation")
-                        : (lang === 'bn' ? `ধাপ ৩: বিস্তারিত মূল্যায়ন (${assessStep - 3}/৪)` : `Phase 3: Sector Deep Dive (${assessStep - 3}/4)`)
-                      }
-                    </span>
-                    <h4 className="text-sm font-bold text-slate-300 mt-1">
-                      {assessStep === 3 
-                        ? (lang === 'bn' ? "আপনার উপযুক্ত কাজের ক্ষেত্র নির্ধারণ করুন" : "Review your primary interest sector") 
-                        : (lang === 'bn' ? "নিচের প্রশ্নটির উত্তর দিন:" : "Please select the option that best represents you:")
-                      }
-                    </h4>
+                {/* Quest phases and progress */}
+                <div className="space-y-4 border-b border-slate-800 pb-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300">
+                        {sectorQuestCopy.eyebrow}
+                      </p>
+                      <h4 className="mt-1 text-lg font-black text-white">
+                        {SECTOR_QUEST_PHASES[sectorQuestPhase][lang].name}
+                      </h4>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {SECTOR_QUEST_PHASES[sectorQuestPhase][lang].hint}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSectorQuestSettings(previous => !previous)}
+                      className="shrink-0 rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-extrabold text-slate-300 hover:border-indigo-400 hover:text-white"
+                    >
+                      <span aria-hidden="true">⚙</span>
+                      <span className="hidden sm:inline"> {sectorQuestCopy.settings}</span>
+                    </button>
                   </div>
 
-                  {/* Progress bar container */}
-                  <div className="w-full sm:w-48 space-y-1.5 shrink-0">
-                    <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                      <span>{lang === 'bn' ? "অগ্রগতি" : "Progress"}</span>
-                      <span>{Math.round(((assessStep + (assessStep >= 3 ? 1 : 0)) / 8) * 100)}%</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-300"
-                        style={{ width: `${((assessStep + (assessStep >= 3 ? 1 : 0)) / 8) * 100}%` }}
-                      ></div>
-                    </div>
+                  <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
+                    {SECTOR_QUEST_PHASES.map((phase, phaseIndex) => {
+                      const phaseCompleted =
+                        phaseIndex === 0
+                          ? Object.keys(generalSelected).length === 3
+                          : phaseIndex === 1
+                            ? assessStep > 3
+                            : Object.keys(sectorSelected).length === 4
+                      const phaseUnlocked =
+                        phaseIndex === 0 ||
+                        (phaseIndex === 1 && Object.keys(generalSelected).length === 3) ||
+                        (phaseIndex === 2 && Boolean(confirmedSector))
+                      const phaseStep = phaseIndex === 0 ? 0 : phaseIndex === 1 ? 3 : 4
+                      return (
+                        <button
+                          key={phase.en.name}
+                          type="button"
+                          disabled={!phaseUnlocked}
+                          onClick={() => moveSectorQuest(phaseStep)}
+                          className={`flex min-w-[190px] flex-1 items-center gap-3 rounded-2xl border p-3 text-left ${sectorQuestTransition} ${
+                            sectorQuestPhase === phaseIndex
+                              ? "border-indigo-400 bg-indigo-400/15"
+                              : phaseCompleted
+                                ? "border-emerald-400/25 bg-emerald-400/10"
+                                : "border-slate-800 bg-slate-950/30"
+                          } disabled:cursor-not-allowed disabled:opacity-40`}
+                        >
+                          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${
+                            phaseCompleted ? "bg-emerald-500 text-white" : "bg-white/10"
+                          }`} aria-hidden="true">
+                            {phaseCompleted ? "✓" : phase.icon}
+                          </span>
+                          <span>
+                            <span className="block text-xs font-black text-white">{phase[lang].name}</span>
+                            <span className="mt-0.5 block text-[10px] font-bold text-slate-500">
+                              {phase.total} {lang === "bn" ? "ধাপ" : phase.total === 1 ? "step" : "steps"}
+                            </span>
+                          </span>
+                        </button>
+                      )
+                    })}
                   </div>
+
+                  <div className="flex items-center gap-3">
+                    <div
+                      role="progressbar"
+                      aria-label={sectorQuestCopy.progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={sectorQuestProgress}
+                      className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-950"
+                    >
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-500 ${sectorQuestTransition}`}
+                        style={{ width: `${sectorQuestProgress}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-black text-cyan-300">
+                      {sectorQuestProgress}% {sectorQuestCopy.complete}
+                    </span>
+                  </div>
+
+                  {showSectorQuestSettings && (
+                    <div className="grid gap-2 rounded-2xl border border-indigo-400/20 bg-slate-950/50 p-3 sm:grid-cols-2 lg:grid-cols-4">
+                      {([
+                        ["autoAdvance", sectorQuestCopy.autoAdvance],
+                        ["motion", sectorQuestCopy.motion],
+                        ["compact", sectorQuestCopy.compact],
+                        ["largeText", sectorQuestCopy.largeText],
+                      ] as const).map(([key, label]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          aria-pressed={sectorQuestPreferences[key]}
+                          onClick={() => updateSectorQuestPreference(key, !sectorQuestPreferences[key])}
+                          className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-[11px] font-extrabold ${sectorQuestTransition} ${
+                            sectorQuestPreferences[key]
+                              ? "border-indigo-400 bg-indigo-400/15 text-white"
+                              : "border-slate-700 bg-slate-900 text-slate-400"
+                          }`}
+                        >
+                          <span>{label}</span>
+                          <span className={`h-2.5 w-2.5 rounded-full ${sectorQuestPreferences[key] ? "bg-emerald-400" : "bg-slate-600"}`} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Render Phase 1 Questions (General Sector Fit) */}
                 {assessStep < 3 && (
-                  <div className="space-y-4">
-                    <p className="text-base sm:text-lg font-bold text-white leading-snug">
+                  <div className={sectorQuestPreferences.compact ? "space-y-3" : "space-y-5"}>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.16em] text-indigo-300">
+                        {lang === "bn" ? `প্রশ্ন ${assessStep + 1} / ৩` : `Question ${assessStep + 1} of 3`}
+                      </span>
+                      <p className={`${sectorQuestPreferences.largeText ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"} mt-2 font-black leading-snug text-white`}>
                       {lang === 'bn' ? GENERAL_QUESTIONS[assessStep].questionText.bn : GENERAL_QUESTIONS[assessStep].questionText.en}
-                    </p>
+                      </p>
+                      <p className="mt-2 text-xs font-semibold text-slate-400">{sectorQuestCopy.choiceHint}</p>
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-3">
                       {GENERAL_QUESTIONS[assessStep].options.map((opt, oIdx) => {
                         const isSelected = generalSelected[assessStep] === opt.value
                         return (
-                          <div
+                          <button
                             key={oIdx}
-                            onClick={() => {
-                              setGeneralSelected(prev => ({ ...prev, [assessStep]: opt.value }))
-                            }}
-                            className={`p-4 rounded-2xl border text-xs sm:text-sm font-medium leading-relaxed text-slate-300 cursor-pointer transition duration-200 select-none ${
+                            type="button"
+                            aria-pressed={isSelected}
+                            onClick={() => selectGeneralSectorAnswer(opt.value)}
+                            className={`${sectorQuestPreferences.compact ? "p-3" : "p-4"} min-h-24 rounded-2xl border text-left text-xs sm:text-sm font-medium leading-relaxed cursor-pointer select-none ${sectorQuestTransition} ${
                               isSelected
-                                ? 'bg-blue-600/10 border-blue-500 text-white shadow-md shadow-blue-500/5'
-                                : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/50'
+                                ? 'bg-indigo-500/15 border-indigo-400 text-white shadow-lg shadow-indigo-950/20'
+                                : 'bg-slate-950/40 border-slate-800 text-slate-300 hover:-translate-y-0.5 hover:border-slate-600 hover:bg-slate-900/70'
                             }`}
                           >
                             <div className="flex items-start gap-2.5">
-                              <span className={`w-4 h-4 rounded-full border shrink-0 flex items-center justify-center mt-0.5 text-[8px] font-bold ${
-                                isSelected ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-600'
+                              <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg border text-[10px] font-black ${
+                                isSelected ? 'border-indigo-400 bg-indigo-500 text-white' : 'border-slate-600 bg-slate-900 text-slate-400'
                               }`}>
-                                {isSelected && "✓"}
+                                {isSelected ? "✓" : String.fromCharCode(65 + oIdx)}
                               </span>
                               <span>{lang === 'bn' ? opt.text.bn : opt.text.en}</span>
                             </div>
-                          </div>
+                          </button>
                         )
                       })}
                     </div>
@@ -1258,14 +1675,13 @@ export default function ExploreCareersPage() {
 
                 {/* Render Phase 2: Confirmation / Selection */}
                 {assessStep === 3 && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl">
-                      <p className="text-xs sm:text-sm text-slate-300 font-medium">
-                        {lang === 'bn' 
-                          ? `আপনার প্রদত্ত উত্তরের ভিত্তিতে মনে হচ্ছে আপনি ` 
-                          : `Based on your choices, we detected high interest in `
-                        }
-                        <strong className="text-blue-400 font-extrabold text-sm sm:text-base capitalize">
+                  <div className={sectorQuestPreferences.compact ? "space-y-3" : "space-y-5"}>
+                    <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-4 sm:p-5">
+                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300">
+                        {sectorQuestCopy.recommended}
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-slate-300">
+                        <strong className="text-lg font-black capitalize text-white sm:text-xl">
                           {confirmedSector === 'higher_studies' 
                             ? (lang === 'bn' ? "উচ্চশিক্ষা" : "Higher Studies")
                             : confirmedSector === 'job'
@@ -1273,8 +1689,8 @@ export default function ExploreCareersPage() {
                             : (lang === 'bn' ? "উদ্যোক্তা" : "Entrepreneurship")
                           }
                         </strong>
-                        {lang === 'bn' ? ` লাইনে বেশি আগ্রহী। আপনি কি এটিতেই এগোতে চান, নাকি অন্যটি বেছে নেবেন?` : ` options. Please confirm or select another sector to evaluate:`}
                       </p>
+                      <p className="mt-2 text-xs leading-relaxed text-slate-400">{sectorQuestCopy.confirm}</p>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-3">
@@ -1294,13 +1710,15 @@ export default function ExploreCareersPage() {
                           : (lang === 'bn' ? "নতুন স্টার্টআপ ও নিজস্ব উদ্যোগ" : "Startup founding, freelancing & services")
 
                         return (
-                          <div
+                          <button
                             key={sIdx}
-                            onClick={() => setConfirmedSector(sec)}
-                            className={`p-4 rounded-2xl border text-left cursor-pointer transition duration-200 select-none ${
+                            type="button"
+                            aria-pressed={isSelected}
+                            onClick={() => selectConfirmedSector(sec)}
+                            className={`${sectorQuestPreferences.compact ? "p-3" : "p-4"} min-h-24 rounded-2xl border text-left cursor-pointer select-none ${sectorQuestTransition} ${
                               isSelected
-                                ? 'bg-indigo-600/10 border-indigo-500 text-white shadow-md shadow-indigo-500/5'
-                                : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/50'
+                                ? 'bg-indigo-500/15 border-indigo-400 text-white shadow-lg shadow-indigo-950/20'
+                                : 'bg-slate-950/40 border-slate-800 hover:-translate-y-0.5 hover:border-slate-600 hover:bg-slate-900/70'
                             }`}
                           >
                             <div className="flex items-center gap-3">
@@ -1315,7 +1733,7 @@ export default function ExploreCareersPage() {
                                 {isSelected && "✓"}
                               </span>
                             </div>
-                          </div>
+                          </button>
                         )
                       })}
                     </div>
@@ -1324,37 +1742,43 @@ export default function ExploreCareersPage() {
 
                 {/* Render Phase 3: Sector Specific Questions */}
                 {assessStep >= 4 && assessStep <= 7 && confirmedSector && (
-                  <div className="space-y-4">
-                    <p className="text-base sm:text-lg font-bold text-white leading-snug">
-                      {lang === 'bn' 
-                        ? SECTOR_QUESTIONS[confirmedSector][assessStep - 4].questionText.bn 
-                        : SECTOR_QUESTIONS[confirmedSector][assessStep - 4].questionText.en
-                      }
-                    </p>
+                  <div className={sectorQuestPreferences.compact ? "space-y-3" : "space-y-5"}>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.16em] text-indigo-300">
+                        {lang === "bn" ? `বিস্তারিত ${assessStep - 3} / ৪` : `Deep dive ${assessStep - 3} of 4`}
+                      </span>
+                      <p className={`${sectorQuestPreferences.largeText ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"} mt-2 font-black leading-snug text-white`}>
+                        {lang === 'bn'
+                          ? SECTOR_QUESTIONS[confirmedSector][assessStep - 4].questionText.bn
+                          : SECTOR_QUESTIONS[confirmedSector][assessStep - 4].questionText.en
+                        }
+                      </p>
+                      <p className="mt-2 text-xs font-semibold text-slate-400">{sectorQuestCopy.choiceHint}</p>
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-3">
                       {SECTOR_QUESTIONS[confirmedSector][assessStep - 4].options.map((opt, oIdx) => {
                         const isSelected = sectorSelected[assessStep - 4] === opt.value
                         return (
-                          <div
+                          <button
                             key={oIdx}
-                            onClick={() => {
-                              setSectorSelected(prev => ({ ...prev, [assessStep - 4]: opt.value }))
-                            }}
-                            className={`p-4 rounded-2xl border text-xs sm:text-sm font-medium leading-relaxed text-slate-300 cursor-pointer transition duration-200 select-none ${
+                            type="button"
+                            aria-pressed={isSelected}
+                            onClick={() => selectSectorDetailAnswer(opt.value)}
+                            className={`${sectorQuestPreferences.compact ? "p-3" : "p-4"} min-h-24 rounded-2xl border text-left text-xs sm:text-sm font-medium leading-relaxed cursor-pointer select-none ${sectorQuestTransition} ${
                               isSelected
-                                ? 'bg-blue-600/10 border-blue-500 text-white shadow-md shadow-blue-500/5'
-                                : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/50'
+                                ? 'bg-indigo-500/15 border-indigo-400 text-white shadow-lg shadow-indigo-950/20'
+                                : 'bg-slate-950/40 border-slate-800 text-slate-300 hover:-translate-y-0.5 hover:border-slate-600 hover:bg-slate-900/70'
                             }`}
                           >
                             <div className="flex items-start gap-2.5">
-                              <span className={`w-4 h-4 rounded-full border shrink-0 flex items-center justify-center mt-0.5 text-[8px] font-bold ${
-                                isSelected ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-600'
+                              <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg border text-[10px] font-black ${
+                                isSelected ? 'border-indigo-400 bg-indigo-500 text-white' : 'border-slate-600 bg-slate-900 text-slate-400'
                               }`}>
-                                {isSelected && "✓"}
+                                {isSelected ? "✓" : String.fromCharCode(65 + oIdx)}
                               </span>
                               <span>{lang === 'bn' ? opt.text.bn : opt.text.en}</span>
                             </div>
-                          </div>
+                          </button>
                         )
                       })}
                     </div>
@@ -1362,7 +1786,7 @@ export default function ExploreCareersPage() {
                 )}
 
                 {/* Wizard Footer Navigation Controls */}
-                <div className="flex items-center justify-between border-t border-slate-800 pt-4">
+                <div className="flex items-center justify-between gap-3 border-t border-slate-800 pt-4">
                   {/* Cancel/Back button */}
                   <button
                     type="button"
@@ -1370,39 +1794,42 @@ export default function ExploreCareersPage() {
                       if (assessStep === 0) {
                         setIsAssessing(false)
                       } else {
-                        setAssessStep(prev => prev - 1)
+                        moveSectorQuest(assessStep - 1)
                       }
                     }}
-                    className="px-4 py-2 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white font-bold text-xs rounded-xl transition cursor-pointer"
+                    className="min-h-11 px-4 py-2 border border-slate-700 hover:border-slate-500 text-slate-400 hover:text-white font-bold text-xs rounded-xl transition cursor-pointer"
                   >
-                    {assessStep === 0 ? (lang === 'bn' ? "বাতিল করুন" : "Cancel") : (lang === 'bn' ? "পেছনে যান" : "Back")}
+                    <span aria-hidden="true">{assessStep > 0 ? "← " : ""}</span>
+                    {assessStep === 0 ? sectorQuestCopy.cancel : sectorQuestCopy.back}
                   </button>
+
+                  <span className="hidden items-center gap-1.5 text-[10px] font-bold text-slate-500 md:flex">
+                    <span className="text-emerald-400" aria-hidden="true">●</span> {sectorQuestCopy.saved}
+                  </span>
 
                   {/* Next / Submit button */}
                   {assessStep < 7 ? (
                     <button
                       type="button"
-                      onClick={() => {
-                        setAssessStep(prev => prev + 1)
-                      }}
+                      onClick={() => moveSectorQuest(assessStep + 1)}
                       disabled={
                         (assessStep < 3 && !generalSelected[assessStep]) ||
                         (assessStep === 3 && !confirmedSector) ||
                         (assessStep >= 4 && !sectorSelected[assessStep - 4])
                       }
-                      className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-md transition active:scale-97 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="min-h-11 px-5 py-2.5 bg-gradient-to-r from-cyan-400 to-indigo-500 hover:from-cyan-300 hover:to-indigo-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition active:scale-97 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      {lang === 'bn' ? "পরবর্তী প্রশ্ন" : "Next Question"}
+                      {sectorQuestCopy.next}<span aria-hidden="true"> →</span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       onClick={handleSubmitAssessment}
                       disabled={!sectorSelected[3]}
-                      className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-md transition active:scale-97 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                      className="min-h-11 px-6 py-2.5 bg-gradient-to-r from-cyan-400 to-indigo-500 hover:from-cyan-300 hover:to-indigo-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition active:scale-97 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
                     >
-                      <span>{lang === 'bn' ? "সুপারিশ তৈরি করুন" : "Analyze & Generate"}</span>
-                      <span>✨</span>
+                      <span>{sectorQuestCopy.analyze}</span>
+                      <span aria-hidden="true">✦</span>
                     </button>
                   )}
                 </div>
