@@ -18,7 +18,7 @@ interface Recommendation {
 
 const ASSESSMENT_RECOMMENDATIONS_KEY = "assessment_recommended_career_ids"
 const CAREER_ASSESSMENT_RECOMMENDATIONS_KEY = "career_assessment_recommendations"
-const SECTOR_QUEST_DRAFT_KEY = "careerleader_sector_quest_draft_v1"
+const SECTOR_QUEST_DRAFT_KEY = "careerleader_career_worlds_game_v1"
 const recommendationsById = new Map(
   (careerCatalog as Recommendation[]).map(career => [career.id, career])
 )
@@ -88,81 +88,137 @@ const DEFAULT_SECTOR_QUEST_PREFERENCES: SectorQuestPreferences = {
 
 const SECTOR_QUEST_PHASES = [
   {
-    icon: "🧭",
-    en: { name: "Find your direction", hint: "Explore the kind of future that motivates you." },
-    bn: { name: "আপনার দিক খুঁজুন", hint: "কোন ধরনের ভবিষ্যৎ আপনাকে অনুপ্রাণিত করে তা জানুন।" },
+    icon: "🎒",
+    en: { name: "Build your loadout", hint: "Choose the world, mission, and power-up that excite you." },
+    bn: { name: "লোডআউট তৈরি করুন", hint: "পছন্দের জগৎ, মিশন ও পাওয়ার-আপ বেছে নিন।" },
     total: 3,
   },
   {
-    icon: "🛤️",
-    en: { name: "Choose your lane", hint: "Confirm the broad path you want to explore." },
-    bn: { name: "আপনার পথ বেছে নিন", hint: "আপনি যে মূল পথটি অন্বেষণ করতে চান তা নিশ্চিত করুন।" },
+    icon: "🌀",
+    en: { name: "Open a portal", hint: "Enter a career world—or switch portals before you travel." },
+    bn: { name: "পোর্টাল খুলুন", hint: "একটি ক্যারিয়ার জগতে প্রবেশ করুন অথবা যাওয়ার আগে পোর্টাল বদলান।" },
     total: 1,
   },
   {
-    icon: "🔎",
-    en: { name: "Shape your match", hint: "Add the details that make recommendations personal." },
-    bn: { name: "আপনার মিল গড়ে তুলুন", hint: "ব্যক্তিগত সুপারিশের জন্য প্রয়োজনীয় বিস্তারিত তথ্য দিন।" },
+    icon: "⚔️",
+    en: { name: "Complete field missions", hint: "Make four decisions inside your chosen career world." },
+    bn: { name: "ফিল্ড মিশন শেষ করুন", hint: "নির্বাচিত ক্যারিয়ার জগতে চারটি সিদ্ধান্ত নিন।" },
     total: 4,
   },
 ] as const
 
+const CAREER_WORLDS = {
+  higher_studies: {
+    icon: "🏛️",
+    en: {
+      name: "Knowledge Citadel",
+      role: "Scholar Explorer",
+      description: "Research mysteries, master a field, and turn knowledge into new discoveries.",
+      color: "from-violet-500 to-fuchsia-500",
+    },
+    bn: {
+      name: "নলেজ সিটাডেল",
+      role: "স্কলার এক্সপ্লোরার",
+      description: "গবেষণার রহস্য সমাধান করুন, একটি বিষয়ে দক্ষ হন এবং জ্ঞানকে নতুন আবিষ্কারে রূপ দিন।",
+      color: "from-violet-500 to-fuchsia-500",
+    },
+  },
+  job: {
+    icon: "🏙️",
+    en: {
+      name: "Teamwork City",
+      role: "Impact Specialist",
+      description: "Join skilled teams, solve real problems, and level up through practical work.",
+      color: "from-cyan-400 to-blue-500",
+    },
+    bn: {
+      name: "টিমওয়ার্ক সিটি",
+      role: "ইমপ্যাক্ট স্পেশালিস্ট",
+      description: "দক্ষ দলে যোগ দিন, বাস্তব সমস্যা সমাধান করুন এবং কাজের মাধ্যমে এগিয়ে যান।",
+      color: "from-cyan-400 to-blue-500",
+    },
+  },
+  entrepreneurship: {
+    icon: "🏝️",
+    en: {
+      name: "Founder Frontier",
+      role: "Venture Builder",
+      description: "Spot an unmet need, build your own solution, and shape a venture from zero.",
+      color: "from-amber-400 to-orange-500",
+    },
+    bn: {
+      name: "ফাউন্ডার ফ্রন্টিয়ার",
+      role: "ভেঞ্চার বিল্ডার",
+      description: "অসম্পূর্ণ চাহিদা খুঁজুন, নিজের সমাধান তৈরি করুন এবং শূন্য থেকে উদ্যোগ গড়ুন।",
+      color: "from-amber-400 to-orange-500",
+    },
+  },
+} as const
+
 const SECTOR_QUEST_COPY = {
   en: {
-    eyebrow: "Career Path Quest",
-    title: "Turn your interests into a clearer direction",
-    intro: "Complete three short missions to identify your best next lane and receive tailored career matches.",
-    honest: "Choose what fits your real priorities—not what sounds most impressive.",
-    start: "Start path quest",
-    resume: "Continue path quest",
-    settings: "Quest settings",
+    eyebrow: "Career Worlds",
+    title: "Explore careers by playing the role",
+    intro: "Build an explorer, enter one of three career worlds, and complete field missions to unlock roles worth exploring.",
+    honest: "There is no winning portal. Choose the adventure you genuinely want to try.",
+    start: "Launch the game",
+    resume: "Continue my expedition",
+    settings: "Game settings",
     autoAdvance: "Auto-advance",
     motion: "Motion effects",
     compact: "Compact layout",
     largeText: "Larger text",
-    progress: "Quest progress",
+    progress: "Explorer XP",
     complete: "complete",
-    choiceHint: "Choose the option that feels closest to you.",
+    choiceHint: "Choose your move. Each one changes your explorer loadout.",
     back: "Back",
     cancel: "Exit quest",
-    next: "Next step",
-    analyze: "Build my matches",
-    analyzing: "Building your career matches...",
-    milestone: "Mission complete",
+    next: "Travel onward",
+    analyze: "Unlock career cards",
+    analyzing: "Opening your career card pack...",
+    milestone: "Stage cleared!",
     saved: "Progress saved on this device",
-    recommended: "Your answers point toward",
-    confirm: "Confirm this path or choose another one before the deep dive.",
-    questions: "7 guided questions",
-    time: "About 3 minutes",
-    missions: "3 short missions",
+    recommended: "Portal signal locked on",
+    confirm: "Enter this world or choose another portal before the field missions begin.",
+    questions: "8 game moves",
+    time: "A 5-minute game",
+    missions: "3 game stages",
+    powerUp: "Loadout upgraded",
+    xp: "XP",
+    badge: "World badge earned",
+    unlocked: "Career card pack unlocked",
   },
   bn: {
-    eyebrow: "ক্যারিয়ার পথ অভিযান",
-    title: "আপনার আগ্রহকে স্পষ্ট ক্যারিয়ার পথে রূপ দিন",
-    intro: "তিনটি ছোট মিশন শেষ করে আপনার উপযুক্ত পরবর্তী পথ ও ব্যক্তিগত ক্যারিয়ার মিল খুঁজুন।",
-    honest: "যেটি সবচেয়ে আকর্ষণীয় শোনায় সেটি নয়—আপনার বাস্তব অগ্রাধিকারের সঙ্গে যেটি মেলে সেটি বেছে নিন।",
-    start: "পথের অভিযান শুরু করুন",
-    resume: "পথের অভিযান চালিয়ে যান",
-    settings: "অভিযান নিয়ন্ত্রণ",
+    eyebrow: "ক্যারিয়ার ওয়ার্ল্ডস",
+    title: "ভূমিকায় খেলে ক্যারিয়ার অন্বেষণ করুন",
+    intro: "একজন এক্সপ্লোরার তৈরি করুন, তিনটি ক্যারিয়ার জগতের একটিতে প্রবেশ করুন এবং উপযুক্ত ভূমিকার কার্ড আনলক করুন।",
+    honest: "কোনো একটিই বিজয়ী পোর্টাল নয়। যে অভিযানটি সত্যিই চেষ্টা করতে চান সেটি বেছে নিন।",
+    start: "গেম শুরু করুন",
+    resume: "আমার অভিযান চালিয়ে যাই",
+    settings: "গেম নিয়ন্ত্রণ",
     autoAdvance: "স্বয়ংক্রিয়ভাবে এগিয়ে যান",
     motion: "অ্যানিমেশন",
     compact: "কমপ্যাক্ট লেআউট",
     largeText: "বড় লেখা",
-    progress: "অভিযানের অগ্রগতি",
+    progress: "এক্সপ্লোরার এক্সপি",
     complete: "সম্পন্ন",
-    choiceHint: "আপনার সঙ্গে সবচেয়ে বেশি মেলে এমন বিকল্পটি বেছে নিন।",
+    choiceHint: "আপনার চাল বেছে নিন। প্রতিটি সিদ্ধান্ত এক্সপ্লোরারের লোডআউট বদলায়।",
     back: "পেছনে",
     cancel: "অভিযান থেকে বের হন",
-    next: "পরের ধাপ",
-    analyze: "আমার মিল তৈরি করুন",
-    analyzing: "আপনার ক্যারিয়ার মিল তৈরি হচ্ছে...",
-    milestone: "মিশন সম্পন্ন",
+    next: "সামনে এগিয়ে যান",
+    analyze: "ক্যারিয়ার কার্ড আনলক করুন",
+    analyzing: "আপনার ক্যারিয়ার কার্ড প্যাক খোলা হচ্ছে...",
+    milestone: "স্টেজ সম্পন্ন!",
     saved: "এই ডিভাইসে অগ্রগতি সংরক্ষিত",
-    recommended: "আপনার উত্তর যে পথ নির্দেশ করছে",
-    confirm: "বিস্তারিত অংশে যাওয়ার আগে এই পথ নিশ্চিত করুন অথবা অন্যটি বেছে নিন।",
-    questions: "৭টি নির্দেশিত প্রশ্ন",
-    time: "প্রায় ৩ মিনিট",
-    missions: "৩টি ছোট মিশন",
+    recommended: "পোর্টালের সংকেত পাওয়া গেছে",
+    confirm: "ফিল্ড মিশন শুরুর আগে এই জগতে প্রবেশ করুন অথবা অন্য পোর্টাল বেছে নিন।",
+    questions: "৮টি গেম মুভ",
+    time: "৫ মিনিটের গেম",
+    missions: "৩টি গেম স্টেজ",
+    powerUp: "লোডআউট আপগ্রেড হয়েছে",
+    xp: "এক্সপি",
+    badge: "ওয়ার্ল্ড ব্যাজ অর্জিত",
+    unlocked: "ক্যারিয়ার কার্ড প্যাক আনলক হয়েছে",
   },
 } as const
 
@@ -170,30 +226,30 @@ const GENERAL_QUESTIONS: Question[] = [
   {
     id: "g1",
     questionText: {
-      en: "What type of daily environment sounds most appealing to you?",
-      bn: "কোন ধরণের দৈনন্দিন কাজের পরিবেশ আপনার কাছে সবচেয়ে বেশি আকর্ষণীয় মনে হয়?"
+      en: "Three portals appear. Which world do you explore first?",
+      bn: "তিনটি পোর্টাল দেখা দিয়েছে। আপনি প্রথমে কোন জগৎ অন্বেষণ করবেন?"
     },
     options: [
       {
         text: {
-          en: "A university campus, laboratory, or library, diving deep into research.",
-          bn: "একটি বিশ্ববিদ্যালয় ক্যাম্পাস, গবেষণাগার বা লাইব্রেরি, যেখানে গভীর গবেষণা করা যায়।"
+          en: "Enter Knowledge Citadel—libraries, laboratories, and unsolved mysteries.",
+          bn: "নলেজ সিটাডেলে প্রবেশ করি—লাইব্রেরি, গবেষণাগার ও অমীমাংসিত রহস্যের জগৎ।"
         },
         value: "higher_studies",
         sector: "higher_studies"
       },
       {
         text: {
-          en: "A structured company office or collaborative team environment working on real-world projects.",
-          bn: "একটি সুসংগঠিত প্রাতিষ্ঠানিক অফিস বা সহযোগিতামূলক দলগত পরিবেশ যেখানে বাস্তব প্রজেক্টে কাজ করা যায়।"
+          en: "Enter Teamwork City—skilled crews solving real-world challenges.",
+          bn: "টিমওয়ার্ক সিটিতে প্রবেশ করি—দক্ষ দল বাস্তব চ্যালেঞ্জ সমাধান করছে।"
         },
         value: "job",
         sector: "job"
       },
       {
         text: {
-          en: "An independent space, leading my own projects, building a team, or freelancing.",
-          bn: "একটি স্বাধীন পরিবেশ, যেখানে নিজের প্রজেক্ট পরিচালনা, টিম তৈরি বা ফ্রিল্যান্সিং করা যায়।"
+          en: "Enter Founder Frontier—build a venture, recruit allies, and set your own route.",
+          bn: "ফাউন্ডার ফ্রন্টিয়ারে প্রবেশ করি—উদ্যোগ গড়ি, সহযোগী খুঁজি এবং নিজের পথ ঠিক করি।"
         },
         value: "entrepreneurship",
         sector: "entrepreneurship"
@@ -203,30 +259,30 @@ const GENERAL_QUESTIONS: Question[] = [
   {
     id: "g2",
     questionText: {
-      en: "What is your primary career motivation?",
-      bn: "আপনার ক্যারিয়ারের মূল প্রেরণা কোনটি?"
+      en: "Choose the main quest your explorer cannot resist.",
+      bn: "আপনার এক্সপ্লোরার যে মূল মিশনটি এড়িয়ে যেতে পারবে না সেটি বেছে নিন।"
     },
     options: [
       {
         text: {
-          en: "To master a specific subject, conduct original research, and publish papers or teach.",
-          bn: "একটি নির্দিষ্ট বিষয়ে দক্ষতা অর্জন করা, মৌলিক গবেষণা পরিচালনা করা এবং প্রবন্ধ প্রকাশ বা শিক্ষকতা করা।"
+          en: "Decode a difficult subject and create knowledge nobody had before.",
+          bn: "কঠিন একটি বিষয় আয়ত্ত করে এমন জ্ঞান তৈরি করি যা আগে কারও ছিল না।"
         },
         value: "higher_studies",
         sector: "higher_studies"
       },
       {
         text: {
-          en: "To gain a stable income, develop corporate skills, and climb a structured ladder.",
-          bn: "একটি স্থিতিশীল আয় অর্জন করা, প্রাতিষ্ঠানিক দক্ষতা বৃদ্ধি করা এবং নির্দিষ্ট ধাপ অতিক্রম করে এগিয়ে যাওয়া।"
+          en: "Join a capable team, ship useful work, and unlock higher responsibility.",
+          bn: "দক্ষ দলে যোগ দিয়ে উপকারী কাজ করি এবং বড় দায়িত্ব আনলক করি।"
         },
         value: "job",
         sector: "job"
       },
       {
         text: {
-          en: "To build a business from scratch, solve a market need, and have full ownership.",
-          bn: "একেবারে শুরু থেকে একটি ব্যবসা গড়ে তোলা, বাজারের চাহিদা পূরণ করা এবং সম্পূর্ণ মালিকানা নিজের কাছে রাখা।"
+          en: "Spot an unmet need and build a solution that belongs to me.",
+          bn: "অসম্পূর্ণ চাহিদা খুঁজে নিজের মালিকানায় একটি সমাধান তৈরি করি।"
         },
         value: "entrepreneurship",
         sector: "entrepreneurship"
@@ -236,30 +292,30 @@ const GENERAL_QUESTIONS: Question[] = [
   {
     id: "g3",
     questionText: {
-      en: "How do you prefer to handle professional risk and reward?",
-      bn: "আপনি পেশাগত ঝুঁকি ও সাফল্যকে কীভাবে মূল্যায়ন করেন?"
+      en: "A gatekeeper offers three power-ups. Which trade-off do you accept?",
+      bn: "একজন গেটকিপার তিনটি পাওয়ার-আপ দিল। কোন বিনিময়টি আপনি গ্রহণ করবেন?"
     },
     options: [
       {
         text: {
-          en: "Willing to invest years in education/low-paying stipends for deep expertise.",
-          bn: "গভীর জ্ঞান অর্জনের জন্য দীর্ঘ সময় পড়াশোনা বা কম বেতনের স্টাইপেন্ডে কাটানোর মানসিকতা রয়েছে।"
+          en: "Mastery Crystal—invest more time now to gain rare expertise later.",
+          bn: "মাস্টারি ক্রিস্টাল—পরবর্তীতে বিরল দক্ষতার জন্য এখন বেশি সময় বিনিয়োগ করি।"
         },
         value: "higher_studies",
         sector: "higher_studies"
       },
       {
         text: {
-          en: "Prefer a predictable, steady salary with standard benefits and set working hours.",
-          bn: "সুনির্দিষ্ট কাজের সময় এবং নিয়মিত সুযোগ-সুবিধাসহ একটি স্থিতিশীল ও সুনিশ্চিত বেতন পছন্দ করি।"
+          en: "Stability Shield—gain steady rewards, clear levels, and reliable support.",
+          bn: "স্ট্যাবিলিটি শিল্ড—নিয়মিত পুরস্কার, পরিষ্কার ধাপ ও নির্ভরযোগ্য সহায়তা পাই।"
         },
         value: "job",
         sector: "job"
       },
       {
         text: {
-          en: "Willing to take high financial risk for high reward and business autonomy.",
-          bn: "ব্যবসায়িক স্বাধীনতা এবং বড় সফলতার জন্য উচ্চ অর্থনৈতিক ঝুঁকি নিতে রাজি।"
+          en: "Autonomy Flame—accept higher risk for control and unlimited upside.",
+          bn: "অটোনমি ফ্লেম—নিয়ন্ত্রণ ও সীমাহীন সম্ভাবনার জন্য বেশি ঝুঁকি নিই।"
         },
         value: "entrepreneurship",
         sector: "entrepreneurship"
@@ -273,8 +329,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "h1",
       questionText: {
-        en: "What level of education are you aiming to achieve?",
-        bn: "আপনি শিক্ষার কোন স্তরে পৌঁছাতে চান?"
+        en: "Mission 1: Choose the knowledge rank you want to unlock.",
+        bn: "মিশন ১: আপনি যে জ্ঞানের র‍্যাঙ্ক আনলক করতে চান সেটি বেছে নিন।"
       },
       options: [
         { text: { en: "Master's Degree (Specialized knowledge)", bn: "মাস্টার্স ডিগ্রি (বিশেষায়িত জ্ঞান)" }, value: "Master's Degree" },
@@ -285,8 +341,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "h2",
       questionText: {
-        en: "What is your preferred area of research or study?",
-        bn: "আপনার গবেষণা বা পড়াশোনার পছন্দের ক্ষেত্র কোনটি?"
+        en: "Mission 2: Select the wing of the Citadel you want to investigate.",
+        bn: "মিশন ২: সিটাডেলের যে অংশটি অনুসন্ধান করতে চান সেটি বেছে নিন।"
       },
       options: [
         { text: { en: "STEM (Science, Tech, Engineering, Math)", bn: "স্টেম (বিজ্ঞান, প্রযুক্তি, প্রকৌশল, গণিত)" }, value: "STEM" },
@@ -297,8 +353,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "h3",
       questionText: {
-        en: "Where would you prefer to pursue your higher studies?",
-        bn: "আপনি কোথায় উচ্চশিক্ষা গ্রহণ করতে চান?"
+        en: "Mission 3: Place your scholar basecamp.",
+        bn: "মিশন ৩: আপনার স্কলার বেসক্যাম্পের জায়গা নির্ধারণ করুন।"
       },
       options: [
         { text: { en: "In my home country (established universities)", bn: "নিজের দেশে (প্রতিষ্ঠিত বিশ্ববিদ্যালয়ে)" }, value: "Home Country" },
@@ -309,8 +365,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "h4",
       questionText: {
-        en: "What is your ultimate goal after studying?",
-        bn: "পড়াশোনা শেষ করার পর আপনার মূল লক্ষ্য কী?"
+        en: "Final mission: Choose how your discoveries will change the world.",
+        bn: "চূড়ান্ত মিশন: আপনার আবিষ্কার কীভাবে পৃথিবী বদলাবে তা বেছে নিন।"
       },
       options: [
         { text: { en: "Become a university professor or academic researcher", bn: "বিশ্ববিদ্যালয়ের অধ্যাপক বা একাডেমিক গবেষক হওয়া" }, value: "Professor/Researcher" },
@@ -323,8 +379,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "j1",
       questionText: {
-        en: "What type of organization would you prefer to work for?",
-        bn: "আপনি কোন ধরনের প্রতিষ্ঠানে কাজ করতে চান?"
+        en: "Mission 1: Choose the team headquarters where you will spawn.",
+        bn: "মিশন ১: যে দলের সদর দপ্তরে আপনি শুরু করবেন সেটি বেছে নিন।"
       },
       options: [
         { text: { en: "A large multinational corporation (stability, corporate structure)", bn: "একটি বড় বহুজাতিক কর্পোরেশন (স্থিতিশীলতা ও সুনির্দিষ্ট কাঠামো)" }, value: "Multinational Corporation" },
@@ -335,8 +391,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "j2",
       questionText: {
-        en: "Which category of job roles interests you the most?",
-        bn: "কোন ধরনের কাজের ক্ষেত্রে আপনার আগ্রহ সবচেয়ে বেশি?"
+        en: "Mission 2: Equip your specialist class.",
+        bn: "মিশন ২: আপনার স্পেশালিস্ট ক্লাস বেছে নিন।"
       },
       options: [
         { text: { en: "Technical & Analytical (Software, engineering, analytics)", bn: "প্রযুক্তিগত ও বিশ্লেষণধর্মী (সফটওয়্যার, প্রকৌশল, অ্যানালিটিক্স)" }, value: "Technical & Analytical" },
@@ -347,8 +403,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "j3",
       questionText: {
-        en: "What is your ideal work arrangement?",
-        bn: "আপনার পছন্দের কাজের ধরণ কোনটি?"
+        en: "Mission 3: Set your operating mode.",
+        bn: "মিশন ৩: আপনার কাজের মোড নির্ধারণ করুন।"
       },
       options: [
         { text: { en: "Fully Remote (work from anywhere, high flexibility)", bn: "সম্পূর্ণ রিমোট (যেকোনো স্থান থেকে কাজ, উচ্চ নমনীয়তা)" }, value: "Fully Remote" },
@@ -359,8 +415,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "j4",
       questionText: {
-        en: "What work-life dynamic do you prefer?",
-        bn: "আপনি কাজের ক্ষেত্রে কেমন ব্যালেন্স চান?"
+        en: "Final mission: Choose the pace that keeps your energy bar strong.",
+        bn: "চূড়ান্ত মিশন: যে গতি আপনার এনার্জি বার শক্ত রাখে সেটি বেছে নিন।"
       },
       options: [
         { text: { en: "Strict 9-to-5 boundaries with weekends free", bn: "সুনির্দিষ্ট ৯টা-৫টার সীমানা এবং ছুটির দিন সম্পূর্ণ ফ্রি রাখা" }, value: "Strict 9-to-5" },
@@ -373,8 +429,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "e1",
       questionText: {
-        en: "What type of business venture excites you most?",
-        bn: "কোন ধরনের ব্যবসা আপনাকে সবচেয়ে বেশি অনুপ্রাণিত করে?"
+        en: "Mission 1: Choose the venture you will build from zero.",
+        bn: "মিশন ১: শূন্য থেকে যে উদ্যোগটি গড়বেন সেটি বেছে নিন।"
       },
       options: [
         { text: { en: "Tech startup (SaaS, AI, apps) aiming for venture capital and scale", bn: "প্রযুক্তিগত স্টার্টআপ (SaaS, AI, অ্যাপস) যার লক্ষ্য বড় আকারের বিনিয়োগ ও বিস্তার" }, value: "Tech Startup" },
@@ -385,8 +441,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "e2",
       questionText: {
-        en: "What is your primary strength as a founder?",
-        bn: "প্রতিষ্ঠাতা হিসেবে আপনার মূল শক্তি কোনটি?"
+        en: "Mission 2: Equip your founder superpower.",
+        bn: "মিশন ২: আপনার ফাউন্ডার সুপারপাওয়ার বেছে নিন।"
       },
       options: [
         { text: { en: "Product development & Technical execution (the builder)", bn: "পণ্য উন্নয়ন ও কারিগরি বাস্তবায়ন (দ্য বিল্ডার)" }, value: "Product & Tech Builder" },
@@ -397,8 +453,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "e3",
       questionText: {
-        en: "How do you plan to fund your business initially?",
-        bn: "শুরুতে আপনি কীভাবে অর্থায়নের ব্যবস্থা করবেন?"
+        en: "Mission 3: Choose the fuel that launches your venture.",
+        bn: "মিশন ৩: আপনার উদ্যোগ চালু করার জ্বালানি বেছে নিন।"
       },
       options: [
         { text: { en: "Bootstrapping (using my own savings and reinvesting revenue)", bn: "বুটস্ট্র্যাপিং (নিজের সঞ্চয় এবং অর্জিত রাজস্ব পুনরায় বিনিয়োগ করা)" }, value: "Bootstrapping" },
@@ -409,8 +465,8 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "e4",
       questionText: {
-        en: "What is your main reason for choosing entrepreneurship?",
-        bn: "উদ্যোক্তা হওয়ার পেছনে আপনার প্রধান কারণ কোনটি?"
+        en: "Final mission: Define what victory means for your founder.",
+        bn: "চূড়ান্ত মিশন: আপনার প্রতিষ্ঠাতার কাছে বিজয়ের অর্থ ঠিক করুন।"
       },
       options: [
         { text: { en: "Complete creative control and intellectual independence", bn: "সম্পূর্ণ সৃজনশীল নিয়ন্ত্রণ এবং বুদ্ধিবৃত্তিক স্বাধীনতা" }, value: "Creative/Intellectual Control" },
@@ -456,6 +512,9 @@ export default function ExploreCareersPage() {
   )
   const [showSectorQuestSettings, setShowSectorQuestSettings] = useState(false)
   const [sectorQuestMilestone, setSectorQuestMilestone] = useState<number | null>(null)
+  const [careerWorldReward, setCareerWorldReward] = useState<
+    'higher_studies' | 'job' | 'entrepreneurship' | null
+  >(null)
   const sectorAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const sectorQuestAnswerCount =
@@ -463,6 +522,7 @@ export default function ExploreCareersPage() {
     Object.keys(sectorSelected).length +
     (confirmedSector ? 1 : 0)
   const sectorQuestProgress = Math.round((sectorQuestAnswerCount / 8) * 100)
+  const sectorQuestXP = sectorQuestAnswerCount * 125
   const hasSectorQuestDraft =
     Object.keys(generalSelected).length > 0 ||
     Object.keys(sectorSelected).length > 0 ||
@@ -514,8 +574,8 @@ export default function ExploreCareersPage() {
     if (sectorAdvanceTimer.current) clearTimeout(sectorAdvanceTimer.current)
     if (completedPhase !== undefined) setSectorQuestMilestone(completedPhase)
     const delay = sectorQuestPreferences.motion
-      ? completedPhase !== undefined ? 900 : 360
-      : completedPhase !== undefined ? 450 : 120
+      ? completedPhase !== undefined ? 1400 : 950
+      : completedPhase !== undefined ? 800 : 600
     sectorAdvanceTimer.current = setTimeout(() => {
       setSectorQuestMilestone(null)
       setAssessStep(nextStep)
@@ -618,6 +678,7 @@ export default function ExploreCareersPage() {
       if (res.ok && data?.recommendations) {
         const nextRecommendations = cleanRecommendations(data.recommendations)
         setRecommendations(nextRecommendations)
+        setCareerWorldReward(confirmedSector)
 
         if (user) {
           const journeyRes = await fetch("/api/journey", {
@@ -1454,21 +1515,28 @@ export default function ExploreCareersPage() {
                 </div>
 
                 <div className="grid gap-3">
-                  {SECTOR_QUEST_PHASES.map((phase, phaseIndex) => (
-                    <div
-                      key={phase.en.name}
-                      className="flex items-center gap-4 rounded-2xl border border-slate-700/80 bg-slate-950/35 p-4"
-                    >
-                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10 text-xl" aria-hidden="true">
-                        {phase.icon}
-                      </span>
-                      <div>
-                        <p className="text-sm font-black text-white">{phase[lang].name}</p>
-                        <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{phase[lang].hint}</p>
+                  {(['higher_studies', 'job', 'entrepreneurship'] as const).map((worldKey, worldIndex) => {
+                    const world = CAREER_WORLDS[worldKey]
+                    return (
+                      <div
+                        key={worldKey}
+                        className="group relative overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-950/35 p-4"
+                      >
+                        <div className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${world[lang].color}`} />
+                        <div className="flex items-center gap-4">
+                          <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${world[lang].color} text-2xl shadow-lg`} aria-hidden="true">
+                            {world.icon}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-white">{world[lang].name}</p>
+                            <p className="mt-0.5 text-[11px] font-bold text-cyan-200">{world[lang].role}</p>
+                            <p className="mt-1 text-xs leading-relaxed text-slate-400">{world[lang].description}</p>
+                          </div>
+                          <span className="ml-auto self-start text-xs font-black text-slate-600">0{worldIndex + 1}</span>
+                        </div>
                       </div>
-                      <span className="ml-auto text-xs font-black text-slate-600">0{phaseIndex + 1}</span>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
 
                 {showSectorQuestSettings && (
@@ -1600,7 +1668,7 @@ export default function ExploreCareersPage() {
                       />
                     </div>
                     <span className="text-[11px] font-black text-cyan-300">
-                      {sectorQuestProgress}% {sectorQuestCopy.complete}
+                      {sectorQuestXP} / 1000 {sectorQuestCopy.xp}
                     </span>
                   </div>
 
@@ -1636,7 +1704,7 @@ export default function ExploreCareersPage() {
                   <div className={sectorQuestPreferences.compact ? "space-y-3" : "space-y-5"}>
                     <div>
                       <span className="text-[10px] font-black uppercase tracking-[0.16em] text-indigo-300">
-                        {lang === "bn" ? `প্রশ্ন ${assessStep + 1} / ৩` : `Question ${assessStep + 1} of 3`}
+                        {lang === "bn" ? `লোডআউট মুভ ${assessStep + 1} / ৩` : `Loadout move ${assessStep + 1} of 3`}
                       </span>
                       <p className={`${sectorQuestPreferences.largeText ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"} mt-2 font-black leading-snug text-white`}>
                       {lang === 'bn' ? GENERAL_QUESTIONS[assessStep].questionText.bn : GENERAL_QUESTIONS[assessStep].questionText.en}
@@ -1646,30 +1714,46 @@ export default function ExploreCareersPage() {
                     <div className="grid gap-3 sm:grid-cols-3">
                       {GENERAL_QUESTIONS[assessStep].options.map((opt, oIdx) => {
                         const isSelected = generalSelected[assessStep] === opt.value
+                        const worldKey = opt.value as keyof typeof CAREER_WORLDS
+                        const world = CAREER_WORLDS[worldKey]
                         return (
                           <button
                             key={oIdx}
                             type="button"
                             aria-pressed={isSelected}
                             onClick={() => selectGeneralSectorAnswer(opt.value)}
-                            className={`${sectorQuestPreferences.compact ? "p-3" : "p-4"} min-h-24 rounded-2xl border text-left text-xs sm:text-sm font-medium leading-relaxed cursor-pointer select-none ${sectorQuestTransition} ${
+                            className={`${sectorQuestPreferences.compact ? "p-3" : "p-4"} min-h-32 rounded-2xl border text-left text-xs sm:text-sm font-medium leading-relaxed cursor-pointer select-none ${sectorQuestTransition} ${
                               isSelected
-                                ? 'bg-indigo-500/15 border-indigo-400 text-white shadow-lg shadow-indigo-950/20'
+                                ? 'bg-indigo-500/15 border-indigo-400 text-white shadow-lg shadow-indigo-950/20 -translate-y-1'
                                 : 'bg-slate-950/40 border-slate-800 text-slate-300 hover:-translate-y-0.5 hover:border-slate-600 hover:bg-slate-900/70'
                             }`}
                           >
-                            <div className="flex items-start gap-2.5">
-                              <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg border text-[10px] font-black ${
-                                isSelected ? 'border-indigo-400 bg-indigo-500 text-white' : 'border-slate-600 bg-slate-900 text-slate-400'
-                              }`}>
-                                {isSelected ? "✓" : String.fromCharCode(65 + oIdx)}
+                            <div className="flex items-start gap-3">
+                              <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${world[lang].color} text-xl shadow-lg`} aria-hidden="true">
+                                {isSelected ? "✓" : world.icon}
                               </span>
-                              <span>{lang === 'bn' ? opt.text.bn : opt.text.en}</span>
+                              <span>
+                                <span className="block text-[10px] font-black uppercase tracking-[0.12em] text-cyan-300">
+                                  {world[lang].name}
+                                </span>
+                                <span className="mt-1 block">{lang === 'bn' ? opt.text.bn : opt.text.en}</span>
+                              </span>
                             </div>
                           </button>
                         )
                       })}
                     </div>
+                    {generalSelected[assessStep] && (
+                      <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/10 p-3.5" aria-live="polite">
+                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                          ✦ {sectorQuestCopy.powerUp}
+                        </p>
+                        <p className="mt-1 text-xs font-bold leading-relaxed text-emerald-50">
+                          {CAREER_WORLDS[generalSelected[assessStep] as keyof typeof CAREER_WORLDS][lang].role}
+                          {" · +125 "}{sectorQuestCopy.xp}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1682,50 +1766,42 @@ export default function ExploreCareersPage() {
                       </p>
                       <p className="mt-2 text-sm font-medium text-slate-300">
                         <strong className="text-lg font-black capitalize text-white sm:text-xl">
-                          {confirmedSector === 'higher_studies' 
-                            ? (lang === 'bn' ? "উচ্চশিক্ষা" : "Higher Studies")
-                            : confirmedSector === 'job'
-                            ? (lang === 'bn' ? "চাকরি" : "Job")
-                            : (lang === 'bn' ? "উদ্যোক্তা" : "Entrepreneurship")
-                          }
+                          {confirmedSector ? CAREER_WORLDS[confirmedSector][lang].name : ""}
                         </strong>
                       </p>
+                      {confirmedSector && (
+                        <p className="mt-1 text-xs font-extrabold text-cyan-200">
+                          {CAREER_WORLDS[confirmedSector][lang].role}
+                        </p>
+                      )}
                       <p className="mt-2 text-xs leading-relaxed text-slate-400">{sectorQuestCopy.confirm}</p>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-3">
                       {(['higher_studies', 'job', 'entrepreneurship'] as const).map((sec, sIdx) => {
                         const isSelected = confirmedSector === sec
-                        const icon = sec === 'higher_studies' ? '📚' : sec === 'job' ? '💼' : '🚀'
-                        const title = sec === 'higher_studies' 
-                          ? (lang === 'bn' ? "উচ্চশিক্ষা" : "Higher Studies")
-                          : sec === 'job'
-                          ? (lang === 'bn' ? "চাকরি / ক্যারিয়ার" : "Job / Employment")
-                          : (lang === 'bn' ? "উদ্যোক্তা / ব্যবসা" : "Entrepreneurship / Business")
+                        const world = CAREER_WORLDS[sec]
                         
-                        const desc = sec === 'higher_studies'
-                          ? (lang === 'bn' ? "স্নাতকোত্তর, পিএইচডি ও গবেষণা" : "Masters, PhD & Academic Research")
-                          : sec === 'job'
-                          ? (lang === 'bn' ? "প্রতিষ্ঠানে চাকরি ও কর্মসংস্থান" : "Corporate growth, office roles & steady work")
-                          : (lang === 'bn' ? "নতুন স্টার্টআপ ও নিজস্ব উদ্যোগ" : "Startup founding, freelancing & services")
-
                         return (
                           <button
                             key={sIdx}
                             type="button"
                             aria-pressed={isSelected}
                             onClick={() => selectConfirmedSector(sec)}
-                            className={`${sectorQuestPreferences.compact ? "p-3" : "p-4"} min-h-24 rounded-2xl border text-left cursor-pointer select-none ${sectorQuestTransition} ${
+                            className={`${sectorQuestPreferences.compact ? "p-3" : "p-4"} min-h-32 rounded-2xl border text-left cursor-pointer select-none ${sectorQuestTransition} ${
                               isSelected
-                                ? 'bg-indigo-500/15 border-indigo-400 text-white shadow-lg shadow-indigo-950/20'
+                                ? 'bg-indigo-500/15 border-indigo-400 text-white shadow-lg shadow-indigo-950/20 -translate-y-1'
                                 : 'bg-slate-950/40 border-slate-800 hover:-translate-y-0.5 hover:border-slate-600 hover:bg-slate-900/70'
                             }`}
                           >
-                            <div className="flex items-center gap-3">
-                              <span className="text-2xl">{icon}</span>
+                            <div className="flex items-start gap-3">
+                              <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${world[lang].color} text-2xl shadow-lg`} aria-hidden="true">
+                                {world.icon}
+                              </span>
                               <div className="min-w-0">
-                                <h5 className="font-extrabold text-sm text-slate-100">{title}</h5>
-                                <p className="text-[10px] text-slate-400 mt-0.5 truncate">{desc}</p>
+                                <h5 className="font-extrabold text-sm text-slate-100">{world[lang].name}</h5>
+                                <p className="mt-0.5 text-[10px] font-bold text-cyan-200">{world[lang].role}</p>
+                                <p className="mt-1 text-[10px] leading-relaxed text-slate-400">{world[lang].description}</p>
                               </div>
                               <span className={`w-4 h-4 rounded-full border shrink-0 flex items-center justify-center ml-auto text-[8px] font-bold ${
                                 isSelected ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-slate-600'
@@ -1745,7 +1821,7 @@ export default function ExploreCareersPage() {
                   <div className={sectorQuestPreferences.compact ? "space-y-3" : "space-y-5"}>
                     <div>
                       <span className="text-[10px] font-black uppercase tracking-[0.16em] text-indigo-300">
-                        {lang === "bn" ? `বিস্তারিত ${assessStep - 3} / ৪` : `Deep dive ${assessStep - 3} of 4`}
+                        {lang === "bn" ? `ফিল্ড মিশন ${assessStep - 3} / ৪` : `Field mission ${assessStep - 3} of 4`}
                       </span>
                       <p className={`${sectorQuestPreferences.largeText ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"} mt-2 font-black leading-snug text-white`}>
                         {lang === 'bn'
@@ -1782,6 +1858,21 @@ export default function ExploreCareersPage() {
                         )
                       })}
                     </div>
+                    {sectorSelected[assessStep - 4] && (
+                      <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/10 p-3.5" aria-live="polite">
+                        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                          ✦ {sectorQuestCopy.powerUp}
+                        </p>
+                        <p className="mt-1 text-xs font-bold leading-relaxed text-emerald-50">
+                          {
+                            SECTOR_QUESTIONS[confirmedSector][assessStep - 4].options.find(
+                              option => option.value === sectorSelected[assessStep - 4]
+                            )?.text[lang]
+                          }
+                          {" · +125 "}{sectorQuestCopy.xp}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1837,6 +1928,31 @@ export default function ExploreCareersPage() {
             )}
           </div>
 
+
+          {careerWorldReward && (
+            <div className="relative overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-cyan-50 p-6 shadow-sm sm:p-8">
+              <div className={`absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gradient-to-br ${CAREER_WORLDS[careerWorldReward][lang].color} opacity-15 blur-2xl`} />
+              <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center">
+                <span className={`grid h-20 w-20 shrink-0 place-items-center rounded-3xl bg-gradient-to-br ${CAREER_WORLDS[careerWorldReward][lang].color} text-4xl text-white shadow-xl`} aria-hidden="true">
+                  {CAREER_WORLDS[careerWorldReward].icon}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-amber-700">
+                    🏅 {sectorQuestCopy.badge}
+                  </p>
+                  <h3 className="mt-1 text-2xl font-black text-slate-950">
+                    {CAREER_WORLDS[careerWorldReward][lang].role}
+                  </h3>
+                  <p className="mt-1 text-sm font-semibold text-slate-600">
+                    {CAREER_WORLDS[careerWorldReward][lang].name} · 1000 {sectorQuestCopy.xp}
+                  </p>
+                  <p className="mt-2 text-xs font-extrabold text-emerald-700">
+                    ✦ {sectorQuestCopy.unlocked}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 1. TOP MATCH CARDS (Vertical cards grid) */}
           <div id="recommendations-list" className="space-y-4">
