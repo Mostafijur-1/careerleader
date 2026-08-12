@@ -57,6 +57,18 @@ export function recommendFromCareerAssessment(
       }
     }
   })
+  const profileSignals = [
+    ...(assessment.profile?.favoriteSubjects || []),
+    ...(assessment.profile?.interests || []),
+    ...(assessment.profile?.skills || []),
+    assessment.profile?.goal,
+    assessment.profile?.workStyle,
+    assessment.profile?.workEnvironment,
+    ...(assessment.gameResults?.strengths || []),
+  ].filter((signal): signal is string => typeof signal === 'string' && signal.length > 0)
+  for (const signal of profileSignals) {
+    selectedSignals.set(signal, Math.max(selectedSignals.get(signal) || 0, 2))
+  }
 
   return pool
     .map((candidate, originalIndex) => ({

@@ -138,6 +138,22 @@ export interface SectorAssessmentPayload {
   sector: string
   generalAnswers: Array<{ question: string; answer: string; value?: string }>
   sectorAnswers: Array<{ question: string; answer: string; value?: string }>
+  profile?: {
+    education?: string
+    favoriteSubjects?: string[]
+    interests?: string[]
+    skills?: string[]
+    confidence?: number
+    goal?: string
+    workStyle?: string
+    workEnvironment?: string
+  }
+  gameResults?: {
+    logicAnswer?: string | number
+    logicCorrect?: boolean
+    planningChoice?: string | number
+    strengths?: string[]
+  }
 }
 
 export async function getSectorRecommendations(
@@ -163,6 +179,13 @@ export async function getSectorRecommendations(
     .map(a => `- Question: "${a.question}"\n  Answer: "${a.answer}"`)
     .join("\n")
 
+  const profileText = assessment.profile
+    ? JSON.stringify(assessment.profile, null, 2)
+    : "Not provided"
+  const gameText = assessment.gameResults
+    ? JSON.stringify(assessment.gameResults, null, 2)
+    : "Not provided"
+
   const prompt = `You are a career guidance assistant. Return only valid JSON with this exact shape (no markdown, no extra keys at root):
 {"recommendations": [{"title": string, "description": string, "skills": string[]}]}
 
@@ -173,6 +196,12 @@ ${generalText}
 
 Here are their answers specific to their target sector:
 ${sectorText}
+
+Here is the student's education, interests, skills, goal, and work preferences:
+${profileText}
+
+Here are the results from two short skill games. Treat these as supporting signals, not pass/fail tests:
+${gameText}
 
 Provide practical, highly specific career recommendations matching their profile and answers. Limit each recommendation's description to 2 concise sentences.`
 
