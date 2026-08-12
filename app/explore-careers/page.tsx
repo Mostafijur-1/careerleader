@@ -227,30 +227,30 @@ const GENERAL_QUESTIONS: Question[] = [
   {
     id: "g1",
     questionText: {
-      en: "Three portals appear. Which world do you explore first?",
-      bn: "তিনটি পোর্টাল দেখা দিয়েছে। আপনি প্রথমে কোন জগৎ অন্বেষণ করবেন?"
+      en: "Which career path would you like to explore first?",
+      bn: "আপনি প্রথমে কোন ক্যারিয়ার পথটি দেখতে চান?"
     },
     options: [
       {
         text: {
-          en: "Enter Knowledge Citadel—libraries, laboratories, and unsolved mysteries.",
-          bn: "নলেজ সিটাডেলে প্রবেশ করি—লাইব্রেরি, গবেষণাগার ও অমীমাংসিত রহস্যের জগৎ।"
+          en: "Study more, do research, and discover new knowledge.",
+          bn: "আরও পড়াশোনা করি, গবেষণা করি এবং নতুন জ্ঞান খুঁজি।"
         },
         value: "higher_studies",
         sector: "higher_studies"
       },
       {
         text: {
-          en: "Enter Teamwork City—skilled crews solving real-world challenges.",
-          bn: "টিমওয়ার্ক সিটিতে প্রবেশ করি—দক্ষ দল বাস্তব চ্যালেঞ্জ সমাধান করছে।"
+          en: "Get a job, work with a team, and solve real problems.",
+          bn: "চাকরি করি, দলের সঙ্গে কাজ করি এবং বাস্তব সমস্যা সমাধান করি।"
         },
         value: "job",
         sector: "job"
       },
       {
         text: {
-          en: "Enter Founder Frontier—build a venture, recruit allies, and set your own route.",
-          bn: "ফাউন্ডার ফ্রন্টিয়ারে প্রবেশ করি—উদ্যোগ গড়ি, সহযোগী খুঁজি এবং নিজের পথ ঠিক করি।"
+          en: "Start my own business and build a team around my idea.",
+          bn: "নিজের ব্যবসা শুরু করি এবং ধারণাটি নিয়ে একটি দল গড়ি।"
         },
         value: "entrepreneurship",
         sector: "entrepreneurship"
@@ -260,30 +260,30 @@ const GENERAL_QUESTIONS: Question[] = [
   {
     id: "g2",
     questionText: {
-      en: "Choose the main quest your explorer cannot resist.",
-      bn: "আপনার এক্সপ্লোরার যে মূল মিশনটি এড়িয়ে যেতে পারবে না সেটি বেছে নিন।"
+      en: "Which goal sounds most exciting to you?",
+      bn: "কোন লক্ষ্যটি আপনার কাছে সবচেয়ে ভালো লাগে?"
     },
     options: [
       {
         text: {
-          en: "Decode a difficult subject and create knowledge nobody had before.",
-          bn: "কঠিন একটি বিষয় আয়ত্ত করে এমন জ্ঞান তৈরি করি যা আগে কারও ছিল না।"
+          en: "Understand a difficult subject and discover something new.",
+          bn: "কঠিন একটি বিষয় বুঝি এবং নতুন কিছু আবিষ্কার করি।"
         },
         value: "higher_studies",
         sector: "higher_studies"
       },
       {
         text: {
-          en: "Join a capable team, ship useful work, and unlock higher responsibility.",
-          bn: "দক্ষ দলে যোগ দিয়ে উপকারী কাজ করি এবং বড় দায়িত্ব আনলক করি।"
+          en: "Join a good team, do useful work, and take on more responsibility.",
+          bn: "ভালো একটি দলে যোগ দিই, দরকারি কাজ করি এবং বড় দায়িত্ব নিই।"
         },
         value: "job",
         sector: "job"
       },
       {
         text: {
-          en: "Spot an unmet need and build a solution that belongs to me.",
-          bn: "অসম্পূর্ণ চাহিদা খুঁজে নিজের মালিকানায় একটি সমাধান তৈরি করি।"
+          en: "Find a problem and build my own solution for it.",
+          bn: "একটি সমস্যা খুঁজি এবং নিজের সমাধান তৈরি করি।"
         },
         value: "entrepreneurship",
         sector: "entrepreneurship"
@@ -293,30 +293,30 @@ const GENERAL_QUESTIONS: Question[] = [
   {
     id: "g3",
     questionText: {
-      en: "A gatekeeper offers three power-ups. Which trade-off do you accept?",
-      bn: "একজন গেটকিপার তিনটি পাওয়ার-আপ দিল। কোন বিনিময়টি আপনি গ্রহণ করবেন?"
+      en: "Which benefit would you choose, even with its challenge?",
+      bn: "চ্যালেঞ্জ থাকলেও আপনি কোন সুবিধাটি বেছে নেবেন?"
     },
     options: [
       {
         text: {
-          en: "Mastery Crystal—invest more time now to gain rare expertise later.",
-          bn: "মাস্টারি ক্রিস্টাল—পরবর্তীতে বিরল দক্ষতার জন্য এখন বেশি সময় বিনিয়োগ করি।"
+          en: "Study longer now to become highly skilled later.",
+          bn: "পরে খুব দক্ষ হতে এখন বেশি সময় পড়াশোনা করি।"
         },
         value: "higher_studies",
         sector: "higher_studies"
       },
       {
         text: {
-          en: "Stability Shield—gain steady rewards, clear levels, and reliable support.",
-          bn: "স্ট্যাবিলিটি শিল্ড—নিয়মিত পুরস্কার, পরিষ্কার ধাপ ও নির্ভরযোগ্য সহায়তা পাই।"
+          en: "Choose steady income, a clear career path, and reliable support.",
+          bn: "নিয়মিত আয়, পরিষ্কার ক্যারিয়ার পথ ও নির্ভরযোগ্য সহায়তা বেছে নিই।"
         },
         value: "job",
         sector: "job"
       },
       {
         text: {
-          en: "Autonomy Flame—accept higher risk for control and unlimited upside.",
-          bn: "অটোনমি ফ্লেম—নিয়ন্ত্রণ ও সীমাহীন সম্ভাবনার জন্য বেশি ঝুঁকি নিই।"
+          en: "Take more risk to have more control and growth.",
+          bn: "বেশি নিয়ন্ত্রণ ও উন্নতির জন্য বেশি ঝুঁকি নিই।"
         },
         value: "entrepreneurship",
         sector: "entrepreneurship"
@@ -330,49 +330,49 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "h1",
       questionText: {
-        en: "Mission 1: Choose the knowledge rank you want to unlock.",
-        bn: "মিশন ১: আপনি যে জ্ঞানের র‍্যাঙ্ক আনলক করতে চান সেটি বেছে নিন।"
+        en: "What type of further study would you choose?",
+        bn: "আপনি কোন ধরনের উচ্চশিক্ষা বেছে নেবেন?"
       },
       options: [
-        { text: { en: "Master's Degree (Specialized knowledge)", bn: "মাস্টার্স ডিগ্রি (বিশেষায়িত জ্ঞান)" }, value: "Master's Degree" },
-        { text: { en: "PhD / Doctorate (Research & academia)", bn: "পিএইচডি / ডক্টরেট (গবেষণা ও শিক্ষাবিদ্যা)" }, value: "PhD / Doctorate" },
-        { text: { en: "Professional Certification / Diploma", bn: "পেশাদার সার্টিফিকেট / ডিপ্লোমা" }, value: "Professional Certification / Diploma" }
+        { text: { en: "Master's degree to learn one subject deeply", bn: "একটি বিষয়ে গভীরভাবে শিখতে মাস্টার্স ডিগ্রি" }, value: "Master's Degree" },
+        { text: { en: "PhD or doctorate to do research and teach", bn: "গবেষণা ও শিক্ষকতার জন্য পিএইচডি বা ডক্টরেট" }, value: "PhD / Doctorate" },
+        { text: { en: "Professional certificate or diploma for job skills", bn: "চাকরির দক্ষতার জন্য পেশাগত সার্টিফিকেট বা ডিপ্লোমা" }, value: "Professional Certification / Diploma" }
       ]
     },
     {
       id: "h2",
       questionText: {
-        en: "Mission 2: Select the wing of the Citadel you want to investigate.",
-        bn: "মিশন ২: সিটাডেলের যে অংশটি অনুসন্ধান করতে চান সেটি বেছে নিন।"
+        en: "Which subject area would you most like to study?",
+        bn: "আপনি কোন বিষয়টি সবচেয়ে বেশি পড়তে চান?"
       },
       options: [
-        { text: { en: "STEM (Science, Tech, Engineering, Math)", bn: "স্টেম (বিজ্ঞান, প্রযুক্তি, প্রকৌশল, গণিত)" }, value: "STEM" },
-        { text: { en: "Social Sciences & Business Management", bn: "সামাজিক বিজ্ঞান ও ব্যবসায়িক ব্যবস্থাপনা" }, value: "Social Sciences & Business Management" },
-        { text: { en: "Arts, Literature & Humanities", bn: "কলা, সাহিত্য ও মানবিক শাখা" }, value: "Arts & Humanities" }
+        { text: { en: "Science, technology, engineering, or math", bn: "বিজ্ঞান, প্রযুক্তি, প্রকৌশল বা গণিত" }, value: "STEM" },
+        { text: { en: "Social science or business management", bn: "সামাজিক বিজ্ঞান বা ব্যবসা ব্যবস্থাপনা" }, value: "Social Sciences & Business Management" },
+        { text: { en: "Arts, literature, or humanities", bn: "কলা, সাহিত্য বা মানবিক বিভাগ" }, value: "Arts & Humanities" }
       ]
     },
     {
       id: "h3",
       questionText: {
-        en: "Mission 3: Place your scholar basecamp.",
-        bn: "মিশন ৩: আপনার স্কলার বেসক্যাম্পের জায়গা নির্ধারণ করুন।"
+        en: "Where would you prefer to study?",
+        bn: "আপনি কোথায় পড়াশোনা করতে চান?"
       },
       options: [
-        { text: { en: "In my home country (established universities)", bn: "নিজের দেশে (প্রতিষ্ঠিত বিশ্ববিদ্যালয়ে)" }, value: "Home Country" },
-        { text: { en: "Abroad (North America, Europe, Asia-Pacific for global exposure)", bn: "বিদেশে (উত্তর আমেরিকা, ইউরোপ বা এশিয়া-প্যাসিফিক অঞ্চল)" }, value: "Abroad" },
-        { text: { en: "Online / Hybrid programs while working", bn: "কাজের পাশাপাশি অনলাইন / হাইব্রিড প্রোগ্রাম" }, value: "Online/Hybrid" }
+        { text: { en: "At a university in my own country", bn: "নিজের দেশের বিশ্ববিদ্যালয়ে" }, value: "Home Country" },
+        { text: { en: "At a university in another country", bn: "অন্য দেশের বিশ্ববিদ্যালয়ে" }, value: "Abroad" },
+        { text: { en: "Online or partly online while working", bn: "কাজের পাশাপাশি অনলাইনে বা আংশিক অনলাইনে" }, value: "Online/Hybrid" }
       ]
     },
     {
       id: "h4",
       questionText: {
-        en: "Final mission: Choose how your discoveries will change the world.",
-        bn: "চূড়ান্ত মিশন: আপনার আবিষ্কার কীভাবে পৃথিবী বদলাবে তা বেছে নিন।"
+        en: "What would you like to do after further study?",
+        bn: "উচ্চশিক্ষার পর আপনি কী করতে চান?"
       },
       options: [
-        { text: { en: "Become a university professor or academic researcher", bn: "বিশ্ববিদ্যালয়ের অধ্যাপক বা একাডেমিক গবেষক হওয়া" }, value: "Professor/Researcher" },
-        { text: { en: "Enter R&D departments in corporate industries", bn: "কর্পোরেট শিল্পে গবেষণা ও উন্নয়ন (R&D) বিভাগে যোগ দেওয়া" }, value: "Corporate R&D" },
-        { text: { en: "Advise governments, NGOs, or public institutions", bn: "সরকারি প্রতিষ্ঠান, এনজিও বা জনকল্যাণ সংস্থায় পরামর্শদাতা হওয়া" }, value: "Policy Advisor/Consultant" }
+        { text: { en: "Teach at a university or do academic research", bn: "বিশ্ববিদ্যালয়ে পড়াই বা গবেষণা করি" }, value: "Professor/Researcher" },
+        { text: { en: "Do research for a company", bn: "কোনো প্রতিষ্ঠানে গবেষণার কাজ করি" }, value: "Corporate R&D" },
+        { text: { en: "Advise government or social organizations", bn: "সরকার বা সামাজিক প্রতিষ্ঠানকে পরামর্শ দিই" }, value: "Policy Advisor/Consultant" }
       ]
     }
   ],
@@ -380,49 +380,49 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "j1",
       questionText: {
-        en: "Mission 1: Choose the team headquarters where you will spawn.",
-        bn: "মিশন ১: যে দলের সদর দপ্তরে আপনি শুরু করবেন সেটি বেছে নিন।"
+        en: "What type of workplace would you prefer?",
+        bn: "আপনি কোন ধরনের কর্মস্থল পছন্দ করেন?"
       },
       options: [
-        { text: { en: "A large multinational corporation (stability, corporate structure)", bn: "একটি বড় বহুজাতিক কর্পোরেশন (স্থিতিশীলতা ও সুনির্দিষ্ট কাঠামো)" }, value: "Multinational Corporation" },
-        { text: { en: "A fast-growing startup / medium company (rapid learning, flexibility)", bn: "একটি দ্রুত বর্ধনশীল স্টার্টআপ / মাঝারি মানের প্রতিষ্ঠান (দ্রুত শেখা ও নমনীয়তা)" }, value: "Startup/Medium Company" },
-        { text: { en: "Government / Public Sector (high job security, public service)", bn: "সরকারি / পাবলিক সেক্টর (উচ্চ নিরাপত্তা ও জনসেবা)" }, value: "Government/Public Sector" }
+        { text: { en: "A large company with clear rules and stable work", bn: "পরিষ্কার নিয়ম ও স্থির কাজসহ বড় প্রতিষ্ঠান" }, value: "Multinational Corporation" },
+        { text: { en: "A growing company where I can learn quickly", bn: "দ্রুত শেখার সুযোগসহ বেড়ে ওঠা প্রতিষ্ঠান" }, value: "Startup/Medium Company" },
+        { text: { en: "A government job with security and public service", bn: "নিরাপত্তা ও জনসেবাসহ সরকারি চাকরি" }, value: "Government/Public Sector" }
       ]
     },
     {
       id: "j2",
       questionText: {
-        en: "Mission 2: Equip your specialist class.",
-        bn: "মিশন ২: আপনার স্পেশালিস্ট ক্লাস বেছে নিন।"
+        en: "What kind of work interests you most?",
+        bn: "কোন ধরনের কাজে আপনার সবচেয়ে বেশি আগ্রহ?"
       },
       options: [
-        { text: { en: "Technical & Analytical (Software, engineering, analytics)", bn: "প্রযুক্তিগত ও বিশ্লেষণধর্মী (সফটওয়্যার, প্রকৌশল, অ্যানালিটিক্স)" }, value: "Technical & Analytical" },
-        { text: { en: "Creative & Design (UI/UX, copywriting, marketing, design)", bn: "সৃজনশীল ও ডিজাইন সংক্রান্ত (ইউআই/ইউএক্স, কপিরাইটিং, মার্কেটিং, ডিজাইন)" }, value: "Creative & Design" },
-        { text: { en: "Management & Operations (Product management, project lead, strategy)", bn: "ব্যবস্থাপনা ও পরিচালনা সংক্রান্ত (প্রোডাক্ট বা প্রজেক্ট ম্যানেজমেন্ট, স্ট্র্যাটেজি)" }, value: "Management & Operations" }
+        { text: { en: "Technical work like software, engineering, or data", bn: "সফটওয়্যার, প্রকৌশল বা ডেটার মতো প্রযুক্তিগত কাজ" }, value: "Technical & Analytical" },
+        { text: { en: "Creative work like design, writing, or marketing", bn: "ডিজাইন, লেখা বা মার্কেটিংয়ের মতো সৃজনশীল কাজ" }, value: "Creative & Design" },
+        { text: { en: "Managing products, projects, people, or plans", bn: "পণ্য, প্রকল্প, মানুষ বা পরিকল্পনা পরিচালনা" }, value: "Management & Operations" }
       ]
     },
     {
       id: "j3",
       questionText: {
-        en: "Mission 3: Set your operating mode.",
-        bn: "মিশন ৩: আপনার কাজের মোড নির্ধারণ করুন।"
+        en: "Where would you like to work?",
+        bn: "আপনি কোথা থেকে কাজ করতে চান?"
       },
       options: [
-        { text: { en: "Fully Remote (work from anywhere, high flexibility)", bn: "সম্পূর্ণ রিমোট (যেকোনো স্থান থেকে কাজ, উচ্চ নমনীয়তা)" }, value: "Fully Remote" },
-        { text: { en: "Hybrid (split time between home and office)", bn: "হাইব্রিড (বাসা এবং অফিস উভয় স্থান মিলিয়ে কাজ)" }, value: "Hybrid" },
-        { text: { en: "On-site (dedicated office space, direct collaboration)", bn: "অন-সাইট (সুনির্দিষ্ট অফিস এবং সরাসরি দলগত সহযোগিতা)" }, value: "On-site" }
+        { text: { en: "From home or anywhere", bn: "বাসা বা যেকোনো জায়গা থেকে" }, value: "Fully Remote" },
+        { text: { en: "Some days at home and some days at the office", bn: "কিছু দিন বাসায়, কিছু দিন অফিসে" }, value: "Hybrid" },
+        { text: { en: "At the office with my team", bn: "দলের সঙ্গে অফিসে" }, value: "On-site" }
       ]
     },
     {
       id: "j4",
       questionText: {
-        en: "Final mission: Choose the pace that keeps your energy bar strong.",
-        bn: "চূড়ান্ত মিশন: যে গতি আপনার এনার্জি বার শক্ত রাখে সেটি বেছে নিন।"
+        en: "What work schedule would suit you best?",
+        bn: "কোন কাজের সময়সূচি আপনার জন্য সবচেয়ে ভালো?"
       },
       options: [
-        { text: { en: "Strict 9-to-5 boundaries with weekends free", bn: "সুনির্দিষ্ট ৯টা-৫টার সীমানা এবং ছুটির দিন সম্পূর্ণ ফ্রি রাখা" }, value: "Strict 9-to-5" },
-        { text: { en: "High intensity, high growth, and willing to work extra hours for promotion", bn: "উচ্চ প্রবৃদ্ধি এবং প্রমোশন বা বোনাসের জন্য অতিরিক্ত পরিশ্রম করতে রাজি" }, value: "High Growth / High Intensity" },
-        { text: { en: "Flexible/freelance hours with focus on completed tasks", bn: "কাজের সফলতার ওপর গুরুত্ব দিয়ে নিজস্ব ফ্লেক্সিবল সময় নির্ধারণ" }, value: "Flexible Hours" }
+        { text: { en: "Fixed office hours with weekends free", bn: "নির্দিষ্ট অফিস সময় এবং ছুটির দিন ফ্রি" }, value: "Strict 9-to-5" },
+        { text: { en: "Longer hours for faster growth and promotion", bn: "দ্রুত উন্নতি ও পদোন্নতির জন্য বেশি সময় কাজ" }, value: "High Growth / High Intensity" },
+        { text: { en: "Flexible hours as long as I finish my work", bn: "কাজ শেষ হলে নিজের সুবিধামতো সময়" }, value: "Flexible Hours" }
       ]
     }
   ],
@@ -430,49 +430,49 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
     {
       id: "e1",
       questionText: {
-        en: "Mission 1: Choose the venture you will build from zero.",
-        bn: "মিশন ১: শূন্য থেকে যে উদ্যোগটি গড়বেন সেটি বেছে নিন।"
+        en: "What kind of business would you like to start?",
+        bn: "আপনি কোন ধরনের ব্যবসা শুরু করতে চান?"
       },
       options: [
-        { text: { en: "Tech startup (SaaS, AI, apps) aiming for venture capital and scale", bn: "প্রযুক্তিগত স্টার্টআপ (SaaS, AI, অ্যাপস) যার লক্ষ্য বড় আকারের বিনিয়োগ ও বিস্তার" }, value: "Tech Startup" },
-        { text: { en: "Service-based agency/consultancy (design, agency, freelancing)", bn: "সেবামূলক এজেন্সি/কনসালটেন্সি (ডিজাইন, সফটওয়্যার এজেন্সি, ফ্রিল্যান্সিং)" }, value: "Service Agency" },
-        { text: { en: "E-commerce or physical products (selling goods online/offline)", bn: "ই-কমার্স বা ভৌত পণ্য (অনলাইন বা অফলাইনে পণ্য বিক্রি)" }, value: "E-commerce/Physical Products" }
+        { text: { en: "A technology business that makes software or apps", bn: "সফটওয়্যার বা অ্যাপ তৈরি করে এমন প্রযুক্তি ব্যবসা" }, value: "Tech Startup" },
+        { text: { en: "A service business like design, consulting, or freelancing", bn: "ডিজাইন, পরামর্শ বা ফ্রিল্যান্সিংয়ের মতো সেবা ব্যবসা" }, value: "Service Agency" },
+        { text: { en: "A business that sells products online or in shops", bn: "অনলাইনে বা দোকানে পণ্য বিক্রির ব্যবসা" }, value: "E-commerce/Physical Products" }
       ]
     },
     {
       id: "e2",
       questionText: {
-        en: "Mission 2: Equip your founder superpower.",
-        bn: "মিশন ২: আপনার ফাউন্ডার সুপারপাওয়ার বেছে নিন।"
+        en: "Which business skill would you most like to use?",
+        bn: "ব্যবসায় আপনি কোন দক্ষতাটি সবচেয়ে বেশি ব্যবহার করতে চান?"
       },
       options: [
-        { text: { en: "Product development & Technical execution (the builder)", bn: "পণ্য উন্নয়ন ও কারিগরি বাস্তবায়ন (দ্য বিল্ডার)" }, value: "Product & Tech Builder" },
-        { text: { en: "Sales, Marketing, & Networking (the growth engine)", bn: "বিক্রয়, বিপণন এবং নেটওয়ার্কিং (দ্য গ্রোথ ইঞ্জিন)" }, value: "Sales & Marketing" },
-        { text: { en: "Operations, Finance, & Strategy (the manager)", bn: "পরিচালনা, অর্থসংস্থান এবং কৌশল নির্ধারণ (দ্য ম্যানেজার)" }, value: "Operations & Finance" }
+        { text: { en: "Building the product and handling technology", bn: "পণ্য তৈরি ও প্রযুক্তির কাজ" }, value: "Product & Tech Builder" },
+        { text: { en: "Selling, marketing, and meeting customers", bn: "বিক্রি, মার্কেটিং ও গ্রাহকের সঙ্গে যোগাযোগ" }, value: "Sales & Marketing" },
+        { text: { en: "Managing money, daily work, and business plans", bn: "টাকা, দৈনন্দিন কাজ ও ব্যবসার পরিকল্পনা পরিচালনা" }, value: "Operations & Finance" }
       ]
     },
     {
       id: "e3",
       questionText: {
-        en: "Mission 3: Choose the fuel that launches your venture.",
-        bn: "মিশন ৩: আপনার উদ্যোগ চালু করার জ্বালানি বেছে নিন।"
+        en: "How would you prefer to fund your business?",
+        bn: "আপনি কীভাবে ব্যবসার টাকা জোগাড় করতে চান?"
       },
       options: [
-        { text: { en: "Bootstrapping (using my own savings and reinvesting revenue)", bn: "বুটস্ট্র্যাপিং (নিজের সঞ্চয় এবং অর্জিত রাজস্ব পুনরায় বিনিয়োগ করা)" }, value: "Bootstrapping" },
-        { text: { en: "Raising external funding (angel investors, VC, loans)", bn: "বাইরের বিনিয়োগ সংগ্রহ (অ্যাঞ্জেল ইনভেস্টর, ভিসি বা লোন)" }, value: "External Funding" },
-        { text: { en: "Crowdfunding or pre-selling products to customers", bn: "ক্রাউডফান্ডিং বা কাস্টমারদের কাছে অগ্রিম পণ্য বিক্রি করা" }, value: "Crowdfunding/Pre-sales" }
+        { text: { en: "Use my own savings and business income", bn: "নিজের সঞ্চয় ও ব্যবসার আয় ব্যবহার করি" }, value: "Bootstrapping" },
+        { text: { en: "Get money from investors or a loan", bn: "বিনিয়োগকারী বা ঋণ থেকে টাকা নিই" }, value: "External Funding" },
+        { text: { en: "Raise money from customers before the product is ready", bn: "পণ্য তৈরি হওয়ার আগে গ্রাহকদের কাছ থেকে টাকা তুলি" }, value: "Crowdfunding/Pre-sales" }
       ]
     },
     {
       id: "e4",
       questionText: {
-        en: "Final mission: Define what victory means for your founder.",
-        bn: "চূড়ান্ত মিশন: আপনার প্রতিষ্ঠাতার কাছে বিজয়ের অর্থ ঠিক করুন।"
+        en: "What would business success mean most to you?",
+        bn: "ব্যবসায় সাফল্য বলতে আপনার কাছে সবচেয়ে গুরুত্বপূর্ণ কী?"
       },
       options: [
-        { text: { en: "Complete creative control and intellectual independence", bn: "সম্পূর্ণ সৃজনশীল নিয়ন্ত্রণ এবং বুদ্ধিবৃত্তিক স্বাধীনতা" }, value: "Creative/Intellectual Control" },
-        { text: { en: "Unlimited financial potential and wealth creation", bn: "অসীম আর্থিক সম্ভাবনা এবং সম্পদ তৈরি" }, value: "Wealth Creation" },
-        { text: { en: "Flexibility of lifestyle and being my own boss", bn: "জীবনযাত্রার নমনীয়তা এবং নিজের বস নিজে হওয়া" }, value: "Lifestyle & Autonomy" }
+        { text: { en: "Having full control over my ideas and decisions", bn: "নিজের ধারণা ও সিদ্ধান্তের ওপর পুরো নিয়ন্ত্রণ" }, value: "Creative/Intellectual Control" },
+        { text: { en: "Earning a lot and building wealth", bn: "অনেক আয় করা ও সম্পদ তৈরি করা" }, value: "Wealth Creation" },
+        { text: { en: "Having flexible time and being my own boss", bn: "নিজের সময় ঠিক করা ও নিজের বস হওয়া" }, value: "Lifestyle & Autonomy" }
       ]
     }
   ]
