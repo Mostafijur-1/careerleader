@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo, useRef } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useUser } from "../contexts/UserContext"
@@ -475,6 +476,43 @@ const SECTOR_QUESTIONS: Record<'higher_studies' | 'job' | 'entrepreneurship', Qu
       ]
     }
   ]
+}
+
+const EXPLORE_QUESTION_IMAGES: Record<string, { src: string; en: string; bn: string }> = {
+  g1: { src: "/images/explore-careers/g1.webp", en: "A male student choosing among three career worlds", bn: "তিনটি ক্যারিয়ার জগতের মধ্যে বেছে নিচ্ছে একজন ছাত্র" },
+  g2: { src: "/images/explore-careers/g2.webp", en: "A male student comparing three career quests", bn: "তিনটি ক্যারিয়ার অভিযান তুলনা করছে একজন ছাত্র" },
+  g3: { src: "/images/explore-careers/g3.webp", en: "A male student choosing a career power-up", bn: "ক্যারিয়ার পাওয়ার-আপ বেছে নিচ্ছে একজন ছাত্র" },
+  h1: { src: "/images/explore-careers/h1.webp", en: "A male scholar choosing a level of study", bn: "পড়াশোনার স্তর বেছে নিচ্ছে একজন ছাত্র" },
+  h2: { src: "/images/explore-careers/h2.webp", en: "A male scholar exploring different fields of study", bn: "বিভিন্ন শিক্ষাক্ষেত্র অনুসন্ধান করছে একজন ছাত্র" },
+  h3: { src: "/images/explore-careers/h3.webp", en: "A male scholar choosing where to study", bn: "কোথায় পড়বে তা বেছে নিচ্ছে একজন ছাত্র" },
+  h4: { src: "/images/explore-careers/h4.webp", en: "A male scholar considering the impact of his discoveries", bn: "নিজের আবিষ্কারের প্রভাব ভাবছে একজন ছাত্র" },
+  j1: { src: "/images/explore-careers/j1.webp", en: "A male career explorer choosing a workplace", bn: "কর্মক্ষেত্র বেছে নিচ্ছে একজন ছাত্র" },
+  j2: { src: "/images/explore-careers/j2.webp", en: "A male career explorer choosing a professional specialty", bn: "পেশাগত দক্ষতার ক্ষেত্র বেছে নিচ্ছে একজন ছাত্র" },
+  j3: { src: "/images/explore-careers/j3.webp", en: "A male career explorer comparing work arrangements", bn: "কাজের বিভিন্ন পদ্ধতি তুলনা করছে একজন ছাত্র" },
+  j4: { src: "/images/explore-careers/j4.webp", en: "A male professional choosing a sustainable work pace", bn: "কাজের উপযুক্ত গতি বেছে নিচ্ছে একজন তরুণ" },
+  e1: { src: "/images/explore-careers/e1.webp", en: "A male founder choosing a venture to build", bn: "কোন উদ্যোগ গড়বে তা বেছে নিচ্ছে একজন তরুণ" },
+  e2: { src: "/images/explore-careers/e2.webp", en: "A male founder choosing his strongest skill", bn: "নিজের প্রধান দক্ষতা বেছে নিচ্ছে একজন তরুণ" },
+  e3: { src: "/images/explore-careers/e3.webp", en: "A male founder comparing ways to fund a venture", bn: "উদ্যোগের অর্থায়নের পথ তুলনা করছে একজন তরুণ" },
+  e4: { src: "/images/explore-careers/e4.webp", en: "A male founder defining what success means to him", bn: "সাফল্যের অর্থ নির্ধারণ করছে একজন তরুণ" },
+}
+
+function ExploreQuestionImage({ questionId, lang, priority = false }: { questionId: string; lang: 'en' | 'bn'; priority?: boolean }) {
+  const illustration = EXPLORE_QUESTION_IMAGES[questionId]
+  if (!illustration) return null
+
+  return (
+    <div className="relative mt-3 aspect-[3/2] w-full overflow-hidden rounded-2xl border border-indigo-400/20 bg-slate-950 shadow-lg shadow-slate-950/20">
+      <Image
+        src={illustration.src}
+        alt={illustration[lang]}
+        fill
+        priority={priority}
+        sizes="(min-width: 1024px) 920px, 100vw"
+        className="object-cover"
+      />
+      <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" />
+    </div>
+  )
 }
 
 export default function ExploreCareersPage() {
@@ -1706,6 +1744,11 @@ export default function ExploreCareersPage() {
                       <span className="text-[10px] font-black uppercase tracking-[0.16em] text-indigo-300">
                         {lang === "bn" ? `লোডআউট মুভ ${assessStep + 1} / ৩` : `Loadout move ${assessStep + 1} of 3`}
                       </span>
+                      <ExploreQuestionImage
+                        questionId={GENERAL_QUESTIONS[assessStep].id}
+                        lang={lang}
+                        priority={assessStep === 0}
+                      />
                       <p className={`${sectorQuestPreferences.largeText ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"} mt-2 font-black leading-snug text-white`}>
                       {lang === 'bn' ? GENERAL_QUESTIONS[assessStep].questionText.bn : GENERAL_QUESTIONS[assessStep].questionText.en}
                       </p>
@@ -1823,6 +1866,10 @@ export default function ExploreCareersPage() {
                       <span className="text-[10px] font-black uppercase tracking-[0.16em] text-indigo-300">
                         {lang === "bn" ? `ফিল্ড মিশন ${assessStep - 3} / ৪` : `Field mission ${assessStep - 3} of 4`}
                       </span>
+                      <ExploreQuestionImage
+                        questionId={SECTOR_QUESTIONS[confirmedSector][assessStep - 4].id}
+                        lang={lang}
+                      />
                       <p className={`${sectorQuestPreferences.largeText ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"} mt-2 font-black leading-snug text-white`}>
                         {lang === 'bn'
                           ? SECTOR_QUESTIONS[confirmedSector][assessStep - 4].questionText.bn

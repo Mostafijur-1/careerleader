@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import DashboardLayout from "../components/DashboardLayout"
 import { useLanguage } from "../contexts/LanguageContext"
@@ -333,6 +334,25 @@ const GAME_SCENES: Record<string, { en: GameScene; bn: GameScene }> = {
   },
 }
 
+const ASSESSMENT_IMAGES: Record<string, { src: string; en: string; bn: string }> = {
+  q1: { src: "/images/assessment/q1.webp", en: "Male students choosing between a lively team huddle and quiet idea work", bn: "দলীয় আলোচনা ও শান্তভাবে ভাবার মধ্যে বেছে নিচ্ছে ছাত্ররা" },
+  q2: { src: "/images/assessment/q2.webp", en: "A male student assembling a festival display kit", bn: "উৎসবের ডিসপ্লে কিট তৈরি করছে একজন ছাত্র" },
+  q3: { src: "/images/assessment/q3.webp", en: "A male student supporting an overwhelmed teammate", bn: "চাপগ্রস্ত সতীর্থকে সহায়তা করছে একজন ছাত্র" },
+  q4: { src: "/images/assessment/q4.webp", en: "Male students planning a festival timeline", bn: "উৎসবের সময়সূচি পরিকল্পনা করছে ছাত্ররা" },
+  q5: { src: "/images/assessment/q5.webp", en: "A male student choosing where to develop an idea", bn: "কোথায় ধারণা নিয়ে কাজ করবে তা বেছে নিচ্ছে একজন ছাত্র" },
+  q6: { src: "/images/assessment/q6.webp", en: "Male students comparing a bold prototype with a proven display", bn: "সাহসী প্রোটোটাইপ ও পরীক্ষিত ডিসপ্লে তুলনা করছে ছাত্ররা" },
+  q7: { src: "/images/assessment/q7.webp", en: "Male students weighing evidence and team enthusiasm", bn: "প্রমাণ ও দলের আগ্রহ বিবেচনা করছে ছাত্ররা" },
+  q8: { src: "/images/assessment/q8.webp", en: "A male festival crew planning for changing weather", bn: "পরিবর্তনশীল আবহাওয়ার জন্য পরিকল্পনা করছে ছাত্রদের দল" },
+  q9: { src: "/images/assessment/q9.webp", en: "Male students restarting a stalled brainstorm", bn: "থেমে যাওয়া ব্রেইনস্টর্ম আবার শুরু করছে ছাত্ররা" },
+  q10: { src: "/images/assessment/q10.webp", en: "Male students finding direction in an unclear brief", bn: "অস্পষ্ট নির্দেশনা থেকে দিক খুঁজছে ছাত্ররা" },
+  q11: { src: "/images/assessment/q11.webp", en: "A male student balancing efficiency with care for his team", bn: "দক্ষতা ও দলের প্রতি যত্নের ভারসাম্য করছে একজন ছাত্র" },
+  q12: { src: "/images/assessment/q12.webp", en: "A male student crew organizing launch-week tasks", bn: "লঞ্চ সপ্তাহের কাজ সাজাচ্ছে ছাত্রদের দল" },
+  q13: { src: "/images/assessment/q13.webp", en: "A male student entering an event with unfamiliar faces", bn: "অপরিচিতদের অনুষ্ঠানে প্রবেশ করছে একজন ছাত্র" },
+  q14: { src: "/images/assessment/q14.webp", en: "A male student finding patterns in visitor feedback", bn: "দর্শনার্থীদের মতামতে ধরন খুঁজছে একজন ছাত্র" },
+  q15: { src: "/images/assessment/q15.webp", en: "Male students giving constructive rehearsal feedback", bn: "মহড়ায় গঠনমূলক মতামত দিচ্ছে ছাত্ররা" },
+  q16: { src: "/images/assessment/q16.webp", en: "A male student crew responding to a last-minute stage change", bn: "শেষ মুহূর্তের মঞ্চ পরিবর্তন সামলাচ্ছে ছাত্রদের দল" },
+}
+
 const COPY = {
   en: {
     eyebrow: "Tomorrow Town",
@@ -535,6 +555,7 @@ export default function AssessmentPage() {
   const progress = questions.length ? Math.round((answeredCount / questions.length) * 100) : 0
   const activeQuestion = questions[currentQuestion]
   const activeScene = activeQuestion ? GAME_SCENES[activeQuestion.id]?.[lang] : undefined
+  const activeImage = activeQuestion ? ASSESSMENT_IMAGES[activeQuestion.id] : undefined
   const activeMission = questionMission(activeQuestion, currentQuestion, questions.length)
   const isLastQuestion = currentQuestion === questions.length - 1
   const allAnswered = questions.length > 0 && answeredCount === questions.length
@@ -935,6 +956,19 @@ export default function AssessmentPage() {
                     <p className="mt-4 text-sm font-semibold leading-relaxed text-slate-500">
                       {MISSIONS[activeMission - 1][lang].hint}
                     </p>
+                    {activeImage && (
+                      <div className="relative mt-5 aspect-[3/2] w-full overflow-hidden rounded-2xl border border-indigo-100 bg-indigo-100 shadow-sm">
+                        <Image
+                          src={activeImage.src}
+                          alt={activeImage[lang]}
+                          fill
+                          priority={currentQuestion === 0}
+                          sizes="(min-width: 1024px) 760px, 100vw"
+                          className="object-cover"
+                        />
+                        <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/30" />
+                      </div>
+                    )}
                     <h2 className={`${questionSize} mt-4 font-black leading-tight tracking-tight text-slate-950`}>
                       {activeScene.prompt}
                     </h2>
